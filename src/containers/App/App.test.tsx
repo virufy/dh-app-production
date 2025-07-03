@@ -1,9 +1,12 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import App from './App';
+import React from "react";
+import SpeechRecordScreen from "../SubmitSteps/RecordingsSteps/SpeechRecordScreen";
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
-});
+const App: React.FC = () => {
+  return (
+    <div>
+      <SpeechRecordScreen />
+    </div>
+  );
+};
+
+export default App;
