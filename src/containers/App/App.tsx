@@ -2,6 +2,7 @@ import React from 'react';
 import './App.css';
 import CoughRecordScreen from "../SubmitSteps/RecordingsSteps/CoughRecordScreen"
 import UploadCompleteCough from "../SubmitSteps/RecordingsSteps/UploadCompleteCough"
+import {Route, Routes} from 'react-router-dom';
 
 const App: React.FC = () => {
   return (
@@ -15,7 +16,12 @@ const App: React.FC = () => {
     //         }}
     //     />
     // </div>
-      <h1>Hello, React is working!</h1>
+    //   <h1>Hello, React is workizzzng!</h1>
+    //   <CoughRecordScreen/>
+      <Routes>
+        <Route path="/cough-record" element={<CoughRecordScreen />} />
+        <Route path="/upload-complete" element={<UploadCompleteCough />} />
+      </Routes>
   );
 };
 
