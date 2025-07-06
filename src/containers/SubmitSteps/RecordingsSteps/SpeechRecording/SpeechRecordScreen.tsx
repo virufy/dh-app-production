@@ -14,7 +14,7 @@ const SpeechRecordScreen: React.FC = () => {
   };
 
   const handleContinue = (): void => {
-    navigate("/upload-complete-speech");
+    navigate("/record-breath");
   };
 
   return (

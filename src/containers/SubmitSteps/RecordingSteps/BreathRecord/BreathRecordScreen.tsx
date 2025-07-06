@@ -65,7 +65,7 @@ const BreathRecordScreen: React.FC = () => {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1rem' }}>
-          <button onClick={() => navigate('/upload-complete-breath')} style={continueButtonStyle}>
+          <button onClick={() => navigate('/confirmation')} style={continueButtonStyle}>
             Continue
           </button>
           <button style={uploadButtonStyle}>Upload your own file</button>

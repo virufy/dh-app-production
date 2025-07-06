@@ -1,16 +1,10 @@
 import React from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import BreathRecordScreen from '../SubmitSteps/RecordingSteps/BreathRecord';
-
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import ConfirmationScreen from '../ConfirmationScreen';
+import SpeechRecordScreen from '../SubmitSteps/RecordingsSteps/SpeechRecording';
+import ConsentScreen from './ConsentPage';
 
-
-const App: React.FC = () => {
-  return (
-    <div>
-      <BreathRecordScreen/>
-    </div>
-  );
 // Homepage with navigate
 const HomePage: React.FC = () => {
     const navigate = useNavigate();
@@ -46,17 +40,16 @@ const HomePage: React.FC = () => {
     );
 };
 
-// Main App with routes
+// Main App with routes 
 const App: React.FC = () => {
     return (
-        <BrowserRouter>
-            <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/confirmation" element={<ConfirmationScreen />} />
-            </Routes>
-        </BrowserRouter>
+        <Routes>
+            <Route path="/" element={<ConsentScreen/>} />
+            <Route path="/record-breath" element={<BreathRecordScreen />} />
+            <Route path="/confirmation" element={<ConfirmationScreen />} />
+            <Route path="/record-speech" element={<SpeechRecordScreen />} />
+        </Routes>
     );
 };
 
 export default App;
-

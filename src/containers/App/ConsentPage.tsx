@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BackIcon from '../../assets/images/back-icon.png';
+
 type CheckboxItem = {
   id: string;
   label: string;
@@ -51,7 +52,7 @@ const ConsentScreen: React.FC = () => {
       ageConfirmed && consentGiven && privacyAck && healthInfoConsent;
 
     if (allChecked) {
-      navigate('/record');
+      navigate('/record-speech');
     } else {
       alert('Please check all boxes to continue.');
     }
