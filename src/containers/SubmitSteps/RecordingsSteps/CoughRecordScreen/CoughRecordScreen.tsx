@@ -50,7 +50,7 @@ function CoughRecordScreen() {
 
         if (!file) {
             // Let it go through for now (no validation)
-            navigate('/upload-complete', {
+            navigate('/record-speech', {
                 state: {
                     audioFileUrl: '', // or use placeholder
                     filename: 'No file selected',

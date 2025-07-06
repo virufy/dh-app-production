@@ -52,7 +52,7 @@ const ConsentScreen: React.FC = () => {
       ageConfirmed && consentGiven && privacyAck && healthInfoConsent;
 
     if (allChecked) {
-      navigate('/record-speech');
+      navigate('/record-coughs');
     } else {
       alert('Please check all boxes to continue.');
     }

@@ -5,18 +5,15 @@ import App from './containers/App/App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 
-
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
+
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-      <BrowserRouter>
-    <App />
+      <App />
     </BrowserRouter>
-    
-      </BrowserRouter>
   </React.StrictMode>
 );
 

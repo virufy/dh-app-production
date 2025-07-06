@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import BreathRecordScreen from '../SubmitSteps/RecordingSteps/BreathRecord';
 import ConfirmationScreen from '../ConfirmationScreen';
 import SpeechRecordScreen from '../SubmitSteps/RecordingsSteps/SpeechRecording';
+import CoughRecordScreen from '../SubmitSteps/RecordingsSteps/CoughRecordScreen';
 import ConsentScreen from './ConsentPage';
 
 // Homepage with navigate
@@ -48,6 +49,7 @@ const App: React.FC = () => {
             <Route path="/record-breath" element={<BreathRecordScreen />} />
             <Route path="/confirmation" element={<ConfirmationScreen />} />
             <Route path="/record-speech" element={<SpeechRecordScreen />} />
+            <Route path="/record-coughs" element={<CoughRecordScreen />} />
         </Routes>
     );
 };
