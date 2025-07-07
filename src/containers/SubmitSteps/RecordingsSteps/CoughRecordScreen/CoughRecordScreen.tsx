@@ -52,7 +52,7 @@ function CoughRecordScreen() {
             // Let it go through for now (no validation)
             navigate('/record-speech', {
                 state: {
-                    audioFileUrl: '', 
+                    audioFileUrl: '',
                     filename: 'No file selected',
                 },
             });
@@ -62,6 +62,7 @@ function CoughRecordScreen() {
                 state: {
                     audioFileUrl,
                     filename: file.name,
+                    nextPage: '/record-speech' 
                 },
             });
         }

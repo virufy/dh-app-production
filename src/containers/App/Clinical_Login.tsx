@@ -14,7 +14,7 @@ import {
 } from './style';
 
 const Clinical_Login = () => {
-  const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation(); 
   const [patientId, setPatientId] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();

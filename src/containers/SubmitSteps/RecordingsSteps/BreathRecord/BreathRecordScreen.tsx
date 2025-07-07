@@ -14,12 +14,40 @@ import {
   uploadButtonStyle,
 } from './style';
 
-
 const BreathRecordScreen: React.FC = () => {
   const navigate = useNavigate();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleBack = (): void => {
     navigate(-1);
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const audioUrl = URL.createObjectURL(file);
+      navigate('/upload-complete', {
+        state: {
+          audioFileUrl: audioUrl,
+          filename: file.name,
+          nextPage: '/confirmation',
+        },
+      });
+    }
+  };
+
+  const handleContinue = () => {
+    navigate('/upload-complete', {
+      state: {
+        audioFileUrl: '',
+        filename: 'Breath Recording',
+        nextPage: '/confirmation',
+      },
+    });
   };
 
   return (
@@ -41,7 +69,7 @@ const BreathRecordScreen: React.FC = () => {
           </svg>
         </button>
 
-        <h2 style={{ color: '#007bff', marginBottom: '2rem', textAlign: 'center'}}>Record your breath</h2>
+        <h2 style={{ color: '#007bff', marginBottom: '2rem', textAlign: 'center' }}>Record your breath</h2>
 
         <h3 style={{ textAlign: 'center', marginBottom: '2rem' }}>Instructions</h3>
 
@@ -67,10 +95,19 @@ const BreathRecordScreen: React.FC = () => {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1rem' }}>
-          <button onClick={() => navigate('/confirmation')} style={continueButtonStyle}>
+          <button onClick={handleContinue} style={continueButtonStyle}>
             Continue
           </button>
-          <button style={uploadButtonStyle}>Upload your own file</button>
+          <button onClick={handleUploadClick} style={uploadButtonStyle}>
+            Upload your own file
+          </button>
+          <input
+            type="file"
+            accept="audio/*"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            style={{ display: 'none' }}
+          />
         </div>
 
         <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#999' }}>

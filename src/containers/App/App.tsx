@@ -4,6 +4,8 @@ import BreathRecordScreen from '../SubmitSteps/RecordingsSteps/BreathRecord';
 import ConfirmationScreen from '../ConfirmationScreen';
 import SpeechRecordScreen from '../SubmitSteps/RecordingsSteps/SpeechRecording';
 import CoughRecordScreen from '../SubmitSteps/RecordingsSteps/CoughRecordScreen';
+import UploadCompleteCough from '../SubmitSteps/RecordingsSteps/UploadCompleteCough';
+
 import ConsentScreen from './ConsentPage';
 import Clinical_Login from './Clinical_Login';
 
@@ -53,6 +55,8 @@ const App: React.FC = () => {
             <Route path="/record-speech" element={<SpeechRecordScreen />} />
             <Route path="/record-coughs" element={<CoughRecordScreen />} />
             <Route path="/clinical-login" element={<Clinical_Login />} />
+            <Route path="/upload-complete" element={<UploadCompleteCough />} />
+
         </Routes>
     );
 };

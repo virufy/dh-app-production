@@ -8,13 +8,38 @@ import BackIcon from "../../../../assets/icons/back-icon.png";
 
 const SpeechRecordScreen: React.FC = () => {
   const navigate = useNavigate();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleBack = (): void => {
     navigate(-1);
   };
 
   const handleContinue = (): void => {
-    navigate("/record-breath");
+    navigate("/upload-complete", {
+      state: {
+        audioFileUrl: "",  
+        filename: "Speech Recording",  
+        nextPage: "/record-breath"  
+      },
+    });
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const audioUrl = URL.createObjectURL(file);
+      navigate('/upload-complete', {
+        state: {
+          audioFileUrl: audioUrl,
+          filename: file.name,
+          nextPage: '/record-breath'
+        },
+      });
+    }
   };
 
   return (
@@ -165,6 +190,7 @@ const SpeechRecordScreen: React.FC = () => {
             Continue
           </button>
           <button
+            onClick={handleUploadClick}
             style={{
               backgroundColor: "#e6f0ff",
               color: "#007bff",
@@ -177,6 +203,13 @@ const SpeechRecordScreen: React.FC = () => {
           >
             Upload your own file
           </button>
+          <input
+            type="file"
+            accept="audio/*"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            style={{ display: "none" }}
+          />
         </div>
 
         <div
