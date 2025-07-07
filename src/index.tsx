@@ -4,6 +4,8 @@ import './index.css';
 import App from './containers/App/App';  // ✅ Use routing App here
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
+import './i18n';
+
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

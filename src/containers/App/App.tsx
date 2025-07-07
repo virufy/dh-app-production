@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
-import BreathRecordScreen from '../SubmitSteps/RecordingSteps/BreathRecord';
+import BreathRecordScreen from '../SubmitSteps/RecordingsSteps/BreathRecord';
 import ConfirmationScreen from '../ConfirmationScreen';
 import SpeechRecordScreen from '../SubmitSteps/RecordingsSteps/SpeechRecording';
 import CoughRecordScreen from '../SubmitSteps/RecordingsSteps/CoughRecordScreen';

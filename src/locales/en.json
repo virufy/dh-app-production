@@ -1,0 +1,15 @@
+{
+  "home": {
+    "title": "Smartphone COVID/Flu/RSV\nAI Diagnostics Study",
+    "language_label": "Language",
+    "patient_id_label": "Patient ID",
+    "patient_id_placeholder": "Enter Patient ID",
+    "hospital_label": "Hospital Name",
+    "hospital_options": {
+      "barsha": "Al Barsha Health Centre",
+      "rashid": "Rashid Hospital",
+      "latifa": "Latifa Hospital"
+    },
+    "submit_button": "Next"
+  }
+}
