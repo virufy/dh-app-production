@@ -41,7 +41,9 @@ const BreathRecordScreen: React.FC = () => {
           </svg>
         </button>
 
-        <h2 style={{ color: '#007bff', marginBottom: '2rem' }}>Record your breath</h2>
+        <h2 style={{ color: '#007bff', marginBottom: '2rem', textAlign: 'center'}}>Record your breath</h2>
+
+        <h3 style={{ textAlign: 'center', marginBottom: '2rem' }}>Instructions</h3>
 
         <p style={{ marginBottom: '1rem' }}>
           <strong>1</strong>. Find a <strong>quiet place</strong> at least <strong>20 ft (6m)</strong> away from others. If you are feeling ill, please sit down.

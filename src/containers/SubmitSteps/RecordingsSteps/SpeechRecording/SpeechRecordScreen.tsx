@@ -61,6 +61,8 @@ const SpeechRecordScreen: React.FC = () => {
           Record your speech
         </h2>
 
+        <h3 style={{ textAlign: 'center', marginBottom: '2rem' }}>Instructions</h3>
+
         <p style={{ marginBottom: "1rem" }}>
           <strong>1</strong>. Find a quiet place at least 20 ft (6m) away from
           others. If you are feeling ill, please sit down.

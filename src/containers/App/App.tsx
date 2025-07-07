@@ -5,6 +5,7 @@ import ConfirmationScreen from '../ConfirmationScreen';
 import SpeechRecordScreen from '../SubmitSteps/RecordingsSteps/SpeechRecording';
 import CoughRecordScreen from '../SubmitSteps/RecordingsSteps/CoughRecordScreen';
 import ConsentScreen from './ConsentPage';
+import Clinical_Login from './Clinical_Login';
 
 // Homepage with navigate
 const HomePage: React.FC = () => {
@@ -45,11 +46,13 @@ const HomePage: React.FC = () => {
 const App: React.FC = () => {
     return (
         <Routes>
-            <Route path="/" element={<ConsentScreen/>} />
+            <Route path="/" element={<Clinical_Login />} />
+            <Route path="/consent" element={<ConsentScreen />} />
             <Route path="/record-breath" element={<BreathRecordScreen />} />
             <Route path="/confirmation" element={<ConfirmationScreen />} />
             <Route path="/record-speech" element={<SpeechRecordScreen />} />
             <Route path="/record-coughs" element={<CoughRecordScreen />} />
+            <Route path="/clinical-login" element={<Clinical_Login />} />
         </Routes>
     );
 };

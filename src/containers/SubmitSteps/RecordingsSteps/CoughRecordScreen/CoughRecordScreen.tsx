@@ -78,6 +78,8 @@ function CoughRecordScreen() {
                         <img src={BackIcon} alt="Back" />
                     </S.BackButton>
                     <h2>Record your cough</h2>
+
+                    <h3>Instructions</h3>
                 </S.Header>
 
                 <S.Paragraph><strong>1</strong>. Find a <strong>quiet place</strong> at least <strong>20 ft (6m)</strong> away from others. 
@@ -86,7 +88,7 @@ function CoughRecordScreen() {
                 <S.Paragraph><strong>2</strong>. Hold the bottom of your device <strong>1-2 ft (30-6 cm)</strong> away from your mouth. 
                 Try not to cough too forcefully</S.Paragraph>
                 <S.Image src={mouthDistance} />
-                <S.Paragraph><strong>3</strong>. Tap record, cough <strong>3</strong>times with a <strong>deep breath</strong> between each cough.
+                <S.Paragraph><strong>3</strong>. Tap record, <strong>cough 3 times</strong> with a <strong>deep breath</strong> between each cough.
                 Then tap stop.</S.Paragraph>
 
                 <S.Timer>0:00</S.Timer>
