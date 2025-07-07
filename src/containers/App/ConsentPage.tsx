@@ -59,9 +59,7 @@ const ConsentScreen: React.FC = () => {
   };
 
   const handleSignedPaperNext = () => {
-    alert(
-      'Please make sure you have signed the paper consent form manually.'
-    );
+    alert('Please make sure you have signed the paper consent form manually.');
   };
 
   const handleBack = () => {
@@ -71,7 +69,6 @@ const ConsentScreen: React.FC = () => {
   return (
     <div
       style={{
-        backgroundColor: '#f8f8f8',
         minHeight: '100vh',
         padding: '2rem',
         display: 'flex',
@@ -81,12 +78,9 @@ const ConsentScreen: React.FC = () => {
     >
       <div
         style={{
-          backgroundColor: '#fff',
           padding: '2rem',
-          borderRadius: '12px',
           maxWidth: '700px',
           width: '100%',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
         }}
       >
         {/* Header */}

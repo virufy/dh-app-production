@@ -52,7 +52,7 @@ function CoughRecordScreen() {
             // Let it go through for now (no validation)
             navigate('/record-speech', {
                 state: {
-                    audioFileUrl: '', // or use placeholder
+                    audioFileUrl: '', 
                     filename: 'No file selected',
                 },
             });
@@ -80,11 +80,14 @@ function CoughRecordScreen() {
                     <h2>Record your cough</h2>
                 </S.Header>
 
-                <S.Paragraph><strong>1</strong>. Find a quiet place...</S.Paragraph>
+                <S.Paragraph><strong>1</strong>. Find a <strong>quiet place</strong> at least <strong>20 ft (6m)</strong> away from others. 
+                If you are feeling ill, please sit down</S.Paragraph>
                 <S.Image src={keepDistance} />
-                <S.Paragraph><strong>2</strong>. Hold the bottom of your device...</S.Paragraph>
+                <S.Paragraph><strong>2</strong>. Hold the bottom of your device <strong>1-2 ft (30-6 cm)</strong> away from your mouth. 
+                Try not to cough too forcefully</S.Paragraph>
                 <S.Image src={mouthDistance} />
-                <S.Paragraph><strong>3</strong>. Tap record, cough 3 times...</S.Paragraph>
+                <S.Paragraph><strong>3</strong>. Tap record, cough <strong>3</strong>times with a <strong>deep breath</strong> between each cough.
+                Then tap stop.</S.Paragraph>
 
                 <S.Timer>0:00</S.Timer>
 
@@ -109,6 +112,7 @@ function CoughRecordScreen() {
                         control={control}
                         render={({ field }) => (
                             <>
+                                <S.ContinueButton type="submit">Continue</S.ContinueButton>
                                 <S.UploadButton type="button" onClick={triggerFileInput}>
                                     <img src={Upload} alt="Upload" />
                                     Upload your own file
@@ -130,7 +134,6 @@ function CoughRecordScreen() {
 
                     {/*)}*/}
 
-                    <S.ContinueButton type="submit">Continue</S.ContinueButton>
                 </form>
 
                 <S.Footer>

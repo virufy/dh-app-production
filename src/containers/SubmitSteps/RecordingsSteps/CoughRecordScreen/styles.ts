@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 export const Container = styled.div`
-  background-color: #f8f8f8;
+  background-color: #FFFFFF;
   min-height: 100vh;
   padding: 2rem;
   font-family: Arial, sans-serif;
@@ -51,7 +51,10 @@ export const Image = styled.img`
   width: 100%;
   border-radius: 8px;
   margin-bottom: 1.5rem;
+  background-color: transparent;
+
 `;
+
 
 export const Timer = styled.div`
   text-align: center;
@@ -112,7 +115,7 @@ export const ActionButtons = styled.div`
 `;
 
 export const ContinueButton = styled.button`
-  background-color: #3578DE;
+  background-color: #007bff;
   color: white;
   border: none;
   padding: 0.75rem;
@@ -123,14 +126,18 @@ export const ContinueButton = styled.button`
 `;
 
 export const UploadButton = styled.button`
-  background-color: #f8f8f8;
-  border: none;
+  background-color: #e6f0ff;
+  color: #007bff;
+  border: 1px solid #007bff;
   padding: 0.75rem;
+  border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
   width: 100%;
   display: flex;
   align-items: center;
+  justify-content: center;
+
 
   img {
     width: 15px;

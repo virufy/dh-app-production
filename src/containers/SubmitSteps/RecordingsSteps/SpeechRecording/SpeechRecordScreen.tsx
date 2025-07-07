@@ -20,7 +20,6 @@ const SpeechRecordScreen: React.FC = () => {
   return (
     <div
       style={{
-        backgroundColor: "#f8f8f8",
         minHeight: "100vh",
         padding: "2rem",
         fontFamily: "Arial, sans-serif",
@@ -31,12 +30,9 @@ const SpeechRecordScreen: React.FC = () => {
     >
       <div
         style={{
-          backgroundColor: "#ffffff",
           padding: "2rem",
-          borderRadius: "12px",
           maxWidth: "600px",
           width: "100%",
-          boxShadow: "0 2px 10px rgba(0, 0, 0, 0.05)",
           textAlign: "center",
           position: "relative",
         }}
@@ -62,7 +58,7 @@ const SpeechRecordScreen: React.FC = () => {
         </button>
 
         <h2 style={{ color: "#007bff", marginBottom: "1rem" }}>
-          Record your cough
+          Record your speech
         </h2>
 
         <p style={{ marginBottom: "1rem" }}>
