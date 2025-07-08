@@ -1,21 +1,21 @@
 import styled from 'styled-components';
 
 export const Container = styled.div`
-  font-family: Arial, sans-serif;
+  font-family: "source sans pro", sans-serif;
   background-color: transparent;
-  width: 100%;
-  height: 100vh;
+  //width: 100%;
+  height: 90vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+  //box-sizing: border-box;
+  //padding: 0;
+  //margin: 0;
 `;
 
 export const InnerWrapper = styled.div`
-  width: 100%;
-  max-width: 360px;
+  //width: 100%;
+  max-width: 1000px;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -25,14 +25,14 @@ export const InnerWrapper = styled.div`
 `;
 
 export const Logo = styled.img`
-  width: 120px;
+  width: 10rem;
   margin-bottom: 1.5rem;
   padding: 0.5rem;
 `;
 
 export const Title = styled.h2`
   font-family: 'Open Sans', Arial, sans-serif;
-  font-size: 30px;
+  font-size: 3rem;
   font-weight: bold;
   color: #393939;
   margin-bottom: 4rem;
@@ -54,8 +54,8 @@ export const ButtonStyled = styled.button`
 `;
 
 export const ErrorLink = styled.a`
-  font-size: 12.5px;
+  font-size: 0.8rem;
   color: #3578de;
   text-decoration: underline;
-  font-weight: 550;
+  font-weight: 510;
 `;

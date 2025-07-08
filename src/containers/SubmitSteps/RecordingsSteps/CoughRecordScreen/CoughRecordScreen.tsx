@@ -1,150 +1,157 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as Yup from 'yup';
-
 import keepDistance from '../../../../assets/images/keepDistance.png';
 import mouthDistance from '../../../../assets/images/mouthDistance.png';
-import BackIcon from '../../../../assets/images/back-icon.png';
-import Upload from '../../../../assets/images/upload.svg';
+import BackIcon from '../../../../assets/icons/arrowLeft.svg';
+import UploadIcon from '../../../../assets/icons/upload.svg';
+import StartIcon from '../../../../assets/icons/start.svg';
+import StopIcon from '../../../../assets/icons/stop.svg';
+import {
+    Container,
+    Content,
+    Header,
+    BackButton,
+    HeaderText,
+    StepCircle,
+    StepWrapper,
+    InstructionText,
+    Image,
+    Timer,
+    TimerBox,
+    ButtonRow,
+    CircleButton,
+    ButtonLabel,
+    CheckboxRow,
+    Label,
+    Checkbox,
+    ActionButtons,
+    UploadButton,
+    UploadText,
+    HiddenFileInput,
+    FooterLink
+} from './styles';
 
-import * as S from './styles';
-
-const schema = Yup.object({
-    file: Yup.mixed()
-        .required('Please upload a file')
-        .test('fileSize', 'File too large', (value?: any) => {
-            if (!value) return false;
-            return value.size <= 5 * 1024 * 1024; // 5MB
-        })
-        .test('fileDuration', 'Audio must be at least 3 seconds', async (value?: any) => {
-            if (!value) return false;
-            const audio = new Audio(URL.createObjectURL(value));
-            await new Promise(resolve => audio.addEventListener('loadedmetadata', resolve));
-            return audio.duration >= 3;
-        }),
-}).required();
-
-function CoughRecordScreen() {
+const CoughRecordScreen: React.FC = () => {
     const navigate = useNavigate();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [involuntary, setInvoluntary] = useState(false);
-    const [errorMsg, setErrorMsg] = useState('');
-
-    const {
-        control,
-        handleSubmit,
-        formState: { errors },
-    } = useForm(
-        // {
-        // resolver: yupResolver(schema),
-    // }
-    );
 
     const handleBack = () => navigate(-1);
-    const toggleInvoluntary = () => setInvoluntary(!involuntary);
 
-    const onSubmit = (data: any) => {
-        const file = data.file;
+    const handleContinue = () => {
+        navigate("/upload-complete", {
+            state: {
+                audioFileUrl: "",
+                filename: "Cough Recording",
+                nextPage: "/record-speech",
+            },
+        });
+    };
 
-        if (!file) {
-            // Let it go through for now (no validation)
-            navigate('/record-speech', {
+    const triggerFileInput = () => fileInputRef.current?.click();
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const audioUrl = URL.createObjectURL(file);
+            navigate("/upload-complete", {
                 state: {
-                    audioFileUrl: '',
-                    filename: 'No file selected',
-                },
-            });
-        } else {
-            const audioFileUrl = URL.createObjectURL(file);
-            navigate('/upload-complete', {
-                state: {
-                    audioFileUrl,
+                    audioFileUrl: audioUrl,
                     filename: file.name,
-                    nextPage: '/record-speech' 
+                    nextPage: "/record-speech",
                 },
             });
         }
     };
 
-
-    const triggerFileInput = () => fileInputRef.current?.click();
-
     return (
-        <S.Container>
-            <S.Content>
-                <S.Header>
-                    <S.BackButton onClick={handleBack}>
-                        <img src={BackIcon} alt="Back" />
-                    </S.BackButton>
-                    <h2>Record your cough</h2>
+        <Container>
+            <Content>
+                <Header>
+                    <BackButton onClick={handleBack}>
+                        <img src={BackIcon} alt="Back" width={24} height={24} />
+                    </BackButton>
+                    <HeaderText>Record your cough</HeaderText>
+                </Header>
 
-                    <h3>Instructions</h3>
-                </S.Header>
+                <h3 style={{ fontFamily: "Source Sans Pro, sans-serif", fontSize: '32px', textAlign: 'center', fontWeight: 'bold', marginBottom: '2rem', color: "#393939" }}>Instructions</h3>
 
-                <S.Paragraph><strong>1</strong>. Find a <strong>quiet place</strong> at least <strong>20 ft (6m)</strong> away from others. 
-                If you are feeling ill, please sit down</S.Paragraph>
-                <S.Image src={keepDistance} />
-                <S.Paragraph><strong>2</strong>. Hold the bottom of your device <strong>1-2 ft (30-6 cm)</strong> away from your mouth. 
-                Try not to cough too forcefully</S.Paragraph>
-                <S.Image src={mouthDistance} />
-                <S.Paragraph><strong>3</strong>. Tap record, <strong>cough 3 times</strong> with a <strong>deep breath</strong> between each cough.
-                Then tap stop.</S.Paragraph>
+                <StepWrapper>
+                    <StepCircle>1</StepCircle>
+                    <InstructionText>
+                        Find a <strong>quiet place</strong> at least <strong>20 ft (6m)</strong> away from others. If you are feeling ill, please sit down.
+                    </InstructionText>
+                </StepWrapper>
+                <Image src={keepDistance} alt="Keep distance" />
 
-                <S.Timer>0:00</S.Timer>
+                <StepWrapper>
+                    <StepCircle>2</StepCircle>
+                    <InstructionText>
+                        Hold the bottom of your device <strong>1–2 ft (30–60 cm)</strong> away from your mouth. Try not to cough too forcefully.
+                    </InstructionText>
+                </StepWrapper>
+                <Image src={mouthDistance} alt="Mouth distance" />
 
-                <S.ButtonGroup>
-                    <S.RecordButton>Record</S.RecordButton>
-                    <S.StopButton>Stop</S.StopButton>
-                </S.ButtonGroup>
+                <StepWrapper>
+                    <StepCircle>3</StepCircle>
+                    <InstructionText>
+                        Tap record. <strong>Cough 3 times</strong> with a <strong>deep breath</strong> between each cough. Then tap stop.
+                    </InstructionText>
+                </StepWrapper>
 
-                <S.CheckboxRow>
-                    <label htmlFor="involuntary">Were your coughs involuntary?</label>
-                    <input
+                <Timer><TimerBox>0:00</TimerBox></Timer>
+
+                <ButtonRow>
+                    <div style={{ textAlign: 'center' }}>
+                        <CircleButton bg="#3578de">
+                            <img src={StartIcon} alt="Start Recording" width={28} height={28} />
+                        </CircleButton>
+                        <ButtonLabel>Record</ButtonLabel>
+                    </div>
+
+                    <div style={{ textAlign: 'center' }}>
+                        <CircleButton bg="#DDE9FF">
+                            <img src={StopIcon} alt="Stop Recording" width={20} height={20} />
+                        </CircleButton>
+                        <ButtonLabel>Stop</ButtonLabel>
+                    </div>
+                </ButtonRow>
+
+                <CheckboxRow>
+                    <Label htmlFor="involuntary">Were the coughs involuntary?</Label>
+                    <Checkbox
                         id="involuntary"
                         type="checkbox"
                         checked={involuntary}
-                        onChange={toggleInvoluntary}
+                        onChange={() => setInvoluntary(!involuntary)}
                     />
-                </S.CheckboxRow>
+                </CheckboxRow>
 
-                <form onSubmit={handleSubmit(onSubmit)}>
-                    <Controller
-                        name="file"
-                        control={control}
-                        render={({ field }) => (
-                            <>
-                                <S.ContinueButton type="submit">Continue</S.ContinueButton>
-                                <S.UploadButton type="button" onClick={triggerFileInput}>
-                                    <img src={Upload} alt="Upload" />
-                                    Upload your own file
-                                </S.UploadButton>
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    accept="audio/*"
-                                    style={{ display: 'none' }}
-                                    onChange={(e) => field.onChange(e.target.files?.[0])}
-                                />
-                            </>
-                        )}
+                <ActionButtons>
+                    <button onClick={handleContinue}>Continue</button>
+
+                    <UploadButton onClick={triggerFileInput}>
+                        <img src={UploadIcon} alt="Upload Icon" width={22} height={22} style={{ marginBottom: '0.3rem', marginRight: '0.5rem' }} />
+                        <UploadText>Upload your own file</UploadText>
+                    </UploadButton>
+                    <HiddenFileInput
+                        type="file"
+                        accept="audio/*"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
                     />
-                    {/*{errors && errors.file && (*/}
-                    {/*    {typeof errors.file?.message === 'string' && (*/}
-                    {/*            <p style={{ color: 'red' }}>{errors.file.message}</p>*/}
-                    {/*        )}*/}
+                </ActionButtons>
 
-                    {/*)}*/}
-
-                </form>
-
-                <S.Footer>
-                    Something wrong? <a href="https://docs.google.com/forms/...">Report an error</a>
-                </S.Footer>
-            </S.Content>
-        </S.Container>
+                <FooterLink
+                    href="https://docs.google.com/forms/d/e/1FAIpQLScYsWESIcn1uyEzFQT464qLSYZuUduHzThgTRPJODTQcCwz5w/viewform"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    Something wrong? Report an error
+                </FooterLink>
+            </Content>
+        </Container>
     );
-}
+};
 
 export default CoughRecordScreen;
