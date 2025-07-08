@@ -11,5 +11,11 @@
       "latifa": "Latifa Hospital"
     },
     "submit_button": "Next"
+  },
+  "confirmation": {
+    "titleLine1": "Thank you for",
+    "titleLine2": "submitting!",
+    "button": "Return to main menu",
+    "report": "Something wrong? Report an error"
   }
 }

@@ -1,159 +1,186 @@
 import styled from 'styled-components';
 
 export const Container = styled.div`
-  background-color: #FFFFFF;
-  min-height: 100vh;
-  padding: 2rem;
-  font-family: Arial, sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+    min-height: 100vh;
+    padding: 1.5rem 1rem;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 14px;
+    display: flex;
+    justify-content: center;
+    background-color: transparent;
 `;
 
 export const Content = styled.div`
-  padding: 2rem;
-  max-width: 700px;
-  width: 100%;
+    max-width: 1000px;
+    width: 100%;
+    position: relative;
 `;
 
 export const Header = styled.div`
-  position: relative;
-  text-align: center;
-  margin: 0;
-  padding: 20px;
-
-  h2 {
-    color: #3578DE;
-    margin-bottom: 1rem;
-  }
+    position: relative;
+    margin-top: 1.25rem;
+    margin-bottom: 1.75rem;
 `;
 
 export const BackButton = styled.button`
-  position: absolute;
-  top: 50%;
-  left: 10px;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-
-  img {
-    width: 25px;
-    height: 35px;
-  }
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
 `;
 
-export const Paragraph = styled.p`
-  margin-bottom: 1rem;
+export const HeaderText = styled.div`
+    text-align: center;
+    font-weight: 600;
+    font-size: 18px;
+    color: #3578de;
+`;
+
+export const StepWrapper = styled.div`
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+`;
+
+export const StepCircle = styled.div`
+    min-width: 28px;
+    height: 28px;
+    background-color: #DDE9FF;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 28px;
+    font-weight: bold;
+    color: #3578de;
+    font-size: 20px;
+`;
+
+export const InstructionText = styled.div`
+    flex: 1;
+    font-size: 20px;
 `;
 
 export const Image = styled.img`
-  width: 100%;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  background-color: transparent;
-
+    width: 100%;
+    margin-bottom: 1.5rem;
 `;
-
 
 export const Timer = styled.div`
-  text-align: center;
-  background-color: #f0f4ff;
-  padding: 0.75rem;
-  border-radius: 20px;
-  font-size: 24px;
-  font-weight: bold;
-  width: 10%;
-  margin: 0 auto 1.5rem auto;
-  border: 2px solid #3578DE;
+    display: flex;
+    justify-content: center;
+    margin: 3.5rem 0 1.75rem;
 `;
 
-export const ButtonGroup = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  margin-bottom: 2rem;
+export const TimerBox = styled.div`
+    border: 1px solid #3578de;
+    color: #3578de;
+    padding: 0.6rem 1.5rem;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 20px;
 `;
 
-export const RecordButton = styled.button`
-  background-color: #e6f0ff;
-  border: none;
-  border-radius: 999px;
-  padding: 1rem 1.5rem;
-  font-size: 16px;
-  font-weight: bold;
-  color: #007bff;
-  cursor: pointer;
+export const ButtonRow = styled.div`
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
 `;
 
-export const StopButton = styled.button`
-  background-color: #ffe6e6;
-  border: none;
-  border-radius: 999px;
-  padding: 1rem 1.5rem;
-  font-size: 16px;
-  font-weight: bold;
-  color: #cc0000;
-  cursor: pointer;
+export const CircleButton = styled.button<{ bg: string }>`
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: ${({ bg }) => bg};
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+`;
+
+export const ButtonLabel = styled.div`
+    font-size: 18px;
+    margin-top: 0.5rem;
+    color: #666;
 `;
 
 export const CheckboxRow = styled.div`
-  background-color: rgba(0, 0, 0, 0.05);
-  padding: 1rem;
-  border-radius: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f7f7f7;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    border: 1px solid #f7f7f7;
+    margin-bottom: 2rem;
+    font-size: 14px;
+    font-weight: 500;
+`;
+
+export const Label = styled.label`
+    font-size: 16px;
+    color: #393939;
+`;
+
+export const Checkbox = styled.input`
+    width: 24px;
+    height: 24px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: white;
+    border: 3px solid #c4c4c4;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-block;
+    position: relative;
 `;
 
 export const ActionButtons = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1rem;
-`;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
 
-export const ContinueButton = styled.button`
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 0.75rem;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  width: 100%;
+    & > button:first-child {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 1.5rem;
+        border-radius: 15px;
+        font-weight: bold;
+        cursor: pointer;
+    }
 `;
 
 export const UploadButton = styled.button`
-  background-color: #e6f0ff;
-  color: #007bff;
-  border: 1px solid #007bff;
-  padding: 0.75rem;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-
-  img {
-    width: 15px;
-    height: 15px;
-    margin-right: 5px;
-    margin-bottom: -2px;
-  }
+    background: none;
+    border: none;
+    padding: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
 `;
 
-export const Footer = styled.div`
-  text-align: center;
-  font-size: 0.85rem;
-  color: #3578DE;
-  text-decoration: underline;
+export const UploadText = styled.span`
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+`;
 
-  a {
-    color: #007bff;
-  }
+export const HiddenFileInput = styled.input`
+    display: none;
+`;
+
+export const FooterLink = styled.a`
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #3578de;
+    text-decoration: underline;
+    text-align: center;
+    display: block;
 `;

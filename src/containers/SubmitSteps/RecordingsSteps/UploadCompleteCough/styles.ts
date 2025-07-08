@@ -1,101 +1,132 @@
-// styles.ts
 import styled from 'styled-components';
 
-export const Container = styled.div`
-  font-family: Arial, sans-serif;
-  background-color: #f8f8f8;
-  min-height: 100vh;
-  padding: 2rem;
+export const PageWrapper = styled.div`
+  min-height: 94vh;
+  padding: 1.5rem 1rem;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  background-color: transparent;
+  font-family: 'Source Sans Pro', sans-serif;
+  overflow: auto;
 `;
 
-export const Content = styled.div`
-  padding: 2rem;
-  border-radius: 12px;
-  max-width: 500px;
+export const ContentWrapper = styled.div`
   width: 100%;
-  text-align: center;
-  position: relative;
+  max-width: 1000px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 `;
 
 export const Header = styled.div`
   position: relative;
-  text-align: center;
-  padding: 20px;
-  h3 {
-    color: #3578de;
-    margin-bottom: 0.5rem;
-  }
+  margin-top: 1.25rem;
+  margin-bottom: 1.75rem;
 `;
 
 export const BackButton = styled.button`
   position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 0;
+  left: 0;
   background: none;
   border: none;
   cursor: pointer;
 `;
 
-export const Filename = styled.div`
-  margin-bottom: 1rem;
-  font-weight: bold;
-`;
-
-export const PlayButton = styled.button`
-  width: 108px;
-  height: 108px;
-  border-radius: 50%;
-  border: none;
-  background-color: #e0f0ff;
+export const HeaderTitle = styled.div`
+  text-align: center;
+  font-weight: 600;
+  font-size: 18px;
   color: #3578de;
-  font-size: 46px;
-  cursor: pointer;
-  margin-bottom: 1rem;
 `;
 
-export const DurationText = styled.div`
+export const Title = styled.h2`
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  color: #333;
+`;
+
+export const Subtitle = styled.p`
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin-bottom: 0.8rem;
+  color: #393939;
+`;
+
+export const FileRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1rem;
+  margin-bottom: 0.4rem;
+`;
+
+export const Slider = styled.input`
+  width: 100%;
+  height: 6px;
+  appearance: none;
+  background-color: #dde9ff;
+  border-radius: 4px;
+  outline: none;
+  margin-bottom: 0.2rem;
+`;
+
+export const TimeRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.2rem;
+  color: #888;
   margin-bottom: 1.5rem;
 `;
 
-export const RetakeButton = styled.button`
-  margin-right: 1rem;
-  border: 2px solid #3578de;
-  padding: 0.5rem 1.25rem;
-  border-radius: 12px;
+export const PlayButton = styled.button`
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 50%;
+  background-color: #dde9ff;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   cursor: pointer;
+  margin: 0 auto 1.5rem;
+`;
+
+export const RetakeButton = styled.button`
+  width: 100%;
+  padding: 1.5rem;
+  border: 3.5px solid #3578de;
+  border-radius: 15px;
+  font-weight: bold;
   color: #3578de;
   background-color: transparent;
-  font-weight: bold;
+  margin-bottom: 2.5rem;
+  cursor: pointer;
   font-size: 16px;
-  width: 100%;
-  margin-bottom: 0.5rem;
 `;
 
 export const SubmitButton = styled.button`
-  margin-right: 1rem;
-  border: 2px solid #3578de;
-  background-color: #3578de;
-  color: #fff;
-  padding: 0.5rem 1.25rem;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 16px;
   width: 100%;
+  padding: 1.5rem;
+  background-color: #3578de;
+  border: none;
+  border-radius: 15px;
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+  font-size: 16px;
 `;
 
-export const ErrorLink = styled.div`
-  margin-top: 1rem;
-  font-size: 0.85rem;
-  color: #007bff;
-  text-decoration: underline;
+export const Footer = styled.div`
+  text-align: center;
+`;
 
-  a {
-    color: #007bff;
-    text-decoration: underline;
-  }
+export const ErrorLink = styled.a`
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #3578de;
+  text-decoration: underline;
 `;
