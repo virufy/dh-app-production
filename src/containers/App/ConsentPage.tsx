@@ -27,25 +27,27 @@ const ConsentScreen: React.FC = () => {
     {
       id: 'consentGiven',
       label:
-        'I have read and understood the Dubai Health Participant Information & Consent Form.',
+        'I have read and understood the Dubai Health Participant Information & Consent Form. I voluntarily agree to participate in this study.',
       state: consentGiven,
       setState: setConsentGiven,
     },
     {
       id: 'privacyAck',
       label:
-        'I acknowledge that my anonymized data will be shared with Virufy for analysis and that I have reviewed their Privacy Policy.',
+        'I acknowledge that my anonymized data will be shared with Virufy for analysis and have had the opportunity to review their Privacy Policy.',
       state: privacyAck,
       setState: setPrivacyAck,
     },
     {
       id: 'healthInfoConsent',
       label:
-        'I explicitly consent to the collection and processing of my health information and recordings (cough, breathing, speech).',
+        'I explicitly consent to the collection and processing of my health information and recordings (cough, breathing, speech) for the research purposes described.',
       state: healthInfoConsent,
       setState: setHealthInfoConsent,
     },
   ];
+
+  const Spacer = ({ height }: { height: string }) => <div style={{ height }} />;
 
   const handleNext = () => {
     const allChecked =
@@ -79,6 +81,7 @@ const ConsentScreen: React.FC = () => {
       <div
         style={{
           padding: '2rem',
+          borderRadius: '12px',
           maxWidth: '700px',
           width: '100%',
         }}
@@ -107,47 +110,92 @@ const ConsentScreen: React.FC = () => {
 
         {/* Intro Text */}
         <p style={{ marginBottom: '1.5rem' }}>
-          You are invited to participate in a research study conducted by Dubai Health in collaboration with our research partner, Virufy.
-          Before you decide, please carefully review the official study documents. Your participation is voluntary.
+          Before you decide, please carefully review the official study documents. Your participation is
+          voluntary. <br />
+          <Spacer height="1rem" />
+          <u>
+            You are invited to participate in a research study conducted by Dubai Health in collaboration with our
+            research partner, Virufy.
+          </u>
         </p>
 
         {/* Documents Section */}
-        <h4>1. Documents</h4>
-        <ul style={{ paddingLeft: '1.2rem', marginBottom: '1.5rem' }}>
-          <li style={{ marginBottom: '0.75rem' }}>
-            <strong>Dubai Health - Participant Information & Consent Form:</strong><br />
-            Explains the study's purpose, procedures, risks, and benefits. <br />
-            <a href="#" style={{ color: '#007bff' }}>Click to read the full document</a>
+        <ol style={{ paddingLeft: '1.2rem', marginBottom: '1.5rem' }}>
+          <li style={{ marginBottom: '1.5rem' }}>
+            <strong>Dubai Health - Participant Information & Consent Form</strong><br />
+            This document explains the study's purpose, procedures, risks, and benefits. <br />
+            <Spacer height="1rem" />
+            <a
+              href="https://docs.google.com/document/d/1c093C-aOUaxqWAUBodDc2QUtIHA8sfpA/view"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#007bff' }}
+            >
+              Tap to read the full document
+            </a>
+            <Spacer height="1rem" />
+            <div style={{ height: '500px', border: '1px solid #ccc', borderRadius: '6px' }}>
+              <iframe
+                src="https://docs.google.com/document/d/1c093C-aOUaxqWAUBodDc2QUtIHA8sfpA/preview"
+                width="100%"
+                height="100%"
+                allow="autoplay"
+                style={{ border: 'none' }}
+                title="Consent Form Preview"
+              ></iframe>
+            </div>
           </li>
+
           <li>
-            <strong>Virufy - Partner Privacy Policy:</strong><br />
-            Explains how Virufy handles your data. <br />
-            <a href="#" style={{ color: '#007bff' }}>Click to read the full document</a>
+            <strong>Virufy - Partner Privacy Policy</strong><br />
+            As our research partner, Virufy helps analyze the data. This document explains how they handle information. <br />
+            <Spacer height="1rem" />
+            <a
+              href="https://drive.google.com/file/d/1hnxvDJ5qHBnUi7cnkNdyD4PuWMz8Ntss/view"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#007bff' }}
+            >
+              Tap to read the full document
+            </a>
+            <Spacer height="1rem" />
+            <div style={{ height: '500px', border: '1px solid #ccc', borderRadius: '6px' }}>
+              <iframe
+                src="https://drive.google.com/file/d/1hnxvDJ5qHBnUi7cnkNdyD4PuWMz8Ntss/preview"
+                width="100%"
+                height="100%"
+                allow="autoplay"
+                style={{ border: 'none' }}
+                title="Privacy Policy Preview"
+              ></iframe>
+            </div>
           </li>
-        </ul>
+        </ol>
 
         {/* Checkboxes */}
-        <h4>2. Confirmation Checkboxes</h4>
+        <h4>Confirmation Checkboxes:</h4>
         <p style={{ fontSize: '0.95rem', marginBottom: '1rem' }}>
           By checking the boxes below, you confirm you have reviewed the information and agree to participate.
         </p>
 
         <div style={{ marginBottom: '1.5rem' }}>
           {checkboxes.map(({ id, label, state, setState }) => (
-            <label key={id} htmlFor={id} style={{ display: 'block', marginBottom: '0.75rem' }}>
+            <label key={id} htmlFor={id}
+              style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '0.75rem' }}>
               <input
                 type="checkbox"
                 id={id}
                 checked={state}
                 onChange={() => setState(!state)}
+                style={{ marginTop: '0.3rem' }}
               />{' '}
-              {label}
+              <span>{label}</span>
             </label>
           ))}
         </div>
 
         {/* Buttons */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem', width: '100%' }}>
           <button
             onClick={handleNext}
             style={{
