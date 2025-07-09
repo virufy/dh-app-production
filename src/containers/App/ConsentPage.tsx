@@ -49,6 +49,8 @@ const ConsentScreen: React.FC = () => {
     },
   ];
 
+  const Spacer = ({ height }: { height: string }) => <div style={{ height }} />;
+
   const handleNext = () => {
     const allChecked =
       ageConfirmed && consentGiven && privacyAck && healthInfoConsent;
@@ -81,6 +83,7 @@ const ConsentScreen: React.FC = () => {
       <div
         style={{
           padding: '2rem',
+          borderRadius: '12px',
           maxWidth: '700px',
           width: '100%',
         }}
@@ -120,12 +123,32 @@ const ConsentScreen: React.FC = () => {
             	{t('consent.dubaiHealthDesc')}<br />
             <a href="#" style={{ color: '#007bff' }}>{t('consent.readFull')}</a>
           </li>
+
           <li>
             <strong>{t('consent.virufyTitle')}</strong><br />
             {t('consent.virufyDesc')} <br />
-            <a href="#" style={{ color: '#007bff' }}>{t('consent.readFull')}</a>
+            <Spacer height="1rem" />
+            <a
+              href="https://drive.google.com/file/d/1hnxvDJ5qHBnUi7cnkNdyD4PuWMz8Ntss/view"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#007bff' }}
+            >
+              {t('consent.readFull')}
+            </a>
+            <Spacer height="1rem" />
+            <div style={{ height: '500px', border: '1px solid #ccc', borderRadius: '6px' }}>
+              <iframe
+                src="https://drive.google.com/file/d/1hnxvDJ5qHBnUi7cnkNdyD4PuWMz8Ntss/preview"
+                width="100%"
+                height="100%"
+                allow="autoplay"
+                style={{ border: 'none' }}
+                title="Privacy Policy Preview"
+              ></iframe>
+            </div>
           </li>
-        </ul>
+        </ol>
 
         {/* Checkboxes */}
         <h4>{t('consent.confirmationTitle')}</h4>
@@ -135,20 +158,22 @@ const ConsentScreen: React.FC = () => {
 
         <div style={{ marginBottom: '1.5rem' }}>
           {checkboxes.map(({ id, label, state, setState }) => (
-            <label key={id} htmlFor={id} style={{ display: 'block', marginBottom: '0.75rem' }}>
+            <label key={id} htmlFor={id}
+              style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '0.75rem' }}>
               <input
                 type="checkbox"
                 id={id}
                 checked={state}
                 onChange={() => setState(!state)}
+                style={{ marginTop: '0.3rem' }}
               />{' '}
-              {label}
+              <span>{label}</span>
             </label>
           ))}
         </div>
 
         {/* Buttons */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem', width: '100%' }}>
           <button
             onClick={handleNext}
             style={{
