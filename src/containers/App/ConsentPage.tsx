@@ -121,8 +121,20 @@ const ConsentScreen: React.FC = () => {
           <li style={{ marginBottom: '0.75rem' }}>
             <strong>{t('consent.dubaiHealthTitle')}</strong><br />
             	{t('consent.dubaiHealthDesc')}<br />
-            <a href="#" style={{ color: '#007bff' }}>{t('consent.readFull')}</a>
+            <a href="https://docs.google.com/document/d/1c093C-aOUaxqWAUBodDc2QUtIHA8sfpA/preview" style={{ color: '#007bff' }}>{t('consent.readFull')}</a>
+            <Spacer height="1rem" />
+            <div style={{ height: '500px', border: '1px solid #ccc', borderRadius: '6px' }}>
+              <iframe
+                src="https://docs.google.com/document/d/1c093C-aOUaxqWAUBodDc2QUtIHA8sfpA/preview"
+                width="100%"
+                height="100%"
+                allow="autoplay"
+                style={{ border: 'none' }}
+                title="Consent Form Preview"
+              ></iframe>
+            </div>  
           </li>
+        
 
           <li>
             <strong>{t('consent.virufyTitle')}</strong><br />
