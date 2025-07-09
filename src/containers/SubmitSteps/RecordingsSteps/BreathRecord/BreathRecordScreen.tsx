@@ -106,10 +106,11 @@ const BreathRecordScreen: React.FC = () => {
             1
           </div>
           <div style={{ flex: 1, fontSize: "20px" }}>
-            {t(
-              "recordBreath.instruction1",
-              "Find a quiet place at least 20 ft (6m) away from others. If you are feeling ill, please sit down."
-            )}
+            {t('recordBreath.instruction1_part1')} 
+            <strong>{t('recordBreath.instruction1_bold1')}</strong>
+            {t('recordBreath.instruction1_part2')}
+            <strong>{t('recordBreath.instruction1_bold2')}</strong>
+            {t('recordBreath.instruction1_part3')}
           </div>
         </div>
         <img src={keepDistance} alt={t("recordBreath.keepDistanceAlt", "Keep distance illustration")} style={{ width: "100%", marginBottom: "1.5rem" }} />
@@ -132,10 +133,9 @@ const BreathRecordScreen: React.FC = () => {
             2
           </div>
           <div style={{ flex: 1, fontSize: "20px" }}>
-            {t(
-              "recordBreath.instruction2",
-              "Hold the bottom of your device 1–2 ft (30–60 cm) away from your mouth."
-            )}
+            {t('recordBreath.instruction2_part1')}
+            <strong>{t('recordBreath.instruction2_bold')}</strong>
+            {t('recordBreath.instruction2_part2')}
           </div>
         </div>
         <img src={mouthBreathDistance} alt={t("recordBreath.mouthDistanceAlt", "Hold device at mouth distance illustration")} style={{ width: "100%", marginBottom: "1.5rem" }} />
@@ -158,10 +158,7 @@ const BreathRecordScreen: React.FC = () => {
             3
           </div>
           <div style={{ flex: 1, fontSize: "20px" }}>
-            {t(
-              "recordBreath.instruction3",
-              "Tap record. Breathe deeply and loudly into the phone 3 times. Then tap stop."
-            )}
+            {t('recordBreath.instruction3_part1')} <strong>{t('recordBreath.instruction3_bold1')}</strong>{t('recordBreath.instruction3_part2')}<strong>{t('recordBreath.instruction3_bold2')}</strong>{t('recordBreath.instruction3_part3')}
           </div>
         </div>
 
@@ -233,7 +230,7 @@ const BreathRecordScreen: React.FC = () => {
           <button
             onClick={handleContinue}
             style={{
-              backgroundColor: "#007bff",
+              backgroundColor: "#3578de",
               color: "white",
               border: "none",
               padding: "1.5rem",

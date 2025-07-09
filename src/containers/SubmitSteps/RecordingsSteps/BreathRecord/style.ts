@@ -124,7 +124,7 @@ export const ButtonGroup = styled.div`
 `;
 
 export const ContinueButton = styled.button`
-  background-color: #007bff;
+  background-color: #3578de;
   color: white;
   border: none;
   padding: 1.5rem;
@@ -145,9 +145,10 @@ export const UploadButton = styled.button`
 `;
 
 export const UploadLabel = styled.span`
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: #333;
+  margin-bottom: 4rem;
 `;
 
 export const Footer = styled.div`

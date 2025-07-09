@@ -4,4 +4,14 @@
     url('/src/assets/fonts/Abel-Regular.woff') format('woff');
     font-weight: 400;
     font-style: normal;
+
+}
+
+/* Doppio One */
+@font-face {
+  font-family: 'Doppio One';
+  src: url('/src/assets/fonts/DoppioOne-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+
 }

@@ -20,7 +20,7 @@
   },
     "consent": {
         "title": "Research Participation Consent",
-        "description": "You are invited to participate in a research study conducted by Dubai Health in collaboration with our research partner, Virufy.Before you decide, please carefully review the official study documents. Your participation is voluntary.",
+        "description": "You are invited to participate in a research study conducted by Dubai Health in collaboration with our research partner, Virufy.\n\n Before you decide, please carefully review the official study documents. Your participation is voluntary.",
         "documentsTitle": "1. Documents",
         "dubaiHealthTitle": "Dubai Health - Participant Information & Consent Form:",
         "dubaiHealthDesc": "Explains the study's purpose, procedures, risks, and benefits.",
@@ -39,46 +39,90 @@
         "report": "Report an error"
         
     },
-  "recordSpeech": {
-    "title": "Record Your Speech",
-    "instructionsTitle": "Instructions",
-    "instruction1": "Find a quiet place at least 6 meters away from others.",
-    "instruction2": "Hold the bottom of your device 1–2 feet (30–60 cm) from your mouth.",
-    "instruction3": "Press the record button. Keep saying \"aaaah\" for at least 5 seconds. Then press stop.",
-    "recordButton": "Record",
-    "stopButton": "Stop",
-    "continueButton": "Continue",
-    "uploadFile": "Upload your own file",
-    "reportIssue": "Something wrong? Report an issue",
-    "goBackAria": "Go back",
-    "goBackAlt": "Back",
-    "keepDistanceAlt": "Keep distance illustration",
-    "mouthDistanceAlt": "Hold device at mouth distance illustration",
-    "defaultFilename": "Speech Recording"
-  },
-  "recordBreath": {
-    "title": "Record your breath",
-    "instructionsTitle": "Instructions",
-    "instruction1": "Find a quiet place at least 20 ft (6m) away from others. If you are feeling ill, please sit down.",
-    "instruction2": "Hold the bottom of your device 1-2 ft (30-60 cm) away from your mouth.",
-    "instruction3": "Tap record. Breathe deeply and loudly into the phone 3 times. Then tap stop.",
-    "recordButton": "Record",
-    "stopButton": "Stop",
-    "continueButton": "Continue",
-    "uploadFile": "Upload your own file",
-    "reportIssue": "Something wrong? Report an error",
-    "goBackAria": "Go back",
-    "goBackAlt": "Back",
-    "keepDistanceAlt": "Keep distance illustration",
-    "mouthDistanceAlt": "Hold device at mouth distance illustration",
-    "defaultFilename": "Breath Recording"
-  },
+    "recordSpeech": {
+      "title": "Record Your Speech",
+      "instructionsTitle": "Instructions",
+
+      "instruction1_part1": "Find a ",
+      "instruction1_bold1": "quiet place ",
+      "instruction1_part2": "at least ",
+      "instruction1_bold2": "20 ft (6m) ",
+      "instruction1_part3": "away from others. If you are feeling ill, please sit down.",
+
+      "instruction2_part1": "Hold the bottom of your device ",
+      "instruction2_bold": "1–2 ft (30–60 cm)",
+      "instruction2_part2": " away from your mouth.",
+
+      "instruction3_part1": "Press the record button. Keep saying ",
+      "instruction3_bold1": "\"aaaah\"",
+      "instruction3_part2": " for at least",
+      "instruction3_bold2": " 5 seconds.",
+      "instruction3_part3": " Then press stop.",
+
+      "recordButton": "Record",
+      "stopButton": "Stop",
+      "continueButton": "Continue",
+      "uploadFile": "Upload your own file",
+      "reportIssue": "Something wrong? Report an issue",
+      "goBackAria": "Go back",
+      "goBackAlt": "Back",
+      "keepDistanceAlt": "Keep distance illustration",
+      "mouthDistanceAlt": "Hold device at mouth distance illustration",
+      "defaultFilename": "Speech Recording"
+    },
+
+    "recordBreath": {
+      "title": "Record your breath",
+      "instructionsTitle": "Instructions",
+
+      "instruction1_part1": "Find a ",
+      "instruction1_bold1": "quiet place ",
+      "instruction1_part2": "at least ",
+      "instruction1_bold2": "20 ft (6m) ",
+      "instruction1_part3": "away from others. If you are feeling ill, please sit down.",    
+
+      "instruction2_part1": "Hold the bottom of your device ",
+      "instruction2_bold": "1–2 ft (30–60 cm)",
+      "instruction2_part2": " away from your mouth.",
+
+      "instruction3_part1": "Tap record.",
+      "instruction3_bold1": " Breathe deeply and loudly",
+      "instruction3_part2": " into the phone",
+      "instruction3_bold2": " 3 times",
+      "instruction3_part3": ". Then tap stop.",
+
+      "recordButton": "Record",
+      "stopButton": "Stop",
+      "continueButton": "Continue",
+      "uploadFile": "Upload your own file",
+      "reportIssue": "Something wrong? Report an error",
+      "goBackAria": "Go back",
+      "goBackAlt": "Back",
+      "keepDistanceAlt": "Keep distance illustration",
+      "mouthDistanceAlt": "Hold device at mouth distance illustration",
+      "defaultFilename": "Breath Recording"
+    },
+
   "recordCough": {
     "title": "Record your cough",
     "instructionsTitle": "Instructions",
-    "instruction1": "Find a quiet place at least 20 ft (6m) away from others. If you are feeling ill, please sit down.",
-    "instruction2": "Hold the bottom of your device 1-2 ft (30-60 cm) away from your mouth. Try not to cough too forcefully.",
-    "instruction3": "Tap record, cough 3 times with a deep breath between each cough. Then tap stop.",
+
+    "instruction1_part1": "Find a ",
+    "instruction1_bold1": "quiet place ",
+    "instruction1_part2": "at least ",
+    "instruction1_bold2": "20 ft (6m) ",
+    "instruction1_part3": "away from others. If you are feeling ill, please sit down.",
+
+    "instruction2_part1": "Hold the bottom of your device ",
+    "instruction2_bold": "1-2 ft (30-60 cm)",
+    "instruction2_part2": " away from your mouth. Try not to cough too forcefully.",
+
+    "instruction3_part1": "Tap record,",
+    "instruction3_bold1": " cough 3 times",
+    "instruction3_part2": " with a",
+    "instruction3_bold2": " deep breath",
+    "instruction3_part3": " between each cough. Then tap stop.",
+    
     "recordButton": "Record",
     "stopButton": "Stop",
     "checkboxLabel": "Were the coughs involuntary?",

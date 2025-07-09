@@ -9,8 +9,8 @@ export const pageContainer: CSSProperties = {
 
 export const title: CSSProperties = {
   fontSize: '22px',
-  fontWeight: 700,  // <-- changed to bold
-  fontFamily: "'Abel', sans-serif",
+  fontWeight: 500,  // <-- changed to bold
+  fontFamily: "'Doppio One', sans-serif",
   color: '#3578DE',
   marginBottom: '30px',
   lineHeight: 1.4,
@@ -71,5 +71,6 @@ export const buttonCircle: CSSProperties = {
 
 export const arrowIcon: CSSProperties = {
   color: '#3578DE',
-  fontSize: '30px',
+  fontSize: '40px',
+  fontWeight: '200',
 };

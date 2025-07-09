@@ -14,10 +14,10 @@ const ConsentScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const [ageConfirmed, setAgeConfirmed] = useState<boolean>(false);
-  const [consentGiven, setConsentGiven] = useState<boolean>(false);
-  const [privacyAck, setPrivacyAck] = useState<boolean>(false);
-  const [healthInfoConsent, setHealthInfoConsent] = useState<boolean>(false);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [consentGiven, setConsentGiven] = useState(false);
+  const [privacyAck, setPrivacyAck] = useState(false);
+  const [healthInfoConsent, setHealthInfoConsent] = useState(false);
 
   const checkboxes: CheckboxItem[] = [
     {
@@ -28,28 +28,36 @@ const ConsentScreen: React.FC = () => {
     },
     {
       id: 'consentGiven',
-      label:
-        t('consent.checkbox2'),
+      label: t('consent.checkbox2'),
       state: consentGiven,
       setState: setConsentGiven,
     },
     {
       id: 'privacyAck',
-      label:
-        t('consent.checkbox3'),
+      label: t('consent.checkbox3'),
       state: privacyAck,
       setState: setPrivacyAck,
     },
     {
       id: 'healthInfoConsent',
-      label:
-        t('consent.checkbox4'),
+      label: t('consent.checkbox4'),
       state: healthInfoConsent,
       setState: setHealthInfoConsent,
     },
   ];
 
   const Spacer = ({ height }: { height: string }) => <div style={{ height }} />;
+
+  const iframeStyle: React.CSSProperties = {
+    height: '500px',
+    border: '1px solid #ccc',
+    borderRadius: '6px',
+    overflow: 'hidden',
+  };
+
+  if (window.innerWidth < 768) {
+    iframeStyle.height = '250px';
+  }
 
   const handleNext = () => {
     const allChecked =
@@ -58,12 +66,12 @@ const ConsentScreen: React.FC = () => {
     if (allChecked) {
       navigate('/record-coughs');
     } else {
-      alert('Please check all boxes to continue.');
+      alert(t('consent.check_all_alert'));
     }
   };
 
   const handleSignedPaperNext = () => {
-    alert('Please make sure you have signed the paper consent form manually.');
+    alert(t('consent.signed_paper_alert'));
   };
 
   const handleBack = () => {
@@ -78,62 +86,72 @@ const ConsentScreen: React.FC = () => {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'flex-start',
-        flexDirection: 'column'
       }}
     >
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-        gap: '12px',
-      }}
-    >
-      <button
-        onClick={handleBack}
+      <div
         style={{
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
+          padding: '2rem',
+          borderRadius: '12px',
+          maxWidth: '700px',
+          width: '100%',
         }}
-        aria-label="Go back"
       >
-        <img src={BackIcon} alt="Back" style={{ width: '25px', height: '35px' }} />
-      </button>
-      <h2 style={{ color: '#007bff', margin: 0, textAlign: 'center' }}>
-        {t('consent.title')}
-      </h2>
-    </div>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            padding: '20px',
+            textAlign: 'center',
+            flexWrap: 'wrap',
+          }}
+        >
+          <button
+            onClick={handleBack}
+            style={{
+              position: 'absolute',
+              left: '0px',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+            aria-label={t('consent.back_aria')}
+          >
+            <img src={BackIcon} alt={t('consent.back_alt')} style={{ width: '25px', height: '35px' }} />
+          </button>
+          <h2 style={{ color: '#007bff', margin: 0, width: '100%', textAlign: 'center' }}>{t('consent.title')}</h2>
+        </div>
 
-
-        {/* Intro Text */}
-        <p style={{ marginBottom: '1.5rem' }}>
-          {t('consent.description')}
+        <p style={{ marginBottom: '1.5rem', whiteSpace: 'pre-line' }}>
+          <u>{t('consent.description')}</u>
         </p>
 
-        {/* Documents Section */}
-        <h4>{t('consent.documentsTitle')}</h4>
-        <ul style={{ paddingLeft: '1.2rem', marginBottom: '1.5rem' }}>
-          <li style={{ marginBottom: '0.75rem' }}>
+        <ol style={{ paddingLeft: '1.2rem', marginBottom: '1.5rem' }}>
+          <li style={{ marginBottom: '1.5rem' }}>
             <strong>{t('consent.dubaiHealthTitle')}</strong><br />
-            	{t('consent.dubaiHealthDesc')}<br />
-            <a href="https://docs.google.com/document/d/1c093C-aOUaxqWAUBodDc2QUtIHA8sfpA/preview" style={{ color: '#007bff' }}>{t('consent.readFull')}</a>
+            {t('consent.dubaiHealthDesc')} <br />
             <Spacer height="1rem" />
-            <div style={{ height: '500px', border: '1px solid #ccc', borderRadius: '6px' }}>
+            <a
+              href="https://docs.google.com/document/d/1c093C-aOUaxqWAUBodDc2QUtIHA8sfpA/view"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#007bff' }}
+            >
+              {t('consent.readFull')}
+            </a>
+            <Spacer height="1rem" />
+            <div style={iframeStyle}>
               <iframe
                 src="https://docs.google.com/document/d/1c093C-aOUaxqWAUBodDc2QUtIHA8sfpA/preview"
                 width="100%"
                 height="100%"
                 allow="autoplay"
                 style={{ border: 'none' }}
-                title="Consent Form Preview"
+                title={t('consent.document_preview_title')}
               ></iframe>
-            </div>  
+            </div>
           </li>
-        
 
           <li>
             <strong>{t('consent.virufyTitle')}</strong><br />
@@ -148,29 +166,29 @@ const ConsentScreen: React.FC = () => {
               {t('consent.readFull')}
             </a>
             <Spacer height="1rem" />
-            <div style={{ height: '500px', border: '1px solid #ccc', borderRadius: '6px' }}>
+            <div style={iframeStyle}>
               <iframe
                 src="https://drive.google.com/file/d/1hnxvDJ5qHBnUi7cnkNdyD4PuWMz8Ntss/preview"
                 width="100%"
                 height="100%"
                 allow="autoplay"
                 style={{ border: 'none' }}
-                title="Privacy Policy Preview"
+                title={t('consent.privacy_policy_preview_title')}
               ></iframe>
             </div>
           </li>
-        </ul>
+        </ol>
 
-        {/* Checkboxes */}
         <h4>{t('consent.confirmationTitle')}</h4>
-        <p style={{ fontSize: '0.95rem', marginBottom: '1rem' }}>
-         {t('consent.confirmationDesc')}
-        </p>
+        <p style={{ fontSize: '0.95rem', marginBottom: '1rem' }}>{t('consent.confirmationDesc')}</p>
 
         <div style={{ marginBottom: '1.5rem' }}>
           {checkboxes.map(({ id, label, state, setState }) => (
-            <label key={id} htmlFor={id}
-              style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '0.75rem' }}>
+            <label
+              key={id}
+              htmlFor={id}
+              style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '0.75rem' }}
+            >
               <input
                 type="checkbox"
                 id={id}
@@ -183,12 +201,11 @@ const ConsentScreen: React.FC = () => {
           ))}
         </div>
 
-        {/* Buttons */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem', width: '100%' }}>
           <button
             onClick={handleNext}
             style={{
-              backgroundColor: '#007bff',
+              backgroundColor: '#3578de',
               color: 'white',
               border: 'none',
               padding: '0.75rem 1.5rem',
@@ -218,7 +235,6 @@ const ConsentScreen: React.FC = () => {
           </button>
         </div>
 
-        {/* Footer */}
         <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#999' }}>
           {t('consent.footerIssue')}{' '}
           <a href="#" style={{ color: '#007bff' }}>
@@ -226,7 +242,7 @@ const ConsentScreen: React.FC = () => {
           </a>
         </div>
       </div>
-    
+    </div>
   );
 };
 

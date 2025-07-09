@@ -32,10 +32,11 @@ export const Logo = styled.img`
 
 export const Title = styled.h2`
   font-family: 'Open Sans', Arial, sans-serif;
-  font-size: 3rem;
-  font-weight: bold;
+  font-size: 2.5rem;
+  font-weight: 900;
   color: #393939;
   margin-bottom: 4rem;
+  text-shadow: 0 0 1px currentColor; /* Adds subtle thickness */
   line-height: 1.4;
 `;
 

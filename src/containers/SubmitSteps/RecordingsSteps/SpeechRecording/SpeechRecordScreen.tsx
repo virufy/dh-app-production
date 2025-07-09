@@ -49,7 +49,7 @@ const SpeechRecordScreen: React.FC = () => {
                 minHeight: "100vh",
                 padding: "1.5rem 1rem",
                 fontFamily: 'Source Sans Pro, sans-serif',
-                fontSize: '14px',
+                fontSize: '13px',
                 display: "flex",
                 justifyContent: "center",
                 backgroundColor: "transparent",
@@ -90,24 +90,44 @@ const SpeechRecordScreen: React.FC = () => {
                 </h3>
 
                 {/* Step 1 */}
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem", marginBottom: "1rem" }}>
-                    <div style={{
-                        minWidth: "28px",
-                        height: "28px",
-                        backgroundColor: "#DDE9FF",
-                        borderRadius: "50%",
-                        textAlign: "center",
-                        lineHeight: "28px",
-                        fontWeight: "bold",
-                        color: "#3578de",
-                        fontSize: "20px"
-                    }}>1
-                    </div>
-                    <div style={{ flex: 1, fontSize: "20px" }}>
-                        {t('recordSpeech.instruction1')}
-                    </div>
+                <div
+                style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "1rem",
+                    marginBottom: "1rem",
+                }}
+                >
+                <div
+                    style={{
+                    minWidth: "28px",
+                    height: "28px",
+                    backgroundColor: "#DDE9FF",
+                    borderRadius: "50%",
+                    textAlign: "center",
+                    lineHeight: "28px",
+                    fontWeight: "bold",
+                    color: "#3578de",
+                    fontSize: "20px",
+                    }}
+                >
+                    1
                 </div>
-                <img src={keepDistance} alt={t('recordSpeech.keepDistanceAlt')} style={{ width: "100%", marginBottom: "1.5rem" }} />
+                <div style={{ flex: 1, fontSize: "20px" }}>
+                    {t('recordSpeech.instruction1_part1')}
+                    <strong>{t('recordSpeech.instruction1_bold1')}</strong>
+                    {t('recordSpeech.instruction1_part2')}
+                    <strong>{t('recordSpeech.instruction1_bold2')}</strong>
+                    {t('recordSpeech.instruction1_part3')}
+                </div>
+                </div>
+
+                <img
+                src={keepDistance}
+                alt={t('recordSpeech.keepDistanceAlt')}
+                style={{ width: "100%", marginBottom: "1.5rem" }}
+                />
+
 
                 {/* Step 2 */}
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem", marginBottom: "1rem" }}>
@@ -124,7 +144,9 @@ const SpeechRecordScreen: React.FC = () => {
                     }}>2
                     </div>
                     <div style={{ flex: 1, fontSize: "20px" }}>
-                        {t('recordSpeech.instruction2')}
+                        {t('recordSpeech.instruction2_part1')}
+                        <strong>{t('recordSpeech.instruction2_bold')}</strong>
+                        {t('recordSpeech.instruction2_part2')}
                     </div>
                 </div>
                 <img src={mouthSpeechDistance} alt={t('recordSpeech.mouthDistanceAlt')} style={{ width: "100%", marginBottom: "1.5rem" }} />
@@ -144,7 +166,11 @@ const SpeechRecordScreen: React.FC = () => {
                     }}>3
                     </div>
                     <div style={{ flex: 1, fontSize: "20px" }}>
-                        {t('recordSpeech.instruction3')}
+                        {t('recordSpeech.instruction3_part1')}
+                        <strong>{t('recordSpeech.instruction3_bold1')}</strong>
+                        {t('recordSpeech.instruction3_part2')}
+                        <strong>{t('recordSpeech.instruction3_bold2')}</strong>
+                        {t('recordSpeech.instruction3_part3')}
                     </div>
                 </div>
 
@@ -217,7 +243,7 @@ const SpeechRecordScreen: React.FC = () => {
                     <button
                         onClick={handleContinue}
                         style={{
-                            backgroundColor: "#007bff",
+                            backgroundColor: "#3578de",
                             color: "white",
                             border: "none",
                             padding: "1.5rem",
@@ -238,12 +264,13 @@ const SpeechRecordScreen: React.FC = () => {
                             flexDirection: "row",
                             alignItems: "center",
                             justifyContent: "center",
-                            cursor: "pointer"
+                            cursor: "pointer",
+                
                         }}
                     >
                         <img src={UploadIcon} alt={t('recordSpeech.uploadFile')} width={22} height={22}
                              style={{ marginBottom: "0.3rem", marginRight: "0.5rem" }} />
-                        <span style={{ fontSize: "13px", fontWeight: 600, color: "#333" }}>
+                        <span style={{ fontSize: "12px", fontWeight: 600, color: "#333" }}>
                             {t('recordSpeech.uploadFile')}
                         </span>
                     </button>

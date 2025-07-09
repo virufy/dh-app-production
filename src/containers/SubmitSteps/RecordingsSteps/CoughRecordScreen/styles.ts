@@ -102,10 +102,11 @@ export const CircleButton = styled.button<{ bg: string }>`
 `;
 
 export const ButtonLabel = styled.div`
-    font-size: 18px;
+    font-size: 1rem;
     margin-top: 0.5rem;
     color: #666;
 `;
+
 
 export const CheckboxRow = styled.div`
     display: flex;
@@ -116,26 +117,42 @@ export const CheckboxRow = styled.div`
     border-radius: 12px;
     border: 1px solid #f7f7f7;
     margin-bottom: 2rem;
-    font-size: 14px;
+    font-size: 1rem;
     font-weight: 500;
+`;
+export const Checkbox = styled.input.attrs({ type: 'checkbox' })`
+  width: 24px;
+  height: 24px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: white;
+  border: 3px solid #c4c4c4;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+
+  &:checked {
+    background-color: #007bff;
+    border-color: #007bff;
+  }
+
+  &:checked::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 1px;
+    width: 6px;
+    height: 12px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
 `;
 
 export const Label = styled.label`
-    font-size: 16px;
+    font-size: 1rem;
     color: #393939;
-`;
-
-export const Checkbox = styled.input`
-    width: 24px;
-    height: 24px;
-    appearance: none;
-    -webkit-appearance: none;
-    background-color: white;
-    border: 3px solid #c4c4c4;
-    border-radius: 6px;
-    cursor: pointer;
-    display: inline-block;
-    position: relative;
 `;
 
 export const ActionButtons = styled.div`
@@ -145,7 +162,7 @@ export const ActionButtons = styled.div`
     margin-bottom: 1rem;
 
     & > button:first-child {
-        background-color: #007bff;
+        background-color: #3578de;
         color: white;
         border: none;
         padding: 1.5rem;
@@ -169,7 +186,8 @@ export const UploadButton = styled.button`
 export const UploadText = styled.span`
     font-size: 13px;
     font-weight: 600;
-    color: #333;
+    color: #333
+    margin-bottom: 4rem;
 `;
 
 export const HiddenFileInput = styled.input`
@@ -177,7 +195,7 @@ export const HiddenFileInput = styled.input`
 `;
 
 export const FooterLink = styled.a`
-    font-size: 0.8rem;
+    font-size: 1rem;
     font-weight: bold;
     color: #3578de;
     text-decoration: underline;
