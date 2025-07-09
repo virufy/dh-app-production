@@ -43,7 +43,7 @@ const ConsentScreen: React.FC = () => {
     {
       id: 'healthInfoConsent',
       label:
-        t('consent.checkbox2'),
+        t('consent.checkbox4'),
       state: healthInfoConsent,
       setState: setHealthInfoConsent,
     },
@@ -148,7 +148,7 @@ const ConsentScreen: React.FC = () => {
               ></iframe>
             </div>
           </li>
-        </ol>
+        </ul>
 
         {/* Checkboxes */}
         <h4>{t('consent.confirmationTitle')}</h4>
