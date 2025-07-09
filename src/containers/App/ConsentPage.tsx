@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BackIcon from '../../assets/images/back-icon.png';
+import { useTranslation } from 'react-i18next';
 
 type CheckboxItem = {
   id: string;
@@ -10,6 +11,7 @@ type CheckboxItem = {
 };
 
 const ConsentScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [ageConfirmed, setAgeConfirmed] = useState<boolean>(false);
@@ -20,28 +22,28 @@ const ConsentScreen: React.FC = () => {
   const checkboxes: CheckboxItem[] = [
     {
       id: 'ageConfirmed',
-      label: 'I certify that I am 18 years of age or older.',
+      label: t('consent.checkbox1'),
       state: ageConfirmed,
       setState: setAgeConfirmed,
     },
     {
       id: 'consentGiven',
       label:
-        'I have read and understood the Dubai Health Participant Information & Consent Form.',
+        t('consent.checkbox2'),
       state: consentGiven,
       setState: setConsentGiven,
     },
     {
       id: 'privacyAck',
       label:
-        'I acknowledge that my anonymized data will be shared with Virufy for analysis and that I have reviewed their Privacy Policy.',
+        t('consent.checkbox3'),
       state: privacyAck,
       setState: setPrivacyAck,
     },
     {
       id: 'healthInfoConsent',
       label:
-        'I explicitly consent to the collection and processing of my health information and recordings (cough, breathing, speech).',
+        t('consent.checkbox2'),
       state: healthInfoConsent,
       setState: setHealthInfoConsent,
     },
@@ -101,35 +103,34 @@ const ConsentScreen: React.FC = () => {
             <img src={BackIcon} alt="Back" style={{ width: '25px', height: '35px' }} />
           </button>
           <h2 style={{ color: '#007bff', margin: 0 }}>
-            Research Participation Consent
+              {t('consent.title')}
           </h2>
         </div>
 
         {/* Intro Text */}
         <p style={{ marginBottom: '1.5rem' }}>
-          You are invited to participate in a research study conducted by Dubai Health in collaboration with our research partner, Virufy.
-          Before you decide, please carefully review the official study documents. Your participation is voluntary.
+          {t('consent.description')}
         </p>
 
         {/* Documents Section */}
-        <h4>1. Documents</h4>
+        <h4>{t('consent.documentsTitle')}</h4>
         <ul style={{ paddingLeft: '1.2rem', marginBottom: '1.5rem' }}>
           <li style={{ marginBottom: '0.75rem' }}>
-            <strong>Dubai Health - Participant Information & Consent Form:</strong><br />
-            Explains the study's purpose, procedures, risks, and benefits. <br />
-            <a href="#" style={{ color: '#007bff' }}>Click to read the full document</a>
+            <strong>{t('consent.dubaiHealthTitle')}</strong><br />
+            	{t('consent.dubaiHealthDesc')}<br />
+            <a href="#" style={{ color: '#007bff' }}>{t('consent.readFull')}</a>
           </li>
           <li>
-            <strong>Virufy - Partner Privacy Policy:</strong><br />
-            Explains how Virufy handles your data. <br />
-            <a href="#" style={{ color: '#007bff' }}>Click to read the full document</a>
+            <strong>{t('consent.virufyTitle')}</strong><br />
+            {t('consent.virufyDesc')} <br />
+            <a href="#" style={{ color: '#007bff' }}>{t('consent.readFull')}</a>
           </li>
         </ul>
 
         {/* Checkboxes */}
-        <h4>2. Confirmation Checkboxes</h4>
+        <h4>{t('consent.confirmationTitle')}</h4>
         <p style={{ fontSize: '0.95rem', marginBottom: '1rem' }}>
-          By checking the boxes below, you confirm you have reviewed the information and agree to participate.
+         {t('consent.confirmationDesc')}
         </p>
 
         <div style={{ marginBottom: '1.5rem' }}>
@@ -161,7 +162,7 @@ const ConsentScreen: React.FC = () => {
               cursor: 'pointer',
             }}
           >
-            Next
+            {t('consent.next')}
           </button>
 
           <button
@@ -177,15 +178,15 @@ const ConsentScreen: React.FC = () => {
               cursor: 'pointer',
             }}
           >
-            Next (Signed Paper Consent Form)
+            {t('consent.nextPaper')}
           </button>
         </div>
 
         {/* Footer */}
         <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#999' }}>
-          Something wrong?{' '}
+          {t('consent.footerIssue')}{' '}
           <a href="#" style={{ color: '#007bff' }}>
-            Report an error
+            {t('consent.report')}
           </a>
         </div>
       </div>

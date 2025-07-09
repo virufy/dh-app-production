@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import BreathRecordScreen from '../SubmitSteps/RecordingsSteps/BreathRecord';
 import ConfirmationScreen from '../ConfirmationScreen';
@@ -9,10 +9,24 @@ import UploadCompleteCough from '../SubmitSteps/RecordingsSteps/UploadCompleteCo
 
 import ConsentScreen from './ConsentPage';
 import Clinical_Login from './Clinical_Login';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
+
+const LanguageSwitcher = () => {
+  const { i18n } = useTranslation();
+
+  return (
+    <div style={{ marginBottom: '1rem' }}>
+      <button onClick={() => i18n.changeLanguage('en')}>English</button>
+      <button onClick={() => i18n.changeLanguage('ar')} style={{ marginLeft: '1rem' }}>العربية</button>
+    </div>
+  );
+};
 
 // Homepage with navigate
 const HomePage: React.FC = () => {
     const navigate = useNavigate();
+
 
     const goToConfirmation = () => {
         navigate('/confirmation');
@@ -24,7 +38,9 @@ const HomePage: React.FC = () => {
             <p style={{ fontSize: '1.2rem', marginTop: '1rem' }}>
                 This is the structure of the team — let’s fit in, collaborate, and build something great on top of it! 🚀
             </p>
+            <div style={{ margin: '1rem' }}>
 
+      </div>
             <button
                 onClick={goToConfirmation}
                 style={{
@@ -41,13 +57,20 @@ const HomePage: React.FC = () => {
             >
                 Next
             </button>
-        </div>
+            </div>
+
     );
 };
 
 // Main App with routes 
 const App: React.FC = () => {
+      const { i18n } = useTranslation();
+    useEffect(() => {
+        document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
+  }, [i18n.language]);
     return (
+      <>
+      <LanguageSwitcher />
         <Routes>
             <Route path="/" element={<Clinical_Login />} />
             <Route path="/consent" element={<ConsentScreen />} />
@@ -59,7 +82,18 @@ const App: React.FC = () => {
             <Route path="/upload-complete" element={<UploadCompleteCough />} />
 
         </Routes>
+      </>
     );
 };
+
+//export default App;
+/*
+const App: React.FC = () => {
+  const { i18n } = useTranslation();
+
+  useEffect(() => {
+    document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
+  }, [i18n.language]
+  */
 
 export default App;

@@ -17,5 +17,26 @@
     "titleLine2": "submitting!",
     "button": "Return to main menu",
     "report": "Something wrong? Report an error"
-  }
+  },
+    "consent": {
+        "title": "Research Participation Consent",
+        "description": "You are invited to participate in a research study conducted by Dubai Health in collaboration with our research partner, Virufy.Before you decide, please carefully review the official study documents. Your participation is voluntary.",
+        "documentsTitle": "1. Documents",
+        "dubaiHealthTitle": "Dubai Health - Participant Information & Consent Form:",
+        "dubaiHealthDesc": "Explains the study's purpose, procedures, risks, and benefits.",
+        "virufyTitle": "Virufy - Partner Privacy Policy:",
+        "virufyDesc": "Explains how Virufy handles your data.",
+        "readFull": "Click to read the full document",
+        "confirmationTitle": "2. Confirmation Checkboxes",
+        "confirmationDesc": "By checking the boxes below, you confirm you have reviewed the information and agree to participate.",
+        "checkbox1": "I certify that I am 18 years of age or older.",
+        "checkbox2": "I have read and understood the Dubai Health Participant Information & Consent Form.",
+        "checkbox3": "I acknowledge that my anonymized data will be shared with Virufy for analysis and that I have reviewed their Privacy Policy.",
+        "checkbox4": "I explicitly consent to the collection and processing of my health information and recordings (cough, breathing, speech).",
+        "next": "Next",
+        "nextPaper": "Next (Signed Paper Consent Form)",
+        "footerIssue": "Something wrong?",
+        "report": "Report an error"
+        
+    }
 }

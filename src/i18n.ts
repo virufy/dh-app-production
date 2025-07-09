@@ -17,5 +17,36 @@ i18n
       escapeValue: false,
     },
   });
+  i18n.on('languageChanged', (lng) => {
+  document.documentElement.dir = lng === 'ar' ? 'rtl' : 'ltr';
+});
 
 export default i18n;
+    /*
+    resources: {
+      ar: {
+        translation: ar
+      }
+    },
+    lng: 'ar', // default language
+    fallbackLng: 'ar',
+    interpolation: {
+      escapeValue: false
+    }
+
+    resources: {
+      ar: { translation: ar },
+      en: { translation: en },
+    },
+    lng: 'en', // default language
+  //  fallbackLng: 'en',
+//    interpolation: { escapeValue: false },
+//  });
+
+// Handle direction change
+
+
+
+
+
+*/
