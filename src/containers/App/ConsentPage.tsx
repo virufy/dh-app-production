@@ -78,37 +78,36 @@ const ConsentScreen: React.FC = () => {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'flex-start',
+        flexDirection: 'column'
       }}
     >
-      <div
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+        gap: '12px',
+      }}
+    >
+      <button
+        onClick={handleBack}
         style={{
-          padding: '2rem',
-          borderRadius: '12px',
-          maxWidth: '700px',
-          width: '100%',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
         }}
+        aria-label="Go back"
       >
-        {/* Header */}
-        <div style={{ position: 'relative', textAlign: 'center', padding: '20px' }}>
-          <button
-            onClick={handleBack}
-            style={{
-              position: 'absolute',
-              left: '10px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-            }}
-            aria-label="Go back"
-          >
-            <img src={BackIcon} alt="Back" style={{ width: '25px', height: '35px' }} />
-          </button>
-          <h2 style={{ color: '#007bff', margin: 0 }}>
-              {t('consent.title')}
-          </h2>
-        </div>
+        <img src={BackIcon} alt="Back" style={{ width: '25px', height: '35px' }} />
+      </button>
+      <h2 style={{ color: '#007bff', margin: 0, textAlign: 'center' }}>
+        {t('consent.title')}
+      </h2>
+    </div>
+
 
         {/* Intro Text */}
         <p style={{ marginBottom: '1.5rem' }}>
@@ -227,7 +226,7 @@ const ConsentScreen: React.FC = () => {
           </a>
         </div>
       </div>
-    </div>
+    
   );
 };
 
