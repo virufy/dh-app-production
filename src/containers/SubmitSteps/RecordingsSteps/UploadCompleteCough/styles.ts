@@ -126,7 +126,7 @@ export const Footer = styled.div`
 `;
 
 export const ErrorLink = styled.a`
-  font-size: 0.8rem;
+  font-size: 1rem;
   font-weight: bold;
   color: #3578de;
   text-decoration: underline;

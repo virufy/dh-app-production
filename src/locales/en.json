@@ -4,6 +4,9 @@
     "language_label": "Language",
     "patient_id_label": "Patient ID",
     "patient_id_placeholder": "Enter Patient ID",
+    "error": {
+      "patient_id_required": "Patient ID is required"
+    },
     "hospital_label": "Hospital Name",
     "hospital_options": {
       "barsha": "Al Barsha Health Centre",
@@ -22,12 +25,12 @@
         "title": "Research Participation Consent",
         "description": "You are invited to participate in a research study conducted by Dubai Health in collaboration with our research partner, Virufy.\n\n Before you decide, please carefully review the official study documents. Your participation is voluntary.",
     
-        "dubaiHealthTitle": "Dubai Health - Participant Information & Consent Form:",
+        "dubaiHealthTitle": "Dubai Health\nParticipant Information & Consent Form",
         "dubaiHealthDesc": "This document explains the study's purpose, procedures, risks, and benefits.",
         "virufyTitle": "Virufy - Partner Privacy Policy:",
         "virufyDesc": "As our research partner, Virufy helps analyze the data. This document explains how Virufy handles your data.",
         "readFull": "Click to read the full document",
-        "confirmationTitle": "Confirmation Checkboxes",
+        "confirmationTitle": "Confirmation Checkboxes:",
         "confirmationDesc": "By checking the boxes below, you confirm you have reviewed the information and agree to participate.",
         "checkbox1": "I certify that I am 18 years of age or older.",
         "checkbox2": "I have read and understood the Dubai Health Participant Information & Consent Form. I voluntarily agree to participate in this study.",

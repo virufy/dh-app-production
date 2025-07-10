@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BackIcon from '../../assets/images/back-icon.png';
 import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 
 type CheckboxItem = {
   id: string;
@@ -13,6 +14,7 @@ type CheckboxItem = {
 const ConsentScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const isArabic = i18n.language === 'ar';
 
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [consentGiven, setConsentGiven] = useState(false);
@@ -96,13 +98,14 @@ const ConsentScreen: React.FC = () => {
           width: '100%',
         }}
       >
+        {/* Header */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             position: 'relative',
-            padding: '20px',
+            padding: '0px 20px',
             textAlign: 'center',
             flexWrap: 'wrap',
           }}
@@ -111,37 +114,52 @@ const ConsentScreen: React.FC = () => {
             onClick={handleBack}
             style={{
               position: 'absolute',
-              left: '0px',
+              left: '-10px',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
             }}
             aria-label={t('consent.back_aria')}
           >
-            <img src={BackIcon} alt={t('consent.back_alt')} style={{ width: '25px', height: '35px' }} />
+            <img
+              src={BackIcon}
+              alt={t('consent.back_alt')}
+              style={{ width: '25px', height: '35px' , transform: isArabic ? 'rotate(180deg)' : 'none', right: '-10px'}}
+            />
           </button>
-          <h2 style={{ color: '#007bff', margin: 0, width: '100%', textAlign: 'center' }}>{t('consent.title')}</h2>
+          <h2
+            style={{
+              color: '#007bff',
+              margin: 0,
+              width: '100%',
+              textAlign: 'center',
+              fontSize: '1rem',
+            }}
+          >
+            {t('consent.title')}
+          </h2>
         </div>
 
-        <p style={{ marginBottom: '1.5rem', whiteSpace: 'pre-line' }}>
+
+        <p style={{ marginTop: '3rem',marginBottom: '2rem', whiteSpace: 'pre-line', fontSize: '1rem' }}>
           <u>{t('consent.description')}</u>
         </p>
 
         <ol style={{ paddingLeft: '1.2rem', marginBottom: '1.5rem' , fontWeight: 'bold'}}>
-          <li style={{ marginBottom: '1.5rem' }}>
+          <li style={{ marginBottom: '1.5rem' , whiteSpace: 'pre-line'}}>
             {t('consent.dubaiHealthTitle')}<br />
-            <span style={{ fontWeight: 'normal' }}>{t('consent.dubaiHealthDesc')}</span>
+            <span style={{ fontWeight: 'normal', marginBottom: '2rem' }}>{t('consent.dubaiHealthDesc')}</span>
             <Spacer height="1rem" />
             <a
               href="https://docs.google.com/document/d/1c093C-aOUaxqWAUBodDc2QUtIHA8sfpA/view"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: '#007bff' }}
+              style={{ color: '#000000', fontWeight: 'normal' }}
             >
               {t('consent.readFull')}
             </a>
             <Spacer height="1rem" />
-            <div style={iframeStyle}>
+            <div style={{ ...iframeStyle, marginTop: '1rem' }}>
               <iframe
                 src="https://docs.google.com/document/d/1c093C-aOUaxqWAUBodDc2QUtIHA8sfpA/preview"
                 width="100%"
@@ -161,12 +179,12 @@ const ConsentScreen: React.FC = () => {
               href="https://drive.google.com/file/d/1hnxvDJ5qHBnUi7cnkNdyD4PuWMz8Ntss/view"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: '#007bff' }}
+              style={{  color: '#000000', fontWeight: 'normal' }}
             >
               {t('consent.readFull')}
             </a>
             <Spacer height="1rem" />
-            <div style={iframeStyle}>
+            <div style={{ ...iframeStyle, marginTop: '1rem' }}>
               <iframe
                 src="https://drive.google.com/file/d/1hnxvDJ5qHBnUi7cnkNdyD4PuWMz8Ntss/preview"
                 width="100%"
@@ -194,7 +212,7 @@ const ConsentScreen: React.FC = () => {
                 id={id}
                 checked={state}
                 onChange={() => setState(!state)}
-                style={{ marginTop: '0.3rem' }}
+                style={{ marginTop: '0.3rem', borderColor: '#000000'}}
               />{' '}
               <span>{label}</span>
             </label>

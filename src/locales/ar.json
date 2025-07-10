@@ -2,9 +2,12 @@
   "home": {
     "title": "دراسة تشخيصية بالذكاء الاصطناعي لـ COVID / Flu / RSV  باستخدام الهاتف الذكي",
     "language_label": "اللغة",
-    "patient_id_label": "معرف المريض",
-    "patient_id_placeholder": "أدخل معرف المريض",
+    "patient_id_label": "رقم هوية المريض",
+    "patient_id_placeholder": "أدخل رقم هوية المريض",
     "hospital_label": "اسم المستشفى",
+    "error": {
+      "patient_id_required": "رقم هوية المريض مطلوب"
+    }, 
     "hospital_options": {
       "barsha": "مركز البرشاء الصحي",
       "rashid": "مستشفى راشد",
@@ -41,9 +44,23 @@
   "recordSpeech": {
     "title": "سجل صوتك",
     "instructionsTitle": "تعليمات",
-    "instruction1": ".ابحث عن مكان هادئ على بُعد 6 أمتار على الأقل من الآخرين إذا كنت تشعر بتوعك،يرجى الجلوس ",
-    "instruction2": "أمسك الجزء السفلي من جهازك على بُعد 1–2 قدم (30–60 سم) من فمك.",
-    "instruction3": "اضغط على زر التسجيل. استمر في نطق صوت \"آآآآه\" لمدة خمس ثوانٍ على الأقل. ثم اضغط على زر الإيقاف.",
+
+    "instruction1_part1": "ابحث عن ",
+    "instruction1_bold1": "مكان هادئ ",
+    "instruction1_part2": "على بُعد ",
+    "instruction1_bold2": "6 أمتار (20 قدمًا) ",
+    "instruction1_part3": "من الآخرين. إذا كنت تشعر بتوعك، يرجى الجلوس.",
+
+    "instruction2_part1": "أمسك الجزء السفلي من جهازك على بُعد ",
+    "instruction2_bold": "1–2 قدم (30–60 سم)",
+    "instruction2_part2": " من فمك.",
+
+    "instruction3_part1": "اضغط على زر التسجيل. استمر في نطق ",
+    "instruction3_bold1": "\"آآآآه\"",
+    "instruction3_part2": " لمدة لا تقل عن",
+    "instruction3_bold2": " 5 ثوانٍ.",
+    "instruction3_part3": " ثم اضغط على زر الإيقاف.",
+    
     "recordButton": "تسجيل",
     "stopButton": "إيقاف",
     "continueButton": "استمرار",

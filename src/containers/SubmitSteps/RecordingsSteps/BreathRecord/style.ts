@@ -153,10 +153,11 @@ export const UploadLabel = styled.span`
 
 export const Footer = styled.div`
   text-align: center;
+  font-size: 1rem;
 `;
 
 export const FooterLink = styled.a`
-  font-size: 0.8rem;
+  font-size: 1rem;
   font-weight: bold;
   color: #3578de;
   text-decoration: underline;

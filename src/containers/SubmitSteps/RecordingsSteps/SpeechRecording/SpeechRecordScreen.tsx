@@ -141,7 +141,8 @@ const SpeechRecordScreen: React.FC = () => {
                         fontWeight: 700,
                         color: "#3578de",
                         fontSize: "14px"
-                    }}>2
+                    }}>
+                    2
                     </div>
                     <div style={{ flex: 1, fontSize: "20px" }}>
                         {t('recordSpeech.instruction2_part1')}
@@ -291,7 +292,7 @@ const SpeechRecordScreen: React.FC = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{
-                            fontSize: '0.8rem',
+                            fontSize: '1rem',
                             fontWeight: 'bold',
                             color: '#3578de',
                             textDecoration: 'underline'
