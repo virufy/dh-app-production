@@ -7,6 +7,7 @@ import BackIcon from '../../../../assets/icons/arrowLeft.svg';
 import UploadIcon from '../../../../assets/icons/upload.svg';
 import StartIcon from '../../../../assets/icons/start.svg';
 import StopIcon from '../../../../assets/icons/stop.svg';
+import i18n from "../../../../i18n";
 import {
     Container,
     Content,
@@ -33,6 +34,7 @@ import {
 } from './styles';
 const CoughRecordScreen: React.FC = () => {
     const { t } = useTranslation();
+    const isArabic = i18n.language === 'ar';     
     const navigate = useNavigate();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [involuntary, setInvoluntary] = useState(false);
@@ -65,11 +67,24 @@ const CoughRecordScreen: React.FC = () => {
             <Content>
                 {/* Header */}
                 <Header>
-                    <BackButton onClick={handleBack} aria-label={t("recordCough.goBackAria")}>
-                        <img src={BackIcon} alt={t("recordCough.goBackAlt")} width={24} height={24} />
-                    </BackButton>
-                    <HeaderText>{t("recordCough.title")}</HeaderText>
+                <BackButton
+                    onClick={handleBack}
+                    aria-label={t("recordCough.goBackAria")}
+                    isArabic={isArabic}
+                >
+                    <img
+                    src={BackIcon}
+                    alt={t("recordCough.goBackAlt")}
+                    width={24}
+                    height={24}
+                    style={{
+                        transform: isArabic ? 'rotate(180deg)' : 'none',
+                    }}
+                    />
+                </BackButton>
+                <HeaderText>{t("recordCough.title")}</HeaderText>
                 </Header>
+
                 <h3
                     style={{
                         fontFamily: "Source Sans Pro, sans-serif",

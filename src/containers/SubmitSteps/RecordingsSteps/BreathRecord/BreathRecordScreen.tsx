@@ -9,8 +9,10 @@ import BackIcon from "../../../../assets/icons/arrowLeft.svg";
 import StartIcon from "../../../../assets/icons/start.svg";
 import StopIcon from "../../../../assets/icons/stop.svg";
 import UploadIcon from "../../../../assets/icons/upload.svg";
+import i18n from "../../../../i18n";
 
 const BreathRecordScreen: React.FC = () => {
+  const isArabic = i18n.language === 'ar';  
   const navigate = useNavigate();
   const { t } = useTranslation();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -62,15 +64,16 @@ const BreathRecordScreen: React.FC = () => {
             onClick={handleBack}
             style={{
               position: "absolute",
+              [isArabic ? 'right' : 'left']: '-10px',
               top: 0,
-              left: 0,
+            
               background: "none",
               border: "none",
               cursor: "pointer",
             }}
             aria-label={t("recordBreath.goBackAria", "Go back")}
           >
-            <img src={BackIcon} alt={t("recordBreath.goBackAlt", "Back")} width={24} height={24} />
+            <img src={BackIcon} alt={t("recordBreath.goBackAlt", "Back")} width={24} height={24} style={{ transform: isArabic ? 'rotate(180deg)' : 'none' }} />
           </button>
           <div
             style={{

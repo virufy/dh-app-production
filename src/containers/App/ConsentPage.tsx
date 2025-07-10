@@ -15,7 +15,6 @@ const ConsentScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const isArabic = i18n.language === 'ar';
-
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [consentGiven, setConsentGiven] = useState(false);
   const [privacyAck, setPrivacyAck] = useState(false);
@@ -114,7 +113,7 @@ const ConsentScreen: React.FC = () => {
             onClick={handleBack}
             style={{
               position: 'absolute',
-              left: '-10px',
+              [isArabic ? 'right' : 'left']: '-10px',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -124,7 +123,7 @@ const ConsentScreen: React.FC = () => {
             <img
               src={BackIcon}
               alt={t('consent.back_alt')}
-              style={{ width: '25px', height: '35px' , transform: isArabic ? 'rotate(180deg)' : 'none', right: '-10px'}}
+              style={{ width: '25px', height: '35px' , transform: isArabic ? 'rotate(180deg)' : 'none',}}
             />
           </button>
           <h2

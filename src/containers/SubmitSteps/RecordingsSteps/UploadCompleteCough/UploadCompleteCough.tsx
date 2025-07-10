@@ -23,11 +23,12 @@ import {
 import ArrowLeftIcon from '../../../../assets/icons/arrowLeft.svg';
 import PlayIcon from '../../../../assets/icons/play.svg';
 import PauseIcon from '../../../../assets/icons/pause.svg';
+import i18n from "../../../../i18n";
 
 const UploadCompleteCough: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-
+    const isArabic = i18n.language === 'ar';
     const { t } = useTranslation();
 
     const { audioFileUrl, filename = t('uploadComplete.filename'), nextPage } = location.state || {};
@@ -85,13 +86,26 @@ const UploadCompleteCough: React.FC = () => {
         <PageWrapper>
             <ContentWrapper>
                 <audio ref={audioRef} src={audioFileUrl || ''} preload="auto" />
-
                 <Header>
-                    <BackButton onClick={handleBack} aria-label={t('uploadComplete.backAria')}>
-                        <img src={ArrowLeftIcon} alt={t('uploadComplete.backAlt')} width={24} height={24} />
+                    <BackButton
+                    onClick={handleBack}
+                    aria-label={t('uploadComplete.backAria')}
+                    isArabic={isArabic}
+                    >
+                    <img
+                        src={ArrowLeftIcon}
+                        alt={t('uploadComplete.backAlt')}
+                        width={24}
+                        height={24}
+                        style={{
+                        transform: isArabic ? 'rotate(180deg)' : 'none',
+                        }}
+                    />
                     </BackButton>
-                    <HeaderTitle>{t('uploadComplete.title')}</HeaderTitle>
+
+                <HeaderTitle>{t('uploadComplete.title')}</HeaderTitle>
                 </Header>
+
 
                 <Title style={{ marginBottom: '2rem' }}>{t('uploadComplete.subtitle')}</Title>
                 <Subtitle style={{ marginBottom: '2rem' }}>{t('uploadComplete.description')}</Subtitle>
