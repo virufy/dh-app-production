@@ -21,6 +21,9 @@ const BreathRecordScreen: React.FC = () => {
 
   const handleUploadClick = () => fileInputRef.current?.click();
 
+  const [error, setError] = React.useState<string | null>(null);
+
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -36,14 +39,22 @@ const BreathRecordScreen: React.FC = () => {
   };
 
   const handleContinue = () => {
-    navigate("/upload-complete", {
-      state: {
-        audioFileUrl: "",
-        filename: t("recordBreath.defaultFilename"),
-        nextPage: "/confirmation",
-      },
-    });
+    const file = fileInputRef.current?.files?.[0];
+    if (!file) {
+      setError(t("recordBreath.error")); // Show error from translation if no file
+    } else {
+      setError(null); // Clear error if valid
+      const audioUrl = URL.createObjectURL(file);
+      navigate("/upload-complete", {
+        state: {
+          audioFileUrl: audioUrl,
+          filename: file.name,
+          nextPage: "/confirmation",
+        },
+      });
+    }
   };
+
 
   return (
     <div
@@ -230,6 +241,12 @@ const BreathRecordScreen: React.FC = () => {
 
         {/* Buttons */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1rem" }}>
+          {error && (
+            <p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>
+              {error}
+            </p>
+          )}
+
           <button
             onClick={handleContinue}
             style={{

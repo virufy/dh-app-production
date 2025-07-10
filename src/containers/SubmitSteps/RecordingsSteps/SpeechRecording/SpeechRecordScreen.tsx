@@ -19,14 +19,23 @@ const SpeechRecordScreen: React.FC = () => {
 
     const handleBack = (): void | Promise<void> => navigate(-1);
 
-    const handleContinue = (): void => {
+    const [error, setError] = React.useState<string | null>(null);    
+
+    const handleContinue = () => {
+        const file = fileInputRef.current?.files?.[0];
+        if (!file) {
+        setError(t("recordBreath.error")); // Show error from translation if no file
+        } else {
+        setError(null); // Clear error if valid
+        const audioUrl = URL.createObjectURL(file);
         navigate("/upload-complete", {
             state: {
-                audioFileUrl: "",
-                filename: t('recordSpeech.defaultFilename'),
-                nextPage: "/record-breath",
+            audioFileUrl: audioUrl,
+            filename: file.name,
+            nextPage: "/confirmation",
             },
         });
+        }
     };
 
     const handleUploadClick = () => fileInputRef.current?.click();
@@ -243,6 +252,11 @@ const SpeechRecordScreen: React.FC = () => {
 
                 {/* Buttons */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1rem" }}>
+                    {error && (
+                        <p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>
+                            {error}
+                        </p>
+                    )}
                     <button
                         onClick={handleContinue}
                         style={{

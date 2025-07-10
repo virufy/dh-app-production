@@ -24,13 +24,13 @@ export const Header = styled.div`
   margin-bottom: 1.75rem;
 `;
 
-export const BackButton = styled.button`
+export const BackButton = styled.button<{ isArabic?: boolean }>`
   position: absolute;
   top: 0;
-  left: 0;
   background: none;
   border: none;
   cursor: pointer;
+  ${({ isArabic }) => (isArabic ? 'right: 0;' : 'left: 0;')}
 `;
 
 export const HeaderTitle = styled.div`

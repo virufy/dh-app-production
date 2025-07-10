@@ -38,15 +38,23 @@ const CoughRecordScreen: React.FC = () => {
     const navigate = useNavigate();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [involuntary, setInvoluntary] = useState(false);
+    const [error, setError] = React.useState<string | null>(null);      
     const handleBack = () => navigate(-1);
     const handleContinue = () => {
+        const file = fileInputRef.current?.files?.[0];
+        if (!file) {
+        setError(t("recordBreath.error")); // Show error from translation if no file
+        } else {
+        setError(null); // Clear error if valid
+        const audioUrl = URL.createObjectURL(file);
         navigate("/upload-complete", {
             state: {
-                audioFileUrl: "",
-                filename: t("recordCough.defaultFilename"),
-                nextPage: "/record-speech",
+            audioFileUrl: audioUrl,
+            filename: file.name,
+            nextPage: "/confirmation",
             },
         });
+        }
     };
     const triggerFileInput = () => fileInputRef.current?.click();
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,8 +154,16 @@ const CoughRecordScreen: React.FC = () => {
                         style={{ cursor: "pointer" }}
                     />
                 </CheckboxRow>
+
+                {/* Error Message */}
+
+                {error && (
+                    <p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>
+                    {error}
+                    </p>
+                )}                
                 {/* Action Buttons */}
-                <ActionButtons>
+                <ActionButtons>                 
                     <button onClick={handleContinue}>
                         {t("recordCough.continueButton")}
                     </button>
