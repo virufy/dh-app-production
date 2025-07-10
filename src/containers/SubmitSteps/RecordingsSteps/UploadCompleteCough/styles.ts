@@ -82,8 +82,8 @@ export const TimeRow = styled.div`
 `;
 
 export const PlayButton = styled.button`
-  width: 5.5rem;
-  height: 5.5rem;
+  width: 7.5rem;
+  height: 7.5rem;
   border-radius: 50%;
   background-color: #dde9ff;
   border: none;
@@ -91,7 +91,7 @@ export const PlayButton = styled.button`
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  margin: 0 auto 1.5rem;
+  margin: 2rem auto 5.5rem;
 `;
 
 export const RetakeButton = styled.button`
@@ -122,6 +122,7 @@ export const SubmitButton = styled.button`
 
 export const Footer = styled.div`
   text-align: center;
+  margin-top: 1rem;
 `;
 
 export const ErrorLink = styled.a`

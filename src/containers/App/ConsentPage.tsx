@@ -127,10 +127,10 @@ const ConsentScreen: React.FC = () => {
           <u>{t('consent.description')}</u>
         </p>
 
-        <ol style={{ paddingLeft: '1.2rem', marginBottom: '1.5rem' }}>
+        <ol style={{ paddingLeft: '1.2rem', marginBottom: '1.5rem' , fontWeight: 'bold'}}>
           <li style={{ marginBottom: '1.5rem' }}>
-            <strong>{t('consent.dubaiHealthTitle')}</strong><br />
-            {t('consent.dubaiHealthDesc')} <br />
+            {t('consent.dubaiHealthTitle')}<br />
+            <span style={{ fontWeight: 'normal' }}>{t('consent.dubaiHealthDesc')}</span>
             <Spacer height="1rem" />
             <a
               href="https://docs.google.com/document/d/1c093C-aOUaxqWAUBodDc2QUtIHA8sfpA/view"
@@ -154,8 +154,8 @@ const ConsentScreen: React.FC = () => {
           </li>
 
           <li>
-            <strong>{t('consent.virufyTitle')}</strong><br />
-            {t('consent.virufyDesc')} <br />
+            {t('consent.virufyTitle')}<br />
+            <span style={{ fontWeight: 'normal' }}>{t('consent.virufyDesc')}</span> <br />
             <Spacer height="1rem" />
             <a
               href="https://drive.google.com/file/d/1hnxvDJ5qHBnUi7cnkNdyD4PuWMz8Ntss/view"

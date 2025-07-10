@@ -93,12 +93,12 @@ const UploadCompleteCough: React.FC = () => {
                     <HeaderTitle>{t('uploadComplete.title')}</HeaderTitle>
                 </Header>
 
-                <Title>{t('uploadComplete.subtitle')}</Title>
-                <Subtitle>{t('uploadComplete.description')}</Subtitle>
+                <Title style={{ marginBottom: '2rem' }}>{t('uploadComplete.subtitle')}</Title>
+                <Subtitle style={{ marginBottom: '2rem' }}>{t('uploadComplete.description')}</Subtitle>
 
                 <FileRow>
                     <span>{filename}</span>
-                    <span style={{ fontSize: '20px', cursor: 'pointer' }}>✕</span>
+                    <span style={{ fontSize: '20px', cursor: 'pointer', marginBottom: '2rem' }}>✕</span>
                 </FileRow>
 
                 <Slider
@@ -120,8 +120,8 @@ const UploadCompleteCough: React.FC = () => {
                     <img
                         src={isPlaying ? PauseIcon : PlayIcon}
                         alt={isPlaying ? t('uploadComplete.pause') : t('uploadComplete.play')}
-                        width="35"
-                        height="35"
+                        width="45"
+                        height="45"
                         style={isPlaying ? {} : { marginLeft: '0.3rem' }}
                     />
                 </PlayButton>
