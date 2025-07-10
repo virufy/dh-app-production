@@ -1,6 +1,6 @@
 import { CSSProperties } from 'react';
 export const logoStyle: CSSProperties = {
-  height: '90px', // adjust as needed
+  height: '100px', // adjust as needed
   marginBottom: 20,
   display: 'block',
   marginLeft: 'auto',

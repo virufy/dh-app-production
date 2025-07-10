@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 export const Container = styled.div`
-  font-family: "source sans pro", sans-serif;
+  font-family: "Open Sans", sans-serif;
   background-color: transparent;
   //width: 100%;
   height: 90vh;
