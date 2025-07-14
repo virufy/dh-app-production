@@ -59,12 +59,15 @@ export const StepCircle = styled.div`
 
 export const InstructionText = styled.div`
     flex: 1;
-    font-size: 20px;
+    font-size: 14px;
 `;
 
 export const Image = styled.img`
-    width: 100%;
+    display: block;
+    margin: auto;
+    width: 50%;
     margin-bottom: 1.5rem;
+
 `;
 
 export const Timer = styled.div`
@@ -102,7 +105,7 @@ export const CircleButton = styled.button<{ bg: string }>`
 `;
 
 export const ButtonLabel = styled.div`
-    font-size: 1rem;
+    font-size: 14px;
     margin-top: 0.5rem;
     color: #666;
 `;

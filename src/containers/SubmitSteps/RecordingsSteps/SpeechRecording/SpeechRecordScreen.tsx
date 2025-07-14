@@ -107,6 +107,7 @@ const SpeechRecordScreen: React.FC = () => {
                     alignItems: "flex-start",
                     gap: "1rem",
                     marginBottom: "1rem",
+    
                 }}
                 >
                 <div
@@ -119,12 +120,12 @@ const SpeechRecordScreen: React.FC = () => {
                     lineHeight: "28px",
                     fontWeight: "bold",
                     color: "#3578de",
-                    fontSize: "20px",
+                    fontSize: "14px",
                     }}
                 >
                     1
                 </div>
-                <div style={{ flex: 1, fontSize: "20px" }}>
+                <div style={{ flex: 1, fontSize: "14px" }}>
                     {t('recordSpeech.instruction1_part1')}
                     <strong>{t('recordSpeech.instruction1_bold1')}</strong>
                     {t('recordSpeech.instruction1_part2')}
@@ -133,10 +134,9 @@ const SpeechRecordScreen: React.FC = () => {
                 </div>
                 </div>
 
-                <img
+                <img style={{ width: "50%", margin: "auto", display: "block" }}
                 src={keepDistance}
                 alt={t('recordSpeech.keepDistanceAlt')}
-                style={{ width: "100%", marginBottom: "1.5rem" }}
                 />
 
 
@@ -155,13 +155,13 @@ const SpeechRecordScreen: React.FC = () => {
                     }}>
                     2
                     </div>
-                    <div style={{ flex: 1, fontSize: "20px" }}>
+                    <div style={{ flex: 1, fontSize: "14px" }}>
                         {t('recordSpeech.instruction2_part1')}
                         <strong>{t('recordSpeech.instruction2_bold')}</strong>
                         {t('recordSpeech.instruction2_part2')}
                     </div>
                 </div>
-                <img src={mouthSpeechDistance} alt={t('recordSpeech.mouthDistanceAlt')} style={{ width: "100%", marginBottom: "1.5rem" }} />
+                <img src={mouthSpeechDistance} alt={t('recordSpeech.mouthDistanceAlt')} style={{ width: "50%", margin: "auto", display: "block" }} />
 
                 {/* Step 3 */}
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem", marginBottom: "2rem" }}>
@@ -174,10 +174,10 @@ const SpeechRecordScreen: React.FC = () => {
                         lineHeight: "28px",
                         fontWeight: "bold",
                         color: "#3578de",
-                        fontSize: "20px"
+                        fontSize: "14px"
                     }}>3
                     </div>
-                    <div style={{ flex: 1, fontSize: "20px" }}>
+                    <div style={{ flex: 1, fontSize: "14px" }}>
                         {t('recordSpeech.instruction3_part1')}
                         <strong>{t('recordSpeech.instruction3_bold1')}</strong>
                         {t('recordSpeech.instruction3_part2')}

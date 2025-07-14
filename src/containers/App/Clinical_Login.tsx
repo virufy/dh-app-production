@@ -48,13 +48,20 @@ const Clinical_Login = () => {
         {t('home.patient_id_label')} <span style={{ color: 'red' }}>*</span>
       </label>
       <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
         style={fieldInput}
         placeholder={t('home.patient_id_placeholder')}
         value={patientId}
-        onChange={e => setPatientId(e.target.value)}
+        onChange={e => {
+            const numericValue = e.target.value.replace(/\D/g, '');
+            setPatientId(numericValue);
+        }}
         aria-invalid={!!error}
         aria-describedby="patientId-error"
       />
+
       {error && (
         <div id="patientId-error" style={{ color: 'red', marginTop: 4 }}>
           {error}

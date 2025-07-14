@@ -114,12 +114,12 @@ const BreathRecordScreen: React.FC = () => {
               lineHeight: "28px",
               fontWeight: "bold",
               color: "#3578de",
-              fontSize: "20px",
+              fontSize: "14px",
             }}
           >
             1
           </div>
-          <div style={{ flex: 1, fontSize: "20px" }}>
+          <div style={{ flex: 1, fontSize: "14px" }}>
             {t('recordBreath.instruction1_part1')} 
             <strong>{t('recordBreath.instruction1_bold1')}</strong>
             {t('recordBreath.instruction1_part2')}
@@ -127,7 +127,7 @@ const BreathRecordScreen: React.FC = () => {
             {t('recordBreath.instruction1_part3')}
           </div>
         </div>
-        <img src={keepDistance} alt={t("recordBreath.keepDistanceAlt", "Keep distance illustration")} style={{ width: "100%", marginBottom: "1.5rem" }} />
+        <img src={keepDistance} alt={t("recordBreath.keepDistanceAlt", "Keep distance illustration")} style={{ width: "50%", margin: "auto", display: "block", marginBottom: "1.5rem" }} />
 
         {/* Step 2 */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem", marginBottom: "1rem" }}>
@@ -141,18 +141,18 @@ const BreathRecordScreen: React.FC = () => {
               lineHeight: "28px",
               fontWeight: "bold",
               color: "#3578de",
-              fontSize: "20px",
+              fontSize: "14px",
             }}
           >
             2
           </div>
-          <div style={{ flex: 1, fontSize: "20px" }}>
+          <div style={{ flex: 1, fontSize: "14px" }}>
             {t('recordBreath.instruction2_part1')}
             <strong>{t('recordBreath.instruction2_bold')}</strong>
             {t('recordBreath.instruction2_part2')}
           </div>
         </div>
-        <img src={mouthBreathDistance} alt={t("recordBreath.mouthDistanceAlt", "Hold device at mouth distance illustration")} style={{ width: "100%", marginBottom: "1.5rem" }} />
+        <img src={mouthBreathDistance} alt={t("recordBreath.mouthDistanceAlt", "Hold device at mouth distance illustration")} style={{ width: "50%", margin: "auto", display: "block" , marginBottom: "2rem" }} />
 
         {/* Step 3 */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem", marginBottom: "2rem" }}>
@@ -166,12 +166,12 @@ const BreathRecordScreen: React.FC = () => {
               lineHeight: "28px",
               fontWeight: "bold",
               color: "#3578de",
-              fontSize: "20px",
+              fontSize: "14px",
             }}
           >
             3
           </div>
-          <div style={{ flex: 1, fontSize: "20px" }}>
+          <div style={{ flex: 1, fontSize: "14px", marginBottom: "1.5rem"  }}>
             {t('recordBreath.instruction3_part1')} <strong>{t('recordBreath.instruction3_bold1')}</strong>{t('recordBreath.instruction3_part2')}<strong>{t('recordBreath.instruction3_bold2')}</strong>{t('recordBreath.instruction3_part3')}
           </div>
         </div>
