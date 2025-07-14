@@ -25,6 +25,10 @@ const Clinical_Login = () => {
       setError(t('home.error.patient_id_required'));
       return;
     }
+    if (!/^\d+$/.test(patientId.trim())) {
+      setError(t('home.error.patient_id_numeric'));
+      return;
+    }
     setError('');
     navigate('/consent');
   };
@@ -55,8 +59,7 @@ const Clinical_Login = () => {
         placeholder={t('home.patient_id_placeholder')}
         value={patientId}
         onChange={e => {
-            const numericValue = e.target.value.replace(/\D/g, '');
-            setPatientId(numericValue);
+            setPatientId(e.target.value);
         }}
         aria-invalid={!!error}
         aria-describedby="patientId-error"

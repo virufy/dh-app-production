@@ -5,7 +5,8 @@
     "patient_id_label": "Patient ID",
     "patient_id_placeholder": "Enter Patient ID",
     "error": {
-      "patient_id_required": "Patient ID is required"
+      "patient_id_required": "Patient ID is required",
+      "patient_id_numeric": "Patient ID must be a valid number."
     },
     "hospital_label": "Hospital Name",
     "hospital_options": {
