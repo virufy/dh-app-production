@@ -189,7 +189,7 @@ export const UploadButton = styled.button`
 export const UploadText = styled.span`
     font-size: 13px;
     font-weight: 600;
-    color: #333
+    color: #000000;
     margin-bottom: 4rem;
 `;
 
