@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 export const Container = styled.div`
-  font-family: "Open Sans", sans-serif;
+  font-family: "Arial", sans-serif;
   background-color: transparent;
   //width: 100%;
   height: 90vh;
@@ -55,8 +55,10 @@ export const ButtonStyled = styled.button`
 `;
 
 export const ErrorLink = styled.a`
-  font-size: 0.8rem;
-  color: #3578de;
-  text-decoration: underline;
-  font-weight: 510;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #3578de;
+    text-decoration: underline;
+    text-align: center;
+    display: block;
 `;

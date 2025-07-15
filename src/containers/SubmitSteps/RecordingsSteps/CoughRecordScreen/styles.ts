@@ -190,7 +190,7 @@ export const UploadText = styled.span`
     font-size: 13px;
     font-weight: 600;
     color: #000000;
-    margin-bottom: 4rem;
+    margin: 0 ;
 `;
 
 export const HiddenFileInput = styled.input`
