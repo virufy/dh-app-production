@@ -3,8 +3,7 @@ import {useNavigate} from 'react-router-dom';
 import BackIcon from '../../assets/images/back-icon.png';
 import {useTranslation} from 'react-i18next';
 import i18n from '../../i18n';
-import {t} from "i18next";
-import {ErrorLink} from "../ConfirmationScreen/style";
+
 
 type CheckboxItem = {
     id: string;
@@ -76,7 +75,7 @@ const ConsentScreen: React.FC = () => {
     };
 
     const handleSignedPaperNext = () => {
-        navigate('/record-coughs');
+        alert(t('consent.signed_paper_alert'));
     };
 
     const handleBack = () => {
@@ -92,13 +91,18 @@ const ConsentScreen: React.FC = () => {
                 justifyContent: 'center',
                 alignItems: 'flex-start',
                 width: '100%',
+                fontSize: '0.8rem',
+                fontWeight: 400,
+                letterSpacing: '0.02em',
+                lineHeight: 1.5,
             }}
         >
             <div
                 style={{
-                    padding: '1.8rem',
+                    padding: '1.7rem',
                     borderRadius: '0px',
                     width: '100%',
+
                 }}
             >
                 {/* Header */}
@@ -111,6 +115,10 @@ const ConsentScreen: React.FC = () => {
                         padding: '0px 20px',
                         textAlign: 'center',
                         flexWrap: 'wrap',
+                        fontWeight: 400,
+                        letterSpacing: '0.02em',
+                        lineHeight: 1.5,
+
                     }}
                 >
                     <button
@@ -148,8 +156,8 @@ const ConsentScreen: React.FC = () => {
                     marginTop: '3rem',
                     marginBottom: '2rem',
                     whiteSpace: 'pre-line',
-                    fontSize: '1rem',
-                    width: '100%'
+                    fontSize: '0.8rem',
+                    width: '100%',
                 }}>
                     <u>{t('consent.description')}</u>
                 </p>
@@ -170,7 +178,8 @@ const ConsentScreen: React.FC = () => {
                         <Spacer height="1rem"/>
                         <div style={{...iframeStyle, marginTop: '1rem'}}>
                             <iframe
-                                src="https://docs.google.com/document/d/1c093C-aOUaxqWAUBodDc2QUtIHA8sfpA/preview"
+                                src="https://docs.google.com/document/d/1c093C-aOUaxqWAUBodDc2QUtIHA8sfpA/view?embedded=true
+"
                                 width="100%"
                                 height="100%"
                                 allow="autoplay"
@@ -208,9 +217,12 @@ const ConsentScreen: React.FC = () => {
 
                 <h4 style={{marginBottom: '0rem'}}>{t('consent.confirmationTitle')}</h4>
                 <p style={{
-                    fontSize: '0.95rem',
+                    fontSize: '0.8rem',
                     marginTop: '0rem',
-                    marginBottom: '1rem'
+                    marginBottom: '1rem',
+                    fontWeight: 400,
+                    letterSpacing: '0.02em',
+                    lineHeight: 1.5,
                 }}>{t('consent.confirmationDesc')}</p>
 
                 <div style={{marginBottom: '1.5rem', paddingLeft: 0}}>
@@ -239,10 +251,13 @@ const ConsentScreen: React.FC = () => {
                     marginBottom: '1.5rem',
                     width: '100%'
                 }}>
+                    <Spacer height="1rem"/>
+                    
                     <button
                         onClick={handleNext}
                         style={{
                             backgroundColor: "#3578de",
+                            fontSize:"0.85rem",
                             color: "white",
                             border: "none",
                             padding: "1.5rem",
@@ -255,31 +270,20 @@ const ConsentScreen: React.FC = () => {
                     </button>
 
                     <button
-                      onClick={handleSignedPaperNext}
-                      style={{
-                        backgroundColor: "#3578de",
-                        color: "white",
-                        border: "none",
-                        padding: "1.5rem",
-                        borderRadius: "15px",
-                        fontWeight: "bold",
-                        cursor: "pointer",
-                        display: "flex",           
-                        justifyContent: "center",  
-                        alignItems: "center",      
-                      }}
+                        onClick={handleSignedPaperNext}
+                        style={{
+                            backgroundColor: "#3578de",
+                            fontSize:"0.85rem",
+                            color: "white",
+                            border: "none",
+                            padding: "1.5rem",
+                            borderRadius: "15px",
+                            fontWeight: "bold",
+                            cursor: "pointer",
+                        }}
                     >
-                      <span style={{ direction: "rtl" }}>
-                        {t("consent.nextPaper")}
-                      </span>
+                        {t('consent.nextPaper')}
                     </button>
-
-
-
-
-
-
-
                 </div>
                 <div style={{textAlign: "center"}}>
                     <a

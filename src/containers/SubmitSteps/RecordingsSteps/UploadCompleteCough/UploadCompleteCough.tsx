@@ -2,8 +2,6 @@ import React, { useRef, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-
-
 import {
   PageWrapper,
   ContentWrapper,
@@ -33,7 +31,6 @@ const UploadCompleteCough: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isArabic = i18n.language === "ar";
-
 
   const { t } = useTranslation();
 
@@ -97,26 +94,24 @@ const UploadCompleteCough: React.FC = () => {
       <ContentWrapper>
         <audio ref={audioRef} src={audioFileUrl || ""} preload="auto" />
         <Header>
-        <BackButton
+          <BackButton
             onClick={handleBack}
             aria-label={t("uploadComplete.backAria")}
-            isArabic={isArabic}  // Pass language direction here
-        >
+            isArabic={isArabic} // Pass language direction here
+          >
             <img
-            src={ArrowLeftIcon}
-            alt={t("uploadComplete.backAlt")}
-            width={24}
-            height={24}
-            style={{ transform: isArabic ? "rotate(180deg)" : "none" }}
+              src={ArrowLeftIcon}
+              alt={t("uploadComplete.backAlt")}
+              width={24}
+              height={24}
+              style={{ transform: isArabic ? "rotate(180deg)" : "none" }}
             />
-        </BackButton>
-        <HeaderTitle>{t("uploadComplete.title")}</HeaderTitle>
+          </BackButton>
+          <HeaderTitle>{t("uploadComplete.title")}</HeaderTitle>
         </Header>
 
-        <ControlsWrapper>
-          <Title style={{ marginBottom: "2rem" }}>
-            {t("uploadComplete.subtitle")}
-          </Title>
+        <Title>{t("uploadComplete.subtitle")}</Title>
+        <ControlsWrapper style={{ padding: 0 }}>
           <Subtitle style={{ marginBottom: "2rem" }}>
             {t("uploadComplete.description")}
           </Subtitle>

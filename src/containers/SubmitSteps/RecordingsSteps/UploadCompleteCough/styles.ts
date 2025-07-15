@@ -21,7 +21,6 @@ export const ContentWrapper = styled.div`
 export const Header = styled.div`
   position: relative;
   margin-top: 1.25rem;
-  margin-bottom: 1.75rem;
 `;
 
 export const BackButton = styled.button<{ isArabic?: boolean }>`
@@ -38,7 +37,6 @@ export const HeaderTitle = styled.div`
   font-weight: 600;
   font-size: 18px;
   color: #3578de;
-  margin-top: 0.05rem;
 `;
 
 export const Title = styled.h2`
@@ -53,9 +51,9 @@ export const Title = styled.h2`
 export const Subtitle = styled.p`
   font-weight: 700;
   font-size: 1.5rem;
-  margin-bottom: 0.8rem;
   color: #393939;
-  padding: 0 1.5rem;
+  padding: 0 1.5rem;       // Horizontal padding only
+  box-sizing: border-box;
 `;
 
 export const FileRow = styled.div`
@@ -75,7 +73,6 @@ export const Slider = styled.input`
   background-color: #dde9ff;
   border-radius: 4px;
   outline: none;
-  
 `;
 
 export const TimeRow = styled.div`
