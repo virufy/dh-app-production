@@ -75,7 +75,7 @@ const ConsentScreen: React.FC = () => {
     };
 
     const handleSignedPaperNext = () => {
-        alert(t('consent.signed_paper_alert'));
+        navigate('/record-coughs');
     };
 
     const handleBack = () => {
