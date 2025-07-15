@@ -100,7 +100,8 @@ const CoughRecordScreen: React.FC = () => {
                         textAlign: "center",
                         fontWeight: "bold",
                         marginBottom: "2rem",
-                        color: "#393939"
+                        color: "#393939",
+                        marginTop: "50px"
                     }}
                 >
                     {t("recordCough.instructionsTitle")}

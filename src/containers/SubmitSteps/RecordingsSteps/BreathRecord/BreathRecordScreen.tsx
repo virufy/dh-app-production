@@ -92,13 +92,14 @@ const BreathRecordScreen: React.FC = () => {
               fontWeight: 600,
               fontSize: "18px",
               color: "#3578de",
+              marginTop: "0.05rem"
             }}
           >
             {t("recordBreath.title", "Record your breath")}
           </div>
         </div>
 
-        <h3 style={{ fontSize: "32px", textAlign: "center", fontWeight: "bold", marginBottom: "2rem" }}>
+        <h3 style={{ fontSize: "32px", textAlign: "center", fontWeight: "bold", marginBottom: "2rem", marginTop: "3rem" }}>
           {t("recordBreath.instructionsTitle", "Instructions")}
         </h3>
 

@@ -76,5 +76,5 @@ export const buttonCircle: CSSProperties = {
 export const arrowIcon: CSSProperties = {
   color: '#3578DE',
   fontSize: "clamp(1rem, 2.5vw, 1.875rem)",
-  fontWeight: 'normal',
+  fontWeight: 300,
 };

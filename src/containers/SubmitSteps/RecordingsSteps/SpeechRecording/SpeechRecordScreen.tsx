@@ -90,13 +90,14 @@ const SpeechRecordScreen: React.FC = () => {
                             fontSize: "18px",
                             color: "#3578de",
                             fontFamily: 'Source Sans Pro, sans-serif',
+                            marginTop: "0.05rem"
                         }}
                     >
                         {t('recordSpeech.title')}
                     </div>
                 </div>
 
-                <h3 style={{ textAlign: "center", fontWeight: "bold", marginBottom: "2rem", fontFamily: "Source Sans Pro, sans-serif", fontSize: '32px' }}>
+                <h3 style={{ textAlign: "center", fontWeight: "bold", marginBottom: "2rem", fontFamily: "Source Sans Pro, sans-serif", fontSize: '32px', marginTop: "3rem" }}>
                     {t('recordSpeech.instructionsTitle')}
                 </h3>
 

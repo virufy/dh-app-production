@@ -18,7 +18,7 @@ export const Content = styled.div`
 
 export const Header = styled.div`
     position: relative;
-    margin-top: 1.25rem;
+    margin-top: 0.05rem;
     margin-bottom: 1.75rem;
 `;
 

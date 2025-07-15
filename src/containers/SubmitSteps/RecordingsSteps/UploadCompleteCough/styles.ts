@@ -38,6 +38,7 @@ export const HeaderTitle = styled.div`
   font-weight: 600;
   font-size: 18px;
   color: #3578de;
+  margin-top: 0.05rem;
 `;
 
 export const Title = styled.h2`
