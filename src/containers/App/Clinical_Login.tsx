@@ -73,8 +73,7 @@ const Clinical_Login = () => {
       <label style={fieldLabel}>{t('home.hospital_label')}</label>
       <select style={dropdown} defaultValue="Al Barsha Health Centre">
         <option>{t('home.hospital_options.barsha')}</option>
-        <option>{t('home.hospital_options.rashid')}</option>
-        <option>{t('home.hospital_options.latifa')}</option>
+        <option>{t('home.hospital_options.nadd')}</option>
       </select>
       <div style={buttonContainer}>
         <button style={buttonCircle} type="submit">

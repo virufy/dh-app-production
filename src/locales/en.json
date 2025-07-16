@@ -11,8 +11,7 @@
     "hospital_label": "Hospital Name",
     "hospital_options": {
       "barsha": "Al Barsha Health Centre",
-      "rashid": "Rashid Hospital",
-      "latifa": "Latifa Hospital"
+      "nadd": "Nadd Al Hammar Health Centre"
     },
     "submit_button": "Next"
   },
