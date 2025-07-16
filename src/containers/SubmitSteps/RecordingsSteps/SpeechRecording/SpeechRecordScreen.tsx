@@ -1,7 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-
 // Assets
 import keepDistance from "../../../../assets/images/keepDistance.png";
 import mouthSpeechDistance from "../../../../assets/images/mouthSpeechDistance.png";
@@ -10,50 +9,87 @@ import StartIcon from "../../../../assets/icons/start.svg";
 import StopIcon from "../../../../assets/icons/stop.svg";
 import UploadIcon from "../../../../assets/icons/upload.svg";
 import i18n from "../../../../i18n";
-
 const SpeechRecordScreen: React.FC = () => {
-    const isArabic = i18n.language === 'ar';
     const { t } = useTranslation();
+    const isArabic = i18n.language === 'ar';
     const navigate = useNavigate();
     const fileInputRef = React.useRef<HTMLInputElement>(null);
-
+    const [error, setError] = React.useState<string | null>(null);
+    const [mediaRecorder, setMediaRecorder] = React.useState<MediaRecorder | null>(null);
+    const [recordingTime, setRecordingTime] = React.useState(0);
+    const [isRecording, setIsRecording] = React.useState(false);
+    const [recordedAudioUrl, setRecordedAudioUrl] = React.useState<string | null>(null);
+    const [recordedFileName, setRecordedFileName] = React.useState<string | null>(null);
+    const timerRef = React.useRef<NodeJS.Timeout | null>(null);
     const handleBack = (): void | Promise<void> => navigate(-1);
-
-    const [error, setError] = React.useState<string | null>(null);    
-
-    const handleContinue = () => {
-        const file = fileInputRef.current?.files?.[0];
-        if (!file) {
-        setError(t("recordBreath.error")); // Show error from translation if no file
-        } else {
-        setError(null); // Clear error if valid
-        const audioUrl = URL.createObjectURL(file);
-        navigate("/upload-complete", {
-            state: {
-            audioFileUrl: audioUrl,
-            filename: file.name,
-            nextPage: "/confirmation",
-            },
-        });
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60).toString();
+        const secs = (seconds % 60).toString().padStart(2, "0");
+        return `${mins}:${secs}`;
+    };
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const recorder = new MediaRecorder(stream);
+            const chunks: Blob[] = [];
+            recorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    chunks.push(event.data);
+                }
+            };
+            recorder.onstop = () => {
+                const audioBlob = new Blob(chunks, { type: "audio/webm" });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                setRecordedAudioUrl(audioUrl);
+                setRecordedFileName(`recording-${Date.now()}.webm`);
+            };
+            recorder.start();
+            setMediaRecorder(recorder);
+            setIsRecording(true);
+            setRecordingTime(0);
+            timerRef.current = setInterval(() => {
+                setRecordingTime((prev) => prev + 1);
+            }, 1000);
+            setError(null);
+        } catch (err) {
+            console.error("Microphone access error:", err);
+            setError(t("recordSpeech.microphoneAccessError") || "Microphone access denied");
         }
     };
-
+    const stopRecording = () => {
+        if (mediaRecorder) {
+            mediaRecorder.stop();
+        }
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+        }
+        setIsRecording(false);
+    };
+    const handleContinue = () => {
+        if (recordedAudioUrl && recordedFileName) {
+            setError(null);
+            navigate("/upload-complete", {
+                state: {
+                    audioFileUrl: recordedAudioUrl,
+                    filename: recordedFileName,
+                    nextPage: "/confirmation",
+                },
+            });
+        } else {
+            setError(t("recordSpeech.error") || "Please record or upload an audio file first.");
+        }
+    };
     const handleUploadClick = () => fileInputRef.current?.click();
-
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             const audioUrl = URL.createObjectURL(file);
-            navigate("/upload-complete", {
-                state: {
-                    audioFileUrl: audioUrl,
-                    filename: file.name,
-                    nextPage: "/record-breath",
-                },
-            });
+            setRecordedAudioUrl(audioUrl);
+            setRecordedFileName(file.name);
+            setError(null);
         }
     };
-
     return (
         <div
             style={{
@@ -96,66 +132,24 @@ const SpeechRecordScreen: React.FC = () => {
                         {t('recordSpeech.title')}
                     </div>
                 </div>
-
                 <h3 style={{ textAlign: "center", fontWeight: "bold", marginBottom: "2rem", fontFamily: "Source Sans Pro, sans-serif", fontSize: '32px', marginTop: "3rem" }}>
                     {t('recordSpeech.instructionsTitle')}
                 </h3>
-
                 {/* Step 1 */}
-                <div
-                style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: "1rem",
-                    marginBottom: "1rem",
-    
-                }}
-                >
-                <div
-                    style={{
-                    minWidth: "28px",
-                    height: "28px",
-                    backgroundColor: "#DDE9FF",
-                    borderRadius: "50%",
-                    textAlign: "center",
-                    lineHeight: "28px",
-                    fontWeight: "bold",
-                    color: "#3578de",
-                    fontSize: "14px",
-                    }}
-                >
-                    1
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem", marginBottom: "1rem" }}>
+                    <div style={{ minWidth: "28px", height: "28px", backgroundColor: "#DDE9FF", borderRadius: "50%", textAlign: "center", lineHeight: "28px", fontWeight: "bold", color: "#3578de", fontSize: "14px" }}>1</div>
+                    <div style={{ flex: 1, fontSize: "14px" }}>
+                        {t('recordSpeech.instruction1_part1')}
+                        <strong>{t('recordSpeech.instruction1_bold1')}</strong>
+                        {t('recordSpeech.instruction1_part2')}
+                        <strong>{t('recordSpeech.instruction1_bold2')}</strong>
+                        {t('recordSpeech.instruction1_part3')}
+                    </div>
                 </div>
-                <div style={{ flex: 1, fontSize: "14px" }}>
-                    {t('recordSpeech.instruction1_part1')}
-                    <strong>{t('recordSpeech.instruction1_bold1')}</strong>
-                    {t('recordSpeech.instruction1_part2')}
-                    <strong>{t('recordSpeech.instruction1_bold2')}</strong>
-                    {t('recordSpeech.instruction1_part3')}
-                </div>
-                </div>
-
-                <img style={{ width: "50%", margin: "auto", display: "block" }}
-                src={keepDistance}
-                alt={t('recordSpeech.keepDistanceAlt')}
-                />
-
-
+                <img style={{ width: "50%", margin: "auto", display: "block" }} src={keepDistance} alt={t('recordSpeech.keepDistanceAlt')} />
                 {/* Step 2 */}
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem", marginBottom: "1rem" }}>
-                    <div style={{
-                        minWidth: "28px",
-                        height: "28px",
-                        backgroundColor: "#DDE9FF",
-                        borderRadius: "50%",
-                        textAlign: "center",
-                        lineHeight: "28px",
-                        fontWeight: 700,
-                        color: "#3578de",
-                        fontSize: "14px"
-                    }}>
-                    2
-                    </div>
+                    <div style={{ minWidth: "28px", height: "28px", backgroundColor: "#DDE9FF", borderRadius: "50%", textAlign: "center", lineHeight: "28px", fontWeight: 700, color: "#3578de", fontSize: "14px" }}>2</div>
                     <div style={{ flex: 1, fontSize: "14px" }}>
                         {t('recordSpeech.instruction2_part1')}
                         <strong>{t('recordSpeech.instruction2_bold')}</strong>
@@ -163,21 +157,9 @@ const SpeechRecordScreen: React.FC = () => {
                     </div>
                 </div>
                 <img src={mouthSpeechDistance} alt={t('recordSpeech.mouthDistanceAlt')} style={{ width: "50%", margin: "auto", display: "block" }} />
-
                 {/* Step 3 */}
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem", marginBottom: "2rem" }}>
-                    <div style={{
-                        minWidth: "28px",
-                        height: "28px",
-                        backgroundColor: "#DDE9FF",
-                        borderRadius: "50%",
-                        textAlign: "center",
-                        lineHeight: "28px",
-                        fontWeight: "bold",
-                        color: "#3578de",
-                        fontSize: "14px"
-                    }}>3
-                    </div>
+                    <div style={{ minWidth: "28px", height: "28px", backgroundColor: "#DDE9FF", borderRadius: "50%", textAlign: "center", lineHeight: "28px", fontWeight: "bold", color: "#3578de", fontSize: "14px" }}>3</div>
                     <div style={{ flex: 1, fontSize: "14px" }}>
                         {t('recordSpeech.instruction3_part1')}
                         <strong>{t('recordSpeech.instruction3_bold1')}</strong>
@@ -186,113 +168,39 @@ const SpeechRecordScreen: React.FC = () => {
                         {t('recordSpeech.instruction3_part3')}
                     </div>
                 </div>
-
                 {/* Timer */}
                 <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.75rem", marginTop: "3.5rem" }}>
-                    <div
-                        style={{
-                            border: "1px solid #3578de",
-                            color: "#3578de",
-                            padding: "0.6rem 1.5rem",
-                            borderRadius: "12px",
-                            fontWeight: "bold",
-                            fontSize: "20px",
-                        }}
-                    >
-                        0:00
+                    <div style={{ border: "1px solid #3578de", color: "#3578de", padding: "0.6rem 1.5rem", borderRadius: "12px", fontWeight: "bold", fontSize: "20px" }}>
+                        {formatTime(recordingTime)}
                     </div>
                 </div>
-
                 {/* Start & Stop buttons */}
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        gap: "2rem",
-                        marginBottom: "2.5rem",
-                    }}
-                >
+                <div style={{ display: "flex", justifyContent: "center", gap: "2rem", marginBottom: "2.5rem" }}>
                     <div style={{ textAlign: "center" }}>
-                        <button
-                            style={{
-                                width: "64px",
-                                height: "64px",
-                                borderRadius: "50%",
-                                backgroundColor: "#3578de",
-                                border: "none",
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                cursor: "pointer",
-                            }}
-                        >
+                        <button onClick={startRecording} style={{ width: "64px", height: "64px", borderRadius: "50%", backgroundColor: isRecording ? "#dde9ff" : "#3578de", border: "none", display: "flex", justifyContent: "center", alignItems: "center", cursor: "pointer" }}>
                             <img src={StartIcon} alt={t('recordSpeech.recordButton')} width={28} height={28} />
                         </button>
                         <div style={{ fontSize: "18px", marginTop: "0.5rem", color: "#666" }}>{t('recordSpeech.recordButton')}</div>
                     </div>
-
                     <div style={{ textAlign: "center" }}>
-                        <button
-                            style={{
-                                width: "64px",
-                                height: "64px",
-                                borderRadius: "50%",
-                                backgroundColor: "#DDE9FF",
-                                border: "none",
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                cursor: "pointer",
-                            }}
-                        >
+                        <button onClick={stopRecording} style={{ width: "64px", height: "64px", borderRadius: "50%",backgroundColor: !isRecording ? "#DDE9FF" : "#DDE9FF",border: "none", display: "flex", justifyContent: "center", alignItems: "center", cursor: "pointer" }}>
                             <img src={StopIcon} alt={t('recordSpeech.stopButton')} width={20} height={20} />
                         </button>
                         <div style={{ fontSize: "18px", marginTop: "0.5rem", color: "#666" }}>{t('recordSpeech.stopButton')}</div>
                     </div>
                 </div>
-
-                {/* Buttons */}
+                {/* Continue and Upload buttons */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1rem" }}>
-                    {error && (
-                        <p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>
-                            {error}
-                        </p>
-                    )}
-                    <button
-                        onClick={handleContinue}
-                        style={{
-                            backgroundColor: "#3578de",
-                            color: "white",
-                            border: "none",
-                            padding: "1.5rem",
-                            borderRadius: "15px",
-                            fontWeight: "bold",
-                            cursor: "pointer",
-                        }}
-                    >
+                    {error && <p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>{error}</p>}
+                    <button onClick={handleContinue} style={{ backgroundColor: "#3578de", color: "white", border: "none", padding: "1.5rem", borderRadius: "15px", fontWeight: "bold", cursor: "pointer" }}>
                         {t('recordSpeech.continueButton')}
                     </button>
-                    <button
-                        onClick={handleUploadClick}
-                        style={{
-                            background: "none",
-                            border: "none",
-                            padding: 0,
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            cursor: "pointer",
-                
-                        }}
-                    >
-                        <img src={UploadIcon} alt={t('recordSpeech.uploadFile')} width={22} height={22}
-                             style={{ marginBottom: "0.3rem", marginRight: "0.5rem" }} />
+                    <button onClick={handleUploadClick} style={{ background: "none", border: "none", padding: 0, display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                        <img src={UploadIcon} alt={t('recordSpeech.uploadFile')} width={22} height={22} style={{ marginBottom: "0.3rem", marginRight: "0.5rem" }} />
                         <span style={{ fontSize: "12px", fontWeight: 600, color: "#333" }}>
                             {t('recordSpeech.uploadFile')}
                         </span>
                     </button>
-
                     <input
                         type="file"
                         accept="audio/*"
@@ -301,7 +209,6 @@ const SpeechRecordScreen: React.FC = () => {
                         style={{ display: "none" }}
                     />
                 </div>
-
                 {/* Footer */}
                 <div style={{ textAlign: 'center' }}>
                     <a
@@ -322,5 +229,4 @@ const SpeechRecordScreen: React.FC = () => {
         </div>
     );
 };
-
 export default SpeechRecordScreen;
