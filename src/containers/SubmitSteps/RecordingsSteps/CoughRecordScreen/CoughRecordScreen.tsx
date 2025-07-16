@@ -32,117 +32,198 @@ import {
     HiddenFileInput,
     FooterLink
 } from './styles';
+
 const CoughRecordScreen: React.FC = () => {
     const { t } = useTranslation();
-    const isArabic = i18n.language === 'ar';     
+    const isArabic = i18n.language === 'ar';
     const navigate = useNavigate();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+
     const [involuntary, setInvoluntary] = useState(false);
-    const [error, setError] = React.useState<string | null>(null);      
+    const [error, setError] = useState<string | null>(null);
+    const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+    const [isRecording, setIsRecording] = useState(false);
+    const [recordingTime, setRecordingTime] = useState(0);
+    const [audioData, setAudioData] = useState<{ audioFileUrl: string; filename: string } | null>(null);
+
     const handleBack = () => navigate(-1);
-    const handleContinue = () => {
-        const file = fileInputRef.current?.files?.[0];
-        if (!file) {
-        setError(t("recordBreath.error")); // Show error from translation if no file
-        } else {
-        setError(null); // Clear error if valid
-        const audioUrl = URL.createObjectURL(file);
-        navigate("/upload-complete", {
-            state: {
-            audioFileUrl: audioUrl,
-            filename: file.name,
-            nextPage: "/confirmation",
-            },
-        });
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60).toString();
+        const secs = (seconds % 60).toString().padStart(2, '0');
+        return `${mins}:${secs}`;
+    };
+
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const recorder = new MediaRecorder(stream);
+            const chunks: Blob[] = [];
+            recorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    chunks.push(event.data);
+                }
+            };
+            recorder.onstop = () => {
+                const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                setAudioData({
+                    audioFileUrl: audioUrl,
+                    filename: `cough_recording-${new Date().toISOString().replace(/[:.]/g, '-')}.webm`
+                });
+            };
+            recorder.start();
+            setMediaRecorder(recorder);
+            setIsRecording(true);
+            setRecordingTime(0);
+            timerRef.current = setInterval(() => {
+                setRecordingTime(prev => prev + 1);
+            }, 1000);
+            setError(null);
+            setAudioData(null);
+        } catch (err) {
+            console.error("Microphone access error:", err);
+            setError(t("recordCough.microphoneAccessError") || "Microphone access denied.");
         }
     };
-    const triggerFileInput = () => fileInputRef.current?.click();
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const audioUrl = URL.createObjectURL(file);
+
+    const stopRecording = () => {
+        if (mediaRecorder) {
+            mediaRecorder.stop();
+        }
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+        }
+        setIsRecording(false);
+    };
+
+    /** ✅ Updated handleContinue */
+    const handleContinue = () => {
+        if (audioData) {
+            setError(null);
             navigate("/upload-complete", {
                 state: {
-                    audioFileUrl: audioUrl,
-                    filename: file.name,
-                    nextPage: "/record-speech",
+                    ...audioData,
+                    nextPage: "/record-speech" // Go to Speech after upload
                 },
             });
+        } else {
+            const file = fileInputRef.current?.files?.[0];
+            if (!file) {
+                setError(t("recordCough.error") || "Please record or upload an audio file first.");
+            } else {
+                const audioUrl = URL.createObjectURL(file);
+                navigate("/upload-complete", {
+                    state: {
+                        audioFileUrl: audioUrl,
+                        filename: file.name,
+                        nextPage: "/record-speech"
+                    },
+                });
+            }
         }
     };
+
+    /** ✅ Updated handleFileChange */
+    const triggerFileInput = () => fileInputRef.current?.click();
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const audioUrl = URL.createObjectURL(file);
+
+        navigate("/upload", {
+            state: {
+                audioFileUrl: audioUrl,
+                filename: file.name,
+                nextPage: "/record-speech"
+            },
+        });
+    };
+
     return (
         <Container>
             <Content>
-                {/* Header */}
                 <Header>
-                <BackButton
-                    onClick={handleBack}
-                    aria-label={t("recordCough.goBackAria")}
-                    isArabic={isArabic}
-                >
-                    <img
-                    src={BackIcon}
-                    alt={t("recordCough.goBackAlt")}
-                    width={24}
-                    height={24}
-                    style={{
-                        transform: isArabic ? 'rotate(180deg)' : 'none',
-                    }}
-                    />
-                </BackButton>
-                <HeaderText>{t("recordCough.title")}</HeaderText>
+                    <BackButton
+                        onClick={handleBack}
+                        aria-label={t("recordCough.goBackAria")}
+                        isArabic={isArabic}
+                    >
+                        <img
+                            src={BackIcon}
+                            alt={t("recordCough.goBackAlt")}
+                            width={24}
+                            height={24}
+                            style={{ transform: isArabic ? 'rotate(180deg)' : 'none' }}
+                        />
+                    </BackButton>
+                    <HeaderText>{t("recordCough.title")}</HeaderText>
                 </Header>
 
-                <h3
-                    style={{
-                        fontFamily: "Source Sans Pro, sans-serif",
-                        fontSize: "32px",
-                        textAlign: "center",
-                        fontWeight: "bold",
-                        marginBottom: "2rem",
-                        color: "#393939",
-                        marginTop: "50px"
-                    }}
-                >
+                <h3 style={{
+                    fontFamily: "Source Sans Pro, sans-serif",
+                    fontSize: "32px",
+                    textAlign: "center",
+                    fontWeight: "bold",
+                    marginBottom: "2rem",
+                    color: "#393939",
+                    marginTop: "50px"
+                }}>
                     {t("recordCough.instructionsTitle")}
                 </h3>
-                {/* Instruction Step 1 */}
+
                 <StepWrapper>
                     <StepCircle>1</StepCircle>
                     <InstructionText>{t('recordCough.instruction1_part1')} <strong>{t('recordCough.instruction1_bold1')}</strong>{t('recordCough.instruction1_part2')} <strong>{t('recordCough.instruction1_bold2')}</strong>{t('recordCough.instruction1_part3')}</InstructionText>
                 </StepWrapper>
                 <Image src={keepDistance} alt={t("recordCough.keepDistanceAlt")} />
-                {/* Instruction Step 2 */}
+
                 <StepWrapper>
                     <StepCircle>2</StepCircle>
                     <InstructionText>{t('recordCough.instruction2_part1')}<strong>{t('recordCough.instruction2_bold')}</strong>{t('recordCough.instruction2_part2')}</InstructionText>
                 </StepWrapper>
                 <Image src={mouthDistance} alt={t("recordCough.mouthDistanceAlt")} />
-                {/* Instruction Step 3 */}
+
                 <StepWrapper>
                     <StepCircle>3</StepCircle>
                     <InstructionText>{t('recordCough.instruction3_part1')} <strong>{t('recordCough.instruction3_bold1')}</strong>{t('recordCough.instruction3_part2')}<strong>{t('recordCough.instruction3_bold2')}</strong>{t('recordCough.instruction3_part3')}</InstructionText>
                 </StepWrapper>
-                {/* Timer */}
+
                 <Timer>
-                    <TimerBox>0:00</TimerBox>
+                    <TimerBox>{formatTime(recordingTime)}</TimerBox>
                 </Timer>
-                {/* Recording Buttons */}
+
                 <ButtonRow>
                     <div style={{ textAlign: 'center' }}>
-                        <CircleButton bg="#3578de" aria-label={t("recordCough.recordButton")}>
+                        <CircleButton
+                            bg={isRecording ? "#dde9ff" : "#3578de"}
+                            aria-label={t("recordCough.recordButton")}
+                            onClick={startRecording}
+                            disabled={isRecording}
+                            style={{ opacity: isRecording ? 0.6 : 1, cursor: isRecording ? "not-allowed" : "pointer" }}
+                        >
                             <img src={StartIcon} alt={t("recordCough.recordButton")} width={28} height={28} />
                         </CircleButton>
                         <ButtonLabel>{t("recordCough.recordButton")}</ButtonLabel>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                        <CircleButton bg="#DDE9FF" aria-label={t("recordCough.stopButton")}>
+                        <CircleButton
+                            bg="#DDE9FF"
+                            aria-label={t("recordCough.stopButton")}
+                            onClick={stopRecording}
+                            disabled={!isRecording}
+                            style={{ opacity: !isRecording ? 0.6 : 1, cursor: !isRecording ? "not-allowed" : "pointer" }}
+                        >
                             <img src={StopIcon} alt={t("recordCough.stopButton")} width={20} height={20} />
                         </CircleButton>
                         <ButtonLabel>{t("recordCough.stopButton")}</ButtonLabel>
                     </div>
                 </ButtonRow>
-                {/* Checkbox */}
+
                 <CheckboxRow>
                     <Label htmlFor="involuntary" style={{ userSelect: "none" }}>
                         {t("recordCough.checkboxLabel")}
@@ -156,15 +237,13 @@ const CoughRecordScreen: React.FC = () => {
                     />
                 </CheckboxRow>
 
-                {/* Error Message */}
-
                 {error && (
                     <p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>
-                    {error}
+                        {error}
                     </p>
-                )}                
-                {/* Action Buttons */}
-                <ActionButtons>                 
+                )}
+
+                <ActionButtons>
                     <button onClick={handleContinue}>
                         {t("recordCough.continueButton")}
                     </button>
@@ -185,7 +264,7 @@ const CoughRecordScreen: React.FC = () => {
                         onChange={handleFileChange}
                     />
                 </ActionButtons>
-                {/* Footer */}
+
                 <FooterLink
                     href="https://docs.google.com/forms/d/e/1FAIpQLScYsWESIcn1uyEzFQT464qLSYZuUduHzThgTRPJODTQcCwz5w/viewform"
                     target="_blank"
@@ -197,4 +276,5 @@ const CoughRecordScreen: React.FC = () => {
         </Container>
     );
 };
+
 export default CoughRecordScreen;

@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-
-// Assets
 import keepDistance from "../../../../assets/images/keepDistance.png";
 import mouthBreathDistance from "../../../../assets/images/mouthBreathDistance.png";
 import BackIcon from "../../../../assets/icons/arrowLeft.svg";
@@ -41,22 +39,23 @@ const BreathRecordScreen: React.FC = () => {
         return `${m}:${s < 10 ? "0" : ""}${s}`;
     };
 
-    const handleBack = (): void | Promise<void> => navigate(-1);
-
+    const handleBack = () => navigate(-1);
     const handleUploadClick = () => fileInputRef.current?.click();
 
+    /** ✅ Updated: Upload → Navigate to Upload Page */
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            const audioUrl = URL.createObjectURL(file);
-            navigate("/upload-complete", {
-                state: {
-                    audioFileUrl: audioUrl,
-                    filename: file.name,
-                    nextPage: "/confirmation",
-                },
-            });
-        }
+        if (!file) return;
+
+        const audioUrl = URL.createObjectURL(file);
+
+        navigate("/upload-complete", {
+            state: {
+                audioFileUrl: audioUrl,
+                filename: file.name,
+                nextPage: "/confirmation" // last step after upload
+            },
+        });
     };
 
     const startRecording = async () => {
@@ -65,7 +64,6 @@ const BreathRecordScreen: React.FC = () => {
             setError(t("recordBreath.noMicSupport", "Microphone not supported"));
             return;
         }
-
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const recorder = new MediaRecorder(stream);
@@ -85,7 +83,7 @@ const BreathRecordScreen: React.FC = () => {
             recorder.start();
             setIsRecording(true);
             setTimer(0);
-        } catch (err) {
+        } catch {
             setError(t("recordBreath.micPermissionDenied", "Microphone permission denied"));
         }
     };
@@ -97,25 +95,22 @@ const BreathRecordScreen: React.FC = () => {
         }
     };
 
+    /** ✅ Updated: Continue → Upload page, pass nextPage: confirmation */
     const handleContinue = () => {
-        if (recordedChunks.length === 0 && !fileInputRef.current?.files?.[0]) {
+        if (recordedChunks.length === 0) {
             setError(t("recordBreath.error", "Please record or upload an audio file first."));
             return;
         }
 
-        const blob = recordedChunks.length
-            ? new Blob(recordedChunks, { type: "audio/webm" })
-            : fileInputRef.current!.files![0];
-
+        const blob = new Blob(recordedChunks, { type: "audio/webm" });
         const audioUrl = URL.createObjectURL(blob);
-        const filename = recordedChunks.length  ? `breath_recording-${new Date().toISOString().replace(/[:.]/g, '-')}.webm`
-            : fileInputRef.current!.files![0].name;
+        const filename = `breath_recording-${new Date().toISOString().replace(/[:.]/g, '-')}.webm`;
 
         navigate("/upload-complete", {
             state: {
                 audioFileUrl: audioUrl,
                 filename,
-                nextPage: "/confirmation",
+                nextPage: "/confirmation" // final step after upload
             },
         });
     };
@@ -148,7 +143,6 @@ const BreathRecordScreen: React.FC = () => {
                     {t("recordBreath.instructionsTitle", "Instructions")}
                 </h3>
 
-                {/* Instructions */}
                 {[1, 2, 3].map((step) => (
                     <div key={step}>
                         <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem", marginBottom: "1rem" }}>
@@ -173,7 +167,7 @@ const BreathRecordScreen: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Start & Stop buttons */}
+                {/* Record / Stop Buttons */}
                 <div style={{ display: "flex", justifyContent: "center", gap: "2rem", marginBottom: "2.5rem" }}>
                     <div style={{ textAlign: "center" }}>
                         <button onClick={startRecording} disabled={isRecording} style={{ width: "64px", height: "64px", borderRadius: "50%", backgroundColor: "#3578de", border: "none", display: "flex", justifyContent: "center", alignItems: "center", cursor: isRecording ? "not-allowed" : "pointer", opacity: isRecording ? 0.6 : 1 }}>
@@ -194,19 +188,16 @@ const BreathRecordScreen: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Error & Action Buttons */}
+                {/* Continue and Upload */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1rem" }}>
                     {error && <p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>{error}</p>}
-
                     <button onClick={handleContinue} style={{ backgroundColor: "#3578de", color: "white", border: "none", padding: "1.5rem", borderRadius: "15px", fontWeight: "bold", cursor: "pointer" }}>
                         {t("recordBreath.continueButton", "Continue")}
                     </button>
-
                     <button onClick={handleUploadClick} style={{ background: "none", border: "none", padding: 0, display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
                         <img src={UploadIcon} alt={t("recordBreath.uploadFile")} width={22} height={22} style={{ marginBottom: "0.3rem", marginRight: "0.5rem" }} />
                         <span style={{ fontSize: "13px", fontWeight: 600, color: "#333" }}>{t("recordBreath.uploadFile", "Upload your own file")}</span>
                     </button>
-
                     <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: "none" }} />
                 </div>
 
