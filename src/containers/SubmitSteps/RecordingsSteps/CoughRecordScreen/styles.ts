@@ -72,7 +72,7 @@ export const InstructionText = styled.div`
 
 export const Image = styled.img`
   width: 100%;
-  max-width: 30%;
+  max-width: 40%;
   height: auto;
   margin: 0 auto 2rem;
   display: block;

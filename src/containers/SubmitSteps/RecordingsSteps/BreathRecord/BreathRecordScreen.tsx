@@ -193,7 +193,7 @@ const BreathRecordScreen: React.FC = () => {
           alt={t("recordBreath.keepDistanceAlt")}
           style={{
             width: "100%",
-            maxWidth: "30%", 
+            maxWidth: "40%", 
             height: "auto",
             margin: "0 auto 2rem",
             display: "block", 
@@ -235,7 +235,7 @@ const BreathRecordScreen: React.FC = () => {
           alt={t("recordBreath.mouthDistanceAlt")}
           style={{
             width: "100%",
-            maxWidth: "30%", 
+            maxWidth: "40%", 
             height: "auto",
             margin: "0 auto 2rem",
             display: "block", 

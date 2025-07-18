@@ -211,7 +211,7 @@ const SpeechRecordScreen: React.FC = () => {
         <img
           style={{ 
             width: "100%",
-            maxWidth: "30%",
+            maxWidth: "40%",
             height: "auto",
             margin: "0 auto 2rem",
             display: "block",
@@ -254,7 +254,7 @@ const SpeechRecordScreen: React.FC = () => {
           alt={t("recordSpeech.mouthDistanceAlt")}
           style={{
             width: "100%",
-            maxWidth: "30%",
+            maxWidth: "40%",
             height: "auto",
             margin: "0 auto 2rem",
             display: "block",
