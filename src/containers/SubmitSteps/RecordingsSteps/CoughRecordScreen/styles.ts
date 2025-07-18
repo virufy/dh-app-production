@@ -23,7 +23,6 @@ export const Content = styled.div`
 export const Header = styled.div`
     position: relative;
     margin-top: 0.05rem;
-    margin-bottom: 1.75rem;
 `;
 
 export const BackButton = styled.button<{ isArabic?: boolean }>`
@@ -207,7 +206,7 @@ export const HiddenFileInput = styled.input`
 `;
 
 export const FooterLink = styled.a`
-    font-size: 1rem;
+    font-size: 14px;
     font-weight: bold;
     color: #3578de;
     text-decoration: underline;

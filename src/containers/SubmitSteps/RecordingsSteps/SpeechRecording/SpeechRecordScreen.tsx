@@ -167,10 +167,10 @@ const SpeechRecordScreen: React.FC = () => {
           style={{
             textAlign: "center",
             fontWeight: "bold",
-            marginBottom: "2rem",
+            marginBottom: "5rem",
             fontFamily: "Source Sans Pro, sans-serif",
-            fontSize: "32px",
-            marginTop: "3rem",
+            fontSize: "24px",
+           
           }}
         >
           {t("recordSpeech.instructionsTitle")}
@@ -455,7 +455,7 @@ const SpeechRecordScreen: React.FC = () => {
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              fontSize: "1rem",
+              fontSize: "14px",
               fontWeight: "bold",
               color: "#3578de",
               textDecoration: "underline",

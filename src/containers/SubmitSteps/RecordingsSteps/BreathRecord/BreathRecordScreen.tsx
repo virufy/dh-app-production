@@ -149,9 +149,9 @@ const BreathRecordScreen: React.FC = () => {
           style={{
             textAlign: "center",
             fontWeight: "bold",
-            fontSize: "32px",
-            marginBottom: "2rem",
-            marginTop: "3rem",
+            fontSize: "24px",
+            marginBottom: "5rem",
+            
           }}
         >
           {t("recordBreath.instructionsTitle")}
@@ -422,6 +422,22 @@ const BreathRecordScreen: React.FC = () => {
             onChange={handleFileChange}
             style={{ display: "none" }}
           />
+        </div>
+                {/* Footer */}
+        <div style={{ textAlign: "center" }}>
+          <a
+            href="https://docs.google.com/forms/d/e/1FAIpQLScYsWESIcn1uyEzFQT464qLSYZuUduHzThgTRPJODTQcCwz5w/viewform"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontSize: "14px",
+              fontWeight: "bold",
+              color: "#3578de",
+              textDecoration: "underline",
+            }}
+          >
+            {t("recordSpeech.reportIssue")}
+          </a>
         </div>
       </div>
     </div>

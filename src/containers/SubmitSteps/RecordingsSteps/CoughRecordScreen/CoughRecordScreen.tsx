@@ -147,7 +147,7 @@ const CoughRecordScreen: React.FC = () => {
 
     const audioUrl = URL.createObjectURL(file);
 
-    navigate("/upload", {
+    navigate("/upload-complete", {
       state: {
         audioFileUrl: audioUrl,
         filename: file.name,
@@ -178,13 +178,14 @@ const CoughRecordScreen: React.FC = () => {
 
         <h3
           style={{
-            fontFamily: "Source Sans Pro, sans-serif",
-            fontSize: "32px",
+            fontFamily: "Source Open Sans, sans-serif",
+            fontSize: "24px",
             textAlign: "center",
-            fontWeight: "bold",
-            marginBottom: "2rem",
+            fontWeight: "600",
+            marginBottom: "5rem",
             color: "#393939",
-            marginTop: "50px",
+            marginTop: "2rem",
+
           }}
         >
           {t("recordCough.instructionsTitle")}
