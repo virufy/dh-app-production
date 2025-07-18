@@ -209,7 +209,13 @@ const SpeechRecordScreen: React.FC = () => {
           </div>
         </div>
         <img
-          style={{ width: "50%", margin: "auto", display: "block" }}
+          style={{ 
+            width: "100%",
+            maxWidth: "30%",
+            height: "auto",
+            margin: "0 auto 2rem",
+            display: "block",
+          }}
           src={keepDistance}
           alt={t("recordSpeech.keepDistanceAlt")}
         />
@@ -246,7 +252,13 @@ const SpeechRecordScreen: React.FC = () => {
         <img
           src={mouthSpeechDistance}
           alt={t("recordSpeech.mouthDistanceAlt")}
-          style={{ width: "50%", margin: "auto", display: "block" }}
+          style={{
+            width: "100%",
+            maxWidth: "30%",
+            height: "auto",
+            margin: "0 auto 2rem",
+            display: "block",
+          }}
         />
 
         <div

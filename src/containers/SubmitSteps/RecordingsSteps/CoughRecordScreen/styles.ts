@@ -8,12 +8,16 @@ export const Container = styled.div`
     display: flex;
     justify-content: center;
     background-color: transparent;
+    
 `;
 
 export const Content = styled.div`
     max-width: 1000px;
     width: 100%;
     position: relative;
+    text-align: center;
+    justify-content: center;
+
 `;
 
 export const Header = styled.div`
@@ -40,34 +44,39 @@ export const HeaderText = styled.div`
 
 export const StepWrapper = styled.div`
     display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    margin-bottom: 1rem;
+    align-items: flex-start;   
+    justify-content: center;   
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    width: 100%;               
+    text-align: left;         
 `;
 
 export const StepCircle = styled.div`
-    min-width: 28px;
-    height: 28px;
-    background-color: #DDE9FF;
-    border-radius: 50%;
-    text-align: center;
-    line-height: 28px;
-    font-weight: bold;
-    color: #3578de;
-    font-size: 20px;
+  min-width: 28px;
+  height: 28px;
+  background-color: #DDE9FF;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 28px;
+  font-weight: bold;
+  color: #3578de;
+  font-size: 14px;
 `;
+
 
 export const InstructionText = styled.div`
     flex: 1;
     font-size: 14px;
+    
 `;
 
 export const Image = styled.img`
-    display: block;
-    margin: auto;
-    width: 50%;
-    margin-bottom: 1.5rem;
-
+  width: 100%;
+  max-width: 30%;
+  height: auto;
+  margin: 0 auto 2rem;
+  display: block;
 `;
 
 export const Timer = styled.div`
