@@ -1,0 +1,164 @@
+{
+  "home": {
+    "title": "دراسة تشخيصية بالذكاء الاصطناعي لـ COVID / Flu / RSV  باستخدام الهاتف الذكي",
+    "language_label": "اللغة",
+    "patient_id_label": "رقم هوية المريض",
+    "patient_id_placeholder": "أدخل رقم هوية المريض",
+    "hospital_label": "اسم المستشفى",
+    "error": {
+      "patient_id_required": "رقم هوية المريض مطلوب"
+    }, 
+    "hospital_options": {
+      "barsha": "مركز البرشاء الصحي",
+      "nadd": "مركز ندى الحمر الصحي"
+    },
+    "submit_button": "التالي"
+  },
+  "confirmation": {
+    "titleLine1": "شكرًا جزيلًا على إرسال",
+    "titleLine2": "النموذج!",
+    "button": "العودة إلى القائمة الرئيسية",
+    "report": "هل هناك خطأ؟ أبلغ عن مشكلة"
+  },
+  "consent": {
+    "title": "الموافقة على المشاركة في البحث",
+    "description": "ندعوك للمشاركة في دراسة بحثية تُجريها دبي الصحية بالتعاون مع شريكنا في البحث، Virufy.\n\n قبل اتخاذ قرارك، يُرجى مراجعة الوثائق الرسمية الخاصة بالدراسة بعناية. مشاركتك تطوعية.",
+    "documentsTitle": "١. المستندات",
+    "dubaiHealthTitle": "١. :هيئة الصحة بدبي - معلومات ونموذج موافقة المشارك",
+
+    "dubaiHealthDesc": "يشرح هدف الدراسة، الإجراءات، المخاطر، والفوائد.\u200F",
+    "virufyTitle": "٢. سياسة الخصوصية للشركاء - Virufy",
+
+    "virufyDesc": "توضيح سياسة التعامل مع بياناتك من قبل Virufy.",
+    "readFull": "اضغط لقراءة المستند الكامل",
+    "confirmationTitle": " مربعات تأكيد الأختيار",
+    "confirmationDesc": "من خلال تحديد المربعات، فأنت تؤكد أنك راجعت المعلومات وتوافق على المشاركة.\u200F",
+    "checkbox1": "أُقر أنني أبلغ من العمر 18 عامًا أو أكثر.\u200F",
+    "checkbox2": "أُقر أنني قرأت وفهمت نموذج معلومات وموافقة المشارك من هيئة الصحة بدبي.\u200F",
+    "checkbox3": "أُقر بأنه سيتم مشاركة بياناتي المجهولة مع Virufy وأنني اطلعت على سياسة الخصوصية الخاصة بهم.\u200F",
+    "checkbox4": "أُقر أنني أُوافق صراحةً على جمع ومعالجة معلوماتي الصحية وتسجيلاتي (السعال، التنفس، الكلام).\u200F",
+    "next": "التالي",
+    "nextPaper": "التالي (نموذج الموافقة الورقة الموقعة)",
+
+
+    "footerIssue": "هل هناك خطأ؟",
+    "report": "الإبلاغ عن خطأ"
+  },
+  "recordSpeech": {
+    "title": "سجل صوتك",
+    "instructionsTitle": "تعليمات",
+
+    "instruction1_part1": "ابحث عن ",
+    "instruction1_bold1": "مكان هادئ ",
+    "instruction1_part2": "على الأقل ",
+    "instruction1_bold2": "6 أمتار (20 قدمًا) ",
+    "instruction1_part3": "بعيدًا عن الآخرين. إذا كنت تشعر بتوعك، يرجى الجلوس.",
+
+    "instruction2_part1": "أمسك الجزء السفلي من جهازك على بُعد ",
+    "instruction2_bold": "1–2 قدم (30–60 سم) ",
+    "instruction2_part2": "من فمك.",
+
+    "instruction3_part1": "اضغط على زر التسجيل. استمر في نطق صوت ",
+    "instruction3_bold1": "\"آآآآه\"",
+    "instruction3_part2": " لمدة ",
+    "instruction3_bold2": "5 ثوانٍ على الأقل.",
+    "instruction3_part3": " ثم اضغط على زر الإيقاف.", 
+    
+    "recordButton": "تسجيل",
+    "stopButton": "إيقاف",
+    "continueButton": "استمرار",
+    "uploadFile": "قم بتحميل ملفك الخاص",
+    "reportIssue": "هل هناك خطأ؟ أبلغ عن مشكلة",
+    "goBackAria": "العودة",
+    "goBackAlt": "رجوع",
+    "keepDistanceAlt": "صورة تبين الحفاظ على المسافة",
+    "mouthDistanceAlt": "صورة تبين مسافة الجهاز عن الفم",
+    "defaultFilename": "تسجيل الصوت",
+    "error": "يرجى تحميل الملف الصوتي أولاً"
+
+  },
+  "recordBreath": {
+    "title": "سجل تنفسك",
+    "instructionsTitle": "تعليمات",
+
+    "instruction1_part1": "ابحث عن ",
+    "instruction1_bold1": "مكان هادئ ",
+    "instruction1_part2": "على بُعد ",
+    "instruction1_bold2": "20 قدمًا (6 أمتار) ",
+    "instruction1_part3": "بعيدًا عن الآخرين. إذا كنت تشعر بتوعك، يرجى الجلوس.",
+
+    "instruction2_part1": "أمسك الجزء السفلي من جهازك ",
+    "instruction2_bold": "1–2 قدم (30–60 سم) ",
+    "instruction2_part2": "بعيدًا عن فمك.",
+
+    "instruction3_part1": "اضغط على زر التسجيل.",
+    "instruction3_bold1": " تنفس بعمق وبصوت عالٍ",
+    "instruction3_part2": " في الهاتف",
+    "instruction3_bold2": " 3 مرات",
+    "instruction3_part3": ". ثم اضغط على زر الإيقاف.",
+
+
+    "recordButton": "تسجيل",
+    "stopButton": "إيقاف",
+    "continueButton": "استمرار",
+    "uploadFile": "قم بتحميل ملفك الخاص",
+    "reportIssue": "هل هناك خطأ؟ أبلغ عن مشكلة",
+    "goBackAria": "العودة",
+    "goBackAlt": "رجوع",
+    "keepDistanceAlt": "صورة تبين الحفاظ على المسافة",
+    "mouthDistanceAlt": "صورة تبين مسافة الجهاز عن الفم",
+    "defaultFilename": "تسجيل التنفس",
+    "error": "يرجى تحميل الملف الصوتي أولاً"
+
+  },
+  "recordCough": {
+    "title": "سجل سعالك",
+    "instructionsTitle": "تعليمات",
+
+    "instruction1_part1": "ابحث عن ",
+    "instruction1_bold1": "مكان هادئ ",
+    "instruction1_part2": "على بُعد ",
+    "instruction1_bold2": "6 أمتار (20 قدمًا) ",
+    "instruction1_part3": "من الآخرين. إذا كنت تشعر بتوعك، يرجى الجلوس.",
+
+    "instruction2_part1": "أمسك الجزء السفلي من جهازك ",
+    "instruction2_bold": "1-2 قدم (30-60 سم)",
+    "instruction2_part2": " بعيدًا عن فمك. حاول ألا تسعل بشدة.",
+
+    "instruction3_part1": "اضغط على زر التسجيل، ثم ",
+    "instruction3_bold1": "اسعل 3 مرات ",
+    "instruction3_part2": "مع أخذ ",
+    "instruction3_bold2": "نفس عميق ",
+    "instruction3_part3": "بين كل سَعلة. ثم اضغط على زر الإيقاف.",
+
+    "recordButton": "تسجيل",
+    "stopButton": "إيقاف",
+    "checkboxLabel": "هل كان السُعال لا إرادياً؟",
+    "continueButton": "استمرار",
+    "uploadFile": "قم بتحميل ملفك الخاص",
+    "reportIssue": "هل هناك خطأ؟ أبلغ عن مشكلة",
+    "goBackAria": "العودة",
+    "goBackAlt": "رجوع",
+    "keepDistanceAlt": "صورة تبين الحفاظ على المسافة",
+    "mouthDistanceAlt": "صورة تبين مسافة الجهاز عن الفم",
+    "defaultFilename": "تسجيل السعال",
+    "error": "يرجى تحميل الملف الصوتي أولاً"
+  },
+  "uploadComplete": {
+    "title": "تأكيد التسجيل",
+    "subtitle": "تم رفع الملف",
+    "description": "تأكيد تسجيل الصوت",
+    "filename": "اسم الملف.flac",
+    "timerStart": "0:00",
+    "timerEnd": "0:07",
+    "retake": "إعادة التسجيل",
+    "submit": "إرسال",
+    "report": "هل هناك خطأ؟ أبلغ عن مشكلة",
+    "backAria": "العودة",
+    "backAlt": "رجوع",
+    "sliderAria": "شريط تحكم الصوت",
+    "play": "تشغيل الصوت",
+    "pause": "إيقاف الصوت مؤقتًا"
+
+  }
+}

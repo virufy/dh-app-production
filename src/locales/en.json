@@ -1,0 +1,160 @@
+{
+  "home": {
+    "title": "Smartphone COVID/Flu/RSV\nAI Diagnostics Study",
+    "language_label": "Language",
+    "patient_id_label": "Patient ID",
+    "patient_id_placeholder": "Enter Patient ID",
+    "error": {
+      "patient_id_required": "Patient ID is required",
+      "patient_id_numeric": "Patient ID must be a valid number."
+    },
+    "hospital_label": "Hospital Name",
+    "hospital_options": {
+      "barsha": "Al Barsha Health Centre",
+      "nadd": "Nadd Al Hammar Health Centre"
+    },
+    "submit_button": "Next"
+  },
+  "confirmation": {
+    "titleLine1": "Thank you for",
+    "titleLine2": "submitting!",
+    "button": "Return to main menu",
+    "report": "Something wrong? Report an error"
+  },
+  "consent": {
+      "title": "Research Participation Consent",
+      "description": "You are invited to participate in a research study conducted by Dubai Health in collaboration with our research partner, Virufy.\n\n Before you decide, please carefully review the official study documents. Your participation is voluntary.",
+      "dubaiHealthTitle": "1. Dubai Health\nParticipant Information & Consent Form",
+      "dubaiHealthDesc": "This document explains the study's purpose, procedures, risks, and benefits.",
+      "virufyTitle": "2. Virufy - Partner Privacy Policy",
+      "virufyDesc": "As our research partner, Virufy helps analyze the data. This document explains how Virufy handles your data.",
+      "readFull": "Tap to read the full document",
+      "confirmationTitle": "Confirmation Checkboxes:",
+      "confirmationDesc": "By checking the boxes below, you confirm you have reviewed the information and agree to participate.",
+      "checkbox1": "I certify that I am 18 years of age or older.",
+      "checkbox2": "I have read and understood the Dubai Health Participant Information & Consent Form. I voluntarily agree to participate in this study.",
+      "checkbox3": "I acknowledge that my anonymized data will be shared with Virufy for analysis and have had the opportunity to review their Privacy Policy.",
+      "checkbox4": "I explicitly consent to the collection and processing of my health information and recordings (cough, breathing, speech) for the research purposes described.",
+      "next": "Next",
+      "nextPaper": "Next (Signed Paper Consent Form)",
+      "footerIssue": "Something wrong?",
+      "report": "Report an error"
+      
+  },
+    "recordSpeech": {
+      "title": "Record Your Speech",
+      "instructionsTitle": "Instructions",
+
+      "instruction1_part1": "Find a ",
+      "instruction1_bold1": "quiet place ",
+      "instruction1_part2": "at least ",
+      "instruction1_bold2": "20 ft (6m) ",
+      "instruction1_part3": "away from others. If you are feeling ill, please sit down.",
+
+      "instruction2_part1": "Hold the bottom of your device ",
+      "instruction2_bold": "1–2 ft (30–60 cm)",
+      "instruction2_part2": " away from your mouth.",
+
+      "instruction3_part1": "Press the record button. Keep saying ",
+      "instruction3_bold1": "\"aaaah\"",
+      "instruction3_part2": " for at least",
+      "instruction3_bold2": " 5 seconds.",
+      "instruction3_part3": " Then press stop.",
+
+      "recordButton": "Record",
+      "stopButton": "Stop",
+      "continueButton": "Continue",
+      "uploadFile": "Upload your own file",
+      "reportIssue": "Something wrong? Report an issue",
+      "goBackAria": "Go back",
+      "goBackAlt": "Back",
+      "keepDistanceAlt": "Keep distance illustration",
+      "mouthDistanceAlt": "Hold device at mouth distance illustration",
+      "defaultFilename": "Speech Recording",
+      "error": "Please upload the audio file first."
+    },
+
+    "recordBreath": {
+      "title": "Record your breath",
+      "instructionsTitle": "Instructions",
+
+      "instruction1_part1": "Find a ",
+      "instruction1_bold1": "quiet place ",
+      "instruction1_part2": "at least ",
+      "instruction1_bold2": "20 ft (6m) ",
+      "instruction1_part3": "away from others. If you are feeling ill, please sit down.",    
+
+      "instruction2_part1": "Hold the bottom of your device ",
+      "instruction2_bold": "1–2 ft (30–60 cm)",
+      "instruction2_part2": " away from your mouth.",
+
+      "instruction3_part1": "Tap record.",
+      "instruction3_bold1": " Breathe deeply and loudly",
+      "instruction3_part2": " into the phone",
+      "instruction3_bold2": " 3 times",
+      "instruction3_part3": ". Then tap stop.",
+
+      "recordButton": "Record",
+      "stopButton": "Stop",
+      "continueButton": "Continue",
+      "uploadFile": "Upload your own file",
+      "reportIssue": "Something wrong? Report an error",
+      "goBackAria": "Go back",
+      "goBackAlt": "Back",
+      "keepDistanceAlt": "Keep distance illustration",
+      "mouthDistanceAlt": "Hold device at mouth distance illustration",
+      "defaultFilename": "Breath Recording",
+      "error": "Please upload the audio file first."      
+    },
+
+  "recordCough": {
+    "title": "Record your cough",
+    "instructionsTitle": "Instructions",
+
+    "instruction1_part1": "Find a ",
+    "instruction1_bold1": "quiet place ",
+    "instruction1_part2": "at least ",
+    "instruction1_bold2": "20 ft (6m) ",
+    "instruction1_part3": "away from others. If you are feeling ill, please sit down.",
+
+    "instruction2_part1": "Hold the bottom of your device ",
+    "instruction2_bold": "1-2 ft (30-60 cm)",
+    "instruction2_part2": " away from your mouth. Try not to cough too forcefully.",
+
+    "instruction3_part1": "Tap record,",
+    "instruction3_bold1": " cough 3 times",
+    "instruction3_part2": " with a",
+    "instruction3_bold2": " deep breath",
+    "instruction3_part3": " between each cough. Then tap stop.",
+    
+    "recordButton": "Record",
+    "stopButton": "Stop",
+    "checkboxLabel": "Were the coughs involuntary?",
+    "continueButton": "Continue",
+    "uploadFile": "Upload your own file",
+    "reportIssue": "Something wrong? Report an error",
+    "goBackAria": "Go back",
+    "goBackAlt": "Back",
+    "keepDistanceAlt": "Keep distance illustration",
+    "mouthDistanceAlt": "Hold device at mouth distance illustration",
+    "defaultFilename": "Cough Recording",
+    "error": "Please upload the audio file first."
+  },
+  "uploadComplete": {
+    "title": "Confirm Recording",
+    "subtitle": "Upload Complete",
+    "description": "Confirm audio recording",
+    "filename": "Filename.flac",
+    "timerStart": "0:00",
+    "timerEnd": "0:07",
+    "retake": "Retake",
+    "submit": "Submit",
+    "report": "Something wrong? Report an error",
+    "backAria": "Go back",
+    "backAlt": "Back",
+    "sliderAria": "Audio seek slider",
+    "play": "Play audio",
+    "pause": "Pause audio"
+
+  }
+}
