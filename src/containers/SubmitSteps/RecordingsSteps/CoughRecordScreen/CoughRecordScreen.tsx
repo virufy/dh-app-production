@@ -108,7 +108,7 @@ const CoughRecordScreen: React.FC = () => {
     setIsRecording(false);
   };
 
-  /** ✅ Updated handleContinue */
+  /** Updated handleContinue */
   const handleContinue = () => {
     if (audioData) {
       setError(null);
@@ -138,7 +138,7 @@ const CoughRecordScreen: React.FC = () => {
     }
   };
 
-  /** ✅ Updated handleFileChange */
+  /** Updated handleFileChange */
   const triggerFileInput = () => fileInputRef.current?.click();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
