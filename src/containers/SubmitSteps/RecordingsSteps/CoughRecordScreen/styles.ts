@@ -61,12 +61,16 @@ export const StepCircle = styled.div`
   font-weight: bold;
   color: #3578de;
   font-size: 14px;
+    margin:  0 0 0 auto;
 `;
 
 
 export const InstructionText = styled.div`
     flex: 1;
     font-size: 14px;
+    max-width: 600px;
+    margin: 0 auto 0 0;
+    //margin-left:0px
     
 `;
 

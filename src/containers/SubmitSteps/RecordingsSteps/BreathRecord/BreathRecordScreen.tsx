@@ -176,11 +176,13 @@ const BreathRecordScreen: React.FC = () => {
               fontWeight: "bold",
               color: "#3578de",
               fontSize: "14px",
+                margin:  "0 0 0 auto",
             }}
           >
             1
           </div>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1 , fontSize: "14px", maxWidth: "600px",
+              margin: "0 auto",marginLeft:"0px"}}>
             {t("recordBreath.instruction1_part1")}
             <strong>{t("recordBreath.instruction1_bold1")}</strong>
             {t("recordBreath.instruction1_part2")}
@@ -220,11 +222,13 @@ const BreathRecordScreen: React.FC = () => {
               fontWeight: "bold",
               color: "#3578de",
               fontSize: "14px",
+                margin:  "0 0 0 auto",
             }}
           >
             2
           </div>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1 ,fontSize: "14px", maxWidth: "600px",
+              margin: "0 auto",marginLeft:"0px" }}>
             {t("recordBreath.instruction2_part1")}
             <strong>{t("recordBreath.instruction2_bold")}</strong>
             {t("recordBreath.instruction2_part2")}
@@ -261,11 +265,13 @@ const BreathRecordScreen: React.FC = () => {
               fontWeight: "bold",
               color: "#3578de",
               fontSize: "14px",
+                margin:  "0 0 0 auto",
             }}
           >
             3
           </div>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1 , fontSize: "14px", maxWidth: "600px",
+              margin: "0 auto",marginLeft:"0px"}}>
             {t("recordBreath.instruction3_part1")}
             <strong>{t("recordBreath.instruction3_bold1")}</strong>
             {t("recordBreath.instruction3_part2")}

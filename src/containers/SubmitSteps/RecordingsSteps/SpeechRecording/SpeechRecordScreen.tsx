@@ -74,7 +74,7 @@ const SpeechRecordScreen: React.FC = () => {
     setIsRecording(false);
   };
 
-  /** ✅ Updated to always navigate to Upload page with next step */
+  /** Updated to always navigate to Upload page with next step */
   const handleContinue = () => {
     if (recordedAudioUrl && recordedFileName) {
       navigate("/upload-complete", {
@@ -94,7 +94,7 @@ const SpeechRecordScreen: React.FC = () => {
 
   const handleUploadClick = () => fileInputRef.current?.click();
 
-  /** ✅ Updated handleFileChange */
+  /** Updated handleFileChange */
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -183,6 +183,7 @@ const SpeechRecordScreen: React.FC = () => {
             alignItems: "flex-start",
             gap: "1rem",
             marginBottom: "1rem",
+
           }}
         >
           <div
@@ -196,11 +197,16 @@ const SpeechRecordScreen: React.FC = () => {
               fontWeight: "bold",
               color: "#3578de",
               fontSize: "14px",
+                margin:  "0 0 0 auto",
+                // marginRight:"0px"
             }}
           >
             1
           </div>
-          <div style={{ flex: 1, fontSize: "14px" }}>
+          <div style={{ flex: 1, fontSize: "14px", maxWidth: "600px",
+              margin: "0 auto",marginLeft:"0px"
+
+          }}>
             {t("recordSpeech.instruction1_part1")}
             <strong>{t("recordSpeech.instruction1_bold1")}</strong>
             {t("recordSpeech.instruction1_part2")}
@@ -239,11 +245,13 @@ const SpeechRecordScreen: React.FC = () => {
               fontWeight: 700,
               color: "#3578de",
               fontSize: "14px",
+                margin:  "0 0 0 auto",
             }}
           >
             2
           </div>
-          <div style={{ flex: 1, fontSize: "14px" }}>
+          <div style={{ flex: 1, fontSize: "14px", maxWidth: "600px",
+              margin: "0 auto",marginLeft:"0px"}}>
             {t("recordSpeech.instruction2_part1")}
             <strong>{t("recordSpeech.instruction2_bold")}</strong>
             {t("recordSpeech.instruction2_part2")}
@@ -280,11 +288,13 @@ const SpeechRecordScreen: React.FC = () => {
               fontWeight: "bold",
               color: "#3578de",
               fontSize: "14px",
+                margin:  "0 0 0 auto",
             }}
           >
             3
           </div>
-          <div style={{ flex: 1, fontSize: "14px" }}>
+          <div style={{ flex: 1, fontSize: "14px",maxWidth: "600px",
+              margin: "0 auto",marginLeft:"0px" }}>
             {t("recordSpeech.instruction3_part1")}
             <strong>{t("recordSpeech.instruction3_bold1")}</strong>
             {t("recordSpeech.instruction3_part2")}
