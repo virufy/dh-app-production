@@ -117,6 +117,7 @@ export const RetakeButton = styled.button`
   margin-bottom: 1.7rem;
   cursor: pointer;
   font-size: 16px;
+  max-width: 400px; 
 
 `;
 
@@ -131,6 +132,7 @@ export const SubmitButton = styled.button`
   cursor: pointer;
   margin-bottom: 0.5rem;
   font-size: 16px;
+  max-width: 400px;
 `;
 // ButtonsWrapper is used to center the buttons.
 export const ButtonsWrapper = styled.div` 

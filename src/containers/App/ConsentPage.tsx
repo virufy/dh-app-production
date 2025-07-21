@@ -3,6 +3,8 @@ import {useNavigate} from 'react-router-dom';
 import BackIcon from '../../assets/images/back-icon.png';
 import {useTranslation} from 'react-i18next';
 import i18n from '../../i18n';
+import { ConsentContainer, ConsentContent } from './consentscreen';
+
 
 
 type CheckboxItem = {
@@ -83,92 +85,122 @@ const ConsentScreen: React.FC = () => {
     };
 
     return (
-        <div
-            style={{
-                minHeight: '100vh',
-                padding: 0,
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'flex-start',
-                width: '100%',
-                fontSize: '0.8rem',
-                fontWeight: 400,
-                letterSpacing: '0.02em',
-                lineHeight: 1.5,
-            }}
-        >
+    <ConsentContainer>
+      <ConsentContent>
+            <div className="consent-container">
+                <div className="consent-content">
             <div
                 style={{
-                    padding: '1.7rem',
-                    borderRadius: '0px',
+                    minHeight: '100vh',
+                    padding: 0,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
                     width: '100%',
-
+                    fontSize: '0.8rem',
+                    fontWeight: 400,
+                    letterSpacing: '0.02em',
+                    lineHeight: 1.5,
                 }}
             >
-                {/* Header */}
                 <div
                     style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        position: 'relative',
-                        padding: '0px 20px',
-                        textAlign: 'center',
-                        flexWrap: 'wrap',
-                        fontWeight: 400,
-                        letterSpacing: '0.02em',
-                        lineHeight: 1.5,
+                        padding: '1.7rem',
+                        borderRadius: '0px',
+                        width: '100%',
 
                     }}
                 >
-                    <button
-                        onClick={handleBack}
+                    {/* Header */}
+                    <div
                         style={{
-                            position: 'absolute',
-                            [isArabic ? 'right' : 'left']: '-10px',
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                        }}
-                        aria-label={t('consent.back_aria')}
-                    >
-                        <img
-                            src={BackIcon}
-                            alt={t('consent.back_alt')}
-                            style={{width: '25px', height: '35px', transform: isArabic ? 'rotate(180deg)' : 'none',}}
-                        />
-                    </button>
-                    <h2
-                        style={{
-                            color: '#007bff',
-                            margin: 0,
-                            width: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            position: 'relative',
+                            padding: '0px 20px',
                             textAlign: 'center',
-                            fontSize: '1rem',
+                            flexWrap: 'wrap',
+                            fontWeight: 400,
+                            letterSpacing: '0.02em',
+                            lineHeight: 1.5,
+
                         }}
                     >
-                        {t('consent.title')}
-                    </h2>
-                </div>
+                        <button
+                            onClick={handleBack}
+                            style={{
+                                position: 'absolute',
+                                [isArabic ? 'right' : 'left']: '-10px',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                marginLeft: '0 px',
+                            }}
+                            aria-label={t('consent.back_aria')}
+                        >
+                            <img
+                                src={BackIcon}
+                                alt={t('consent.back_alt')}
+                                style={{width: '25px', height: '35px', transform: isArabic ? 'rotate(180deg)' : 'none',}}
+                            />
+                        </button>
+                        <h2
+                            style={{
+                                color: '#007bff',
+                                margin: 0,
+                                width: '100%',
+                                textAlign: 'center',
+                                fontSize: '1rem',
+                            }}
+                        >
+                            {t('consent.title')}
+                        </h2>
+                    </div>
 
 
-                <p style={{
-                    marginTop: '3rem',
-                    marginBottom: '2rem',
-                    whiteSpace: 'pre-line',
-                    fontSize: '0.8rem',
-                    width: '100%',
-                }}>
-                    <u>{t('consent.description')}</u>
-                </p>
+                    <p style={{
+                        marginTop: '3rem',
+                        marginBottom: '2rem',
+                        whiteSpace: 'pre-line',
+                        fontSize: '0.8rem',
+                        width: '100%',
+                    }}>
+                        <u>{t('consent.description')}</u>
+                    </p>
 
-                <div style={{marginBottom: '1.5rem', fontWeight: 'bold'}}>
-                    <div style={{marginBottom: '1.5rem', whiteSpace: 'pre-line'}}>
-                        {t('consent.dubaiHealthTitle')}<br/>
-                        <span style={{fontWeight: 'normal', marginBottom: '2rem'}}>{t('consent.dubaiHealthDesc')}</span>
+                    <div style={{marginBottom: '1.5rem', fontWeight: 'bold'}}>
+                        <div style={{marginBottom: '1.5rem', whiteSpace: 'pre-line'}}>
+                            {t('consent.dubaiHealthTitle')}<br/>
+                            <span style={{fontWeight: 'normal', marginBottom: '2rem'}}>{t('consent.dubaiHealthDesc')}</span>
+                            <Spacer height="1rem"/>
+                            <a
+                                href="https://drive.google.com/file/d/1vXhM9nFp2TfGdLplxpc4hV9EIuYZBodW/view"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{color: '#000000', fontWeight: 'normal'}}
+                            >
+                                {t('consent.readFull')}
+                            </a>
+                            <Spacer height="1rem"/>
+                            <div style={{...iframeStyle, marginTop: '1rem'}}>
+                                <iframe
+                                    src="https://drive.google.com/file/d/1vXhM9nFp2TfGdLplxpc4hV9EIuYZBodW/preview"
+                                    width="100%"
+                                    height="100%"
+                                    allow="autoplay"
+                                    style={{border: 'none'}}
+                                    title={t('consent.document_preview_title')}
+                                ></iframe>
+                            </div>
+                        </div>
+
+
+                        {t('consent.virufyTitle')}<br/>
+                        <span style={{fontWeight: 'normal'}}>{t('consent.virufyDesc')}</span> <br/>
                         <Spacer height="1rem"/>
                         <a
-                            href="https://docs.google.com/document/d/1c093C-aOUaxqWAUBodDc2QUtIHA8sfpA/view"
+                            href="https://drive.google.com/file/d/1hnxvDJ5qHBnUi7cnkNdyD4PuWMz8Ntss/view"
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{color: '#000000', fontWeight: 'normal'}}
@@ -178,132 +210,111 @@ const ConsentScreen: React.FC = () => {
                         <Spacer height="1rem"/>
                         <div style={{...iframeStyle, marginTop: '1rem'}}>
                             <iframe
-                                src="https://docs.google.com/document/d/1c093C-aOUaxqWAUBodDc2QUtIHA8sfpA/view?embedded=true
-"
+                                src="https://drive.google.com/file/d/1hnxvDJ5qHBnUi7cnkNdyD4PuWMz8Ntss/preview"
                                 width="100%"
                                 height="100%"
                                 allow="autoplay"
                                 style={{border: 'none'}}
-                                title={t('consent.document_preview_title')}
+                                title={t('consent.privacy_policy_preview_title')}
                             ></iframe>
                         </div>
+
                     </div>
 
+                    <h4 style={{marginBottom: '0rem'}}>{t('consent.confirmationTitle')}</h4>
+                    <p style={{
+                        fontSize: '0.8rem',
+                        marginTop: '0rem',
+                        marginBottom: '1rem',
+                        fontWeight: 400,
+                        letterSpacing: '0.02em',
+                        lineHeight: 1.5,
+                    }}>{t('consent.confirmationDesc')}</p>
 
-                    {t('consent.virufyTitle')}<br/>
-                    <span style={{fontWeight: 'normal'}}>{t('consent.virufyDesc')}</span> <br/>
-                    <Spacer height="1rem"/>
-                    <a
-                        href="https://drive.google.com/file/d/1hnxvDJ5qHBnUi7cnkNdyD4PuWMz8Ntss/view"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{color: '#000000', fontWeight: 'normal'}}
-                    >
-                        {t('consent.readFull')}
-                    </a>
-                    <Spacer height="1rem"/>
-                    <div style={{...iframeStyle, marginTop: '1rem'}}>
-                        <iframe
-                            src="https://drive.google.com/file/d/1hnxvDJ5qHBnUi7cnkNdyD4PuWMz8Ntss/preview"
-                            width="100%"
-                            height="100%"
-                            allow="autoplay"
-                            style={{border: 'none'}}
-                            title={t('consent.privacy_policy_preview_title')}
-                        ></iframe>
+                    <div style={{marginBottom: '1.5rem', paddingLeft: 0}}>
+                        {checkboxes.map(({id, label, state, setState}) => (
+                            <label
+                                key={id}
+                                htmlFor={id}
+                                style={{display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '0.75rem', paddingLeft: 0}}
+                            >
+                                <input
+                                    type="checkbox"
+                                    id={id}
+                                    checked={state}
+                                    onChange={() => setState(!state)}
+                                    style={{marginTop: '0.3rem', borderColor: '#222'}}
+                                />{' '}
+                                <span>{label}</span>
+                            </label>
+                        ))}
                     </div>
 
-                </div>
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '1rem',
+                        marginBottom: '1.5rem',
+                        width: '100%'
+                    }}>
+                        <Spacer height="1rem"/>
 
-                <h4 style={{marginBottom: '0rem'}}>{t('consent.confirmationTitle')}</h4>
-                <p style={{
-                    fontSize: '0.8rem',
-                    marginTop: '0rem',
-                    marginBottom: '1rem',
-                    fontWeight: 400,
-                    letterSpacing: '0.02em',
-                    lineHeight: 1.5,
-                }}>{t('consent.confirmationDesc')}</p>
-
-                <div style={{marginBottom: '1.5rem', paddingLeft: 0}}>
-                    {checkboxes.map(({id, label, state, setState}) => (
-                        <label
-                            key={id}
-                            htmlFor={id}
-                            style={{display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '0.75rem', paddingLeft: 0}}
+                        <button
+                            onClick={handleNext}
+                            style={{
+                                backgroundColor: "#3578de",
+                                fontSize:"0.85rem",
+                                color: "white",
+                                border: "none",
+                                padding: "1.5rem",
+                                borderRadius: "15px",
+                                fontWeight: "bold",
+                                cursor: "pointer",
+                            }}
                         >
-                            <input
-                                type="checkbox"
-                                id={id}
-                                checked={state}
-                                onChange={() => setState(!state)}
-                                style={{marginTop: '0.3rem', borderColor: '#222'}}
-                            />{' '}
-                            <span>{label}</span>
-                        </label>
-                    ))}
-                </div>
+                            {t('consent.next')}
+                        </button>
 
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '1rem',
-                    marginBottom: '1.5rem',
-                    width: '100%'
-                }}>
-                    <Spacer height="1rem"/>
-                    
-                    <button
-                        onClick={handleNext}
-                        style={{
-                            backgroundColor: "#3578de",
-                            fontSize:"0.85rem",
-                            color: "white",
-                            border: "none",
-                            padding: "1.5rem",
-                            borderRadius: "15px",
-                            fontWeight: "bold",
-                            cursor: "pointer",
-                        }}
-                    >
-                        {t('consent.next')}
-                    </button>
+                        <button
+                            onClick={handleSignedPaperNext}
+                            style={{
+                                backgroundColor: "#3578de",
+                                fontSize:"0.85rem",
+                                color: "white",
+                                border: "none",
+                                padding: "1.5rem",
+                                borderRadius: "15px",
+                                fontWeight: "bold",
+                                cursor: "pointer",
+                            }}
+                        >
+                            {t('consent.nextPaper')}
+                        </button>
+                    </div>
+                    <div style={{textAlign: "center"}}>
+                        <a
+                            href="https://docs.google.com/forms/d/e/1FAIpQLScYsWESIcn1uyEzFQT464qLSYZuUduHzThgTRPJODTQcCwz5w/viewform"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                                fontSize: "0.8rem",
+                                fontWeight: "bold",
+                                color: "#3578de",
+                                textDecoration: "underline",
+                            }}
+                        >
+                            {t("recordBreath.reportIssue", "Something wrong? Report an error")}
+                        </a>
+                    </div>
 
-                    <button
-                        onClick={handleSignedPaperNext}
-                        style={{
-                            backgroundColor: "#3578de",
-                            fontSize:"0.85rem",
-                            color: "white",
-                            border: "none",
-                            padding: "1.5rem",
-                            borderRadius: "15px",
-                            fontWeight: "bold",
-                            cursor: "pointer",
-                        }}
-                    >
-                        {t('consent.nextPaper')}
-                    </button>
                 </div>
-                <div style={{textAlign: "center"}}>
-                    <a
-                        href="https://docs.google.com/forms/d/e/1FAIpQLScYsWESIcn1uyEzFQT464qLSYZuUduHzThgTRPJODTQcCwz5w/viewform"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                            fontSize: "0.8rem",
-                            fontWeight: "bold",
-                            color: "#3578de",
-                            textDecoration: "underline",
-                        }}
-                    >
-                        {t("recordBreath.reportIssue", "Something wrong? Report an error")}
-                    </a>
-                </div>
-
             </div>
-        </div>
-    );
+            </div>
+            </div>
+            
+            </ConsentContent>
+        </ConsentContainer>
+        );
 };
 
 export default ConsentScreen;
