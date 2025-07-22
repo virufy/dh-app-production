@@ -2,22 +2,31 @@ import styled from 'styled-components';
 
 export const Container = styled.div`
     min-height: 100vh;
-    padding: 1.5rem 1rem;
-    font-family: 'Source Sans Pro', sans-serif;
-    font-size: 14px;
+    width: 100%;
     display: flex;
     justify-content: center;
-    background-color: transparent;
-    
+    align-items: flex-start;
+    padding: 0.5rem;
+    box-sizing: border-box;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 14px;
+
+
+    @media (min-width: 48rem) {
+        align-items: center;
+    }
 `;
 
 export const Content = styled.div`
-    max-width: 1000px;
     width: 100%;
-    position: relative;
-    text-align: center;
-    justify-content: center;
 
+    @media (min-width: 48rem) {
+        max-width: 26.625rem;
+        width: 100%;
+        background-color: white;
+        padding: 2rem;
+        border-radius: 0.75rem;
+    }
 `;
 
 export const Header = styled.div`

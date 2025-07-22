@@ -169,9 +169,9 @@ const SpeechRecordScreen: React.FC = () => {
                         fontSize: "24px",
                         textAlign: "center",
                         fontWeight: "600",
-                        marginBottom: "5rem",
+                        marginBottom: "2.5rem",
                         color: "#393939",
-                        marginTop: "2rem",
+                        marginTop: "3.5rem",
 
                     }}
                 >
@@ -262,6 +262,11 @@ const SpeechRecordScreen: React.FC = () => {
                     </div>
                 </ButtonRow>
 
+                {error && (
+                <p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>
+                    {error}
+                </p>
+                )}
                 <ActionButtons>
                     <button onClick={handleContinue}>
                         {t("recordSpeech.continueButton")}

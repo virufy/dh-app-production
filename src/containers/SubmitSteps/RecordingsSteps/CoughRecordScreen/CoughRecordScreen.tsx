@@ -181,9 +181,9 @@ const CoughRecordScreen: React.FC = () => {
             fontSize: "24px",
             textAlign: "center",
             fontWeight: "600",
-            marginBottom: "5rem",
+            marginBottom: "2.5rem",
             color: "#393939",
-            marginTop: "2rem",
+            marginTop: "3.5rem",
 
           }}
         >
