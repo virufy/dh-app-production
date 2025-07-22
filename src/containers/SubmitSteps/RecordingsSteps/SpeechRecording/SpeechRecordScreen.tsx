@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useRef, useState} from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import keepDistance from "../../../../assets/images/keepDistance.png";
@@ -8,91 +8,125 @@ import StartIcon from "../../../../assets/icons/start.svg";
 import StopIcon from "../../../../assets/icons/stop.svg";
 import UploadIcon from "../../../../assets/icons/upload.svg";
 import i18n from "../../../../i18n";
-
+import {
+    ActionButtons,
+    BackButton, ButtonLabel, ButtonRow, CircleButton,
+    Container,
+    Content, FooterLink,
+    Header,
+    HeaderText, HiddenFileInput, Image,
+    InstructionText,
+    StepCircle,
+    StepWrapper, Timer, TimerBox, UploadButton, UploadText
+} from "./styles";
 const SpeechRecordScreen: React.FC = () => {
-  const { t } = useTranslation();
-  const isArabic = i18n.language === "ar";
-  const navigate = useNavigate();
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const [error, setError] = React.useState<string | null>(null);
-  const [mediaRecorder, setMediaRecorder] =
-    React.useState<MediaRecorder | null>(null);
-  const [recordingTime, setRecordingTime] = React.useState(0);
-  const [isRecording, setIsRecording] = React.useState(false);
-  const [recordedAudioUrl, setRecordedAudioUrl] = React.useState<string | null>(
-    null
-  );
-  const [recordedFileName, setRecordedFileName] = React.useState<string | null>(
-    null
-  );
-  const timerRef = React.useRef<NodeJS.Timeout | null>(null);
 
-  const handleBack = () => navigate(-1);
+    const { t } = useTranslation();
+    const isArabic = i18n.language === "ar";
+    const navigate = useNavigate();
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+        null
+    );
+    const [isRecording, setIsRecording] = useState(false);
+    const [recordingTime, setRecordingTime] = useState(0);
+    const [audioData, setAudioData] = useState<{
+        audioFileUrl: string;
+        filename: string;
+    } | null>(null);
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60).toString();
-    const secs = (seconds % 60).toString().padStart(2, "0");
-    return `${mins}:${secs}`;
-  };
+    const handleBack = () => navigate(-1);
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      const chunks: Blob[] = [];
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) chunks.push(event.data);
-      };
-      recorder.onstop = () => {
-        const audioBlob = new Blob(chunks, { type: "audio/wav" });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        setRecordedAudioUrl(audioUrl);
-        setRecordedFileName(`speech-${Date.now()}.wav`);
-      };
-      recorder.start();
-      setMediaRecorder(recorder);
-      setIsRecording(true);
-      setRecordingTime(0);
-      timerRef.current = setInterval(() => {
-        setRecordingTime((prev) => prev + 1);
-      }, 1000);
-      setError(null);
-    } catch {
-      setError(
-        t("recordSpeech.microphoneAccessError") || "Microphone access denied"
-      );
-    }
-  };
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60).toString();
+        const secs = (seconds % 60).toString().padStart(2, "0");
+        return `${mins}:${secs}`;
+    };
 
-  const stopRecording = () => {
-    if (mediaRecorder) mediaRecorder.stop();
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    setIsRecording(false);
-  };
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const recorder = new MediaRecorder(stream);
+            const chunks: Blob[] = [];
+            recorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    chunks.push(event.data);
+                }
+            };
+            recorder.onstop = () => {
+                const audioBlob = new Blob(chunks, { type: "audio/wav" });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                setAudioData({
+                    audioFileUrl: audioUrl,
+                    filename: `speech_recording-${new Date()
+                        .toISOString()
+                        .replace(/[:.]/g, "-")}.wav`,
+                });
+            };
+            recorder.start();
+            setMediaRecorder(recorder);
+            setIsRecording(true);
+            setRecordingTime(0);
+            timerRef.current = setInterval(() => {
+                setRecordingTime((prev) => prev + 1);
+            }, 1000);
+            setError(null);
+            setAudioData(null);
+        } catch (err) {
+            console.error("Microphone access error:", err);
+            setError(
+                t("recordSpeech.microphoneAccessError") || "Microphone access denied."
+            );
+        }
+    };
+
+    const stopRecording = () => {
+
+        if (mediaRecorder) {
+            mediaRecorder.stop();
+        }
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+        }
+        setIsRecording(false);
+    };
 
   /** Updated to always navigate to Upload page with next step */
   const handleContinue = () => {
-    if (recordedAudioUrl && recordedFileName) {
-      navigate("/upload-complete", {
-        state: {
-          audioFileUrl: recordedAudioUrl,
-          filename: recordedFileName,
-          nextPage: "/record-breath", // after upload → Breath recording
-        },
-      });
-    } else {
-      setError(
-        t("recordSpeech.error") ||
-          "Please record or upload an audio file first."
-      );
-    }
+      if (audioData) {
+          setError(null);
+          navigate("/upload-complete", {
+              state: {
+                  ...audioData,
+                  nextPage: "/record-breath", // Go to Speech after upload
+              },
+          });
+      }
+      else {
+          const file = fileInputRef.current?.files?.[0];
+          if (!file) {
+              setError(
+                  t("recordSpeech.error") ||
+                  "Please record or upload an audio file first."
+              );
+          } else {
+              const audioUrl = URL.createObjectURL(file);
+              navigate("/upload-complete", {
+                  state: {
+                      audioFileUrl: audioUrl,
+                      filename: file.name,
+                      nextPage: "/record-breath",
+                  },
+              });
+          }
+      }
   };
 
-  const handleUploadClick = () => fileInputRef.current?.click();
+  const triggerFileInput = () => fileInputRef.current?.click();
 
   /** Updated handleFileChange */
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,374 +143,160 @@ const SpeechRecordScreen: React.FC = () => {
       },
     });
   };
+    return (
+        <Container>
+            <Content>
+                <Header>
+                    <BackButton
+                        onClick={handleBack}
+                        aria-label={t("recordSpeech.goBackAria")}
+                        isArabic={isArabic}
+                    >
+                        <img
+                            src={BackIcon}
+                            alt={t("recordSpeech.goBackAlt")}
+                            width={24}
+                            height={24}
+                            style={{ transform: isArabic ? "rotate(180deg)" : "none" }}
+                        />
+                    </BackButton>
+                    <HeaderText>{t("recordSpeech.title")}</HeaderText>
+                </Header>
 
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        padding: "1.5rem 1rem",
-        fontFamily: "Source Sans Pro, sans-serif",
-        fontSize: "13px",
-        display: "flex",
-        justifyContent: "center",
-        backgroundColor: "transparent",
-      }}
-    >
-      <div style={{ maxWidth: "1000px", width: "100%", position: "relative" }}>
-        <div
-          style={{
-            position: "relative",
-            marginTop: "1.25rem",
-            marginBottom: "1.75rem",
-          }}
-        >
-          <button
-            onClick={handleBack}
-            style={{
-              position: "absolute",
-              [isArabic ? "right" : "left"]: "-10px",
-              top: 0,
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-            }}
-            aria-label={t("recordSpeech.goBackAria")}
-          >
-            <img
-              src={BackIcon}
-              alt={t("recordSpeech.goBackAlt")}
-              width={24}
-              height={24}
-              style={{ transform: isArabic ? "rotate(180deg)" : "none" }}
-            />
-          </button>
-          <div
-            style={{
-              textAlign: "center",
-              fontWeight: 600,
-              fontSize: "18px",
-              color: "#3578de",
-              fontFamily: "Source Sans Pro, sans-serif",
-              marginTop: "0.05rem",
-            }}
-          >
-            {t("recordSpeech.title")}
-          </div>
-        </div>
-        <h3
-          style={{
-            textAlign: "center",
-            fontWeight: "bold",
-            marginBottom: "5rem",
-            fontFamily: "Source Sans Pro, sans-serif",
-            fontSize: "24px",
-           
-          }}
-        >
-          {t("recordSpeech.instructionsTitle")}
-        </h3>
+                <h3
+                    style={{
+                        fontFamily: "Source Open Sans, sans-serif",
+                        fontSize: "24px",
+                        textAlign: "center",
+                        fontWeight: "600",
+                        marginBottom: "5rem",
+                        color: "#393939",
+                        marginTop: "2rem",
 
-        {/* Instructions and images */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "1rem",
-            marginBottom: "1rem",
+                    }}
+                >
+                    {t("recordSpeech.instructionsTitle")}
+                </h3>
 
-          }}
-        >
-          <div
-            style={{
-              minWidth: "28px",
-              height: "28px",
-              backgroundColor: "#DDE9FF",
-              borderRadius: "50%",
-              textAlign: "center",
-              lineHeight: "28px",
-              fontWeight: "bold",
-              color: "#3578de",
-              fontSize: "14px",
-                margin:  "0 0 0 auto",
-                // marginRight:"0px"
-            }}
-          >
-            1
-          </div>
-          <div style={{ flex: 1, fontSize: "14px", maxWidth: "600px",
-              margin: "0 auto",marginLeft:"0px"
+                <StepWrapper>
+                    <StepCircle>1</StepCircle>
+                    <InstructionText>
+                        {t("recordSpeech.instruction1_part1")}{" "}
+                        <strong>{t("recordSpeech.instruction1_bold1")}</strong>
+                        {t("recordSpeech.instruction1_part2")}{" "}
+                        <strong>{t("recordSpeech.instruction1_bold2")}</strong>
+                        {t("recordSpeech.instruction1_part3")}
+                    </InstructionText>
+                </StepWrapper>
+                <Image src={keepDistance} alt={t("recordSpeech.keepDistanceAlt")} />
 
-          }}>
-            {t("recordSpeech.instruction1_part1")}
-            <strong>{t("recordSpeech.instruction1_bold1")}</strong>
-            {t("recordSpeech.instruction1_part2")}
-            <strong>{t("recordSpeech.instruction1_bold2")}</strong>
-            {t("recordSpeech.instruction1_part3")}
-          </div>
-        </div>
-        <img
-          style={{ 
-            width: "100%",
-            maxWidth: "40%",
-            height: "auto",
-            margin: "0 auto 2rem",
-            display: "block",
-          }}
-          src={keepDistance}
-          alt={t("recordSpeech.keepDistanceAlt")}
-        />
+                <StepWrapper>
+                    <StepCircle>2</StepCircle>
+                    <InstructionText>
+                        {t("recordSpeech.instruction2_part1")}
+                        <strong>{t("recordSpeech.instruction2_bold")}</strong>
+                        {t("recordSpeech.instruction2_part2")}
+                    </InstructionText>
+                </StepWrapper>
+                <Image src={mouthSpeechDistance} alt={t("recordSpeech.mouthSpeechDistanceAlt")} />
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "1rem",
-            marginBottom: "1rem",
-          }}
-        >
-          <div
-            style={{
-              minWidth: "28px",
-              height: "28px",
-              backgroundColor: "#DDE9FF",
-              borderRadius: "50%",
-              textAlign: "center",
-              lineHeight: "28px",
-              fontWeight: 700,
-              color: "#3578de",
-              fontSize: "14px",
-                margin:  "0 0 0 auto",
-            }}
-          >
-            2
-          </div>
-          <div style={{ flex: 1, fontSize: "14px", maxWidth: "600px",
-              margin: "0 auto",marginLeft:"0px"}}>
-            {t("recordSpeech.instruction2_part1")}
-            <strong>{t("recordSpeech.instruction2_bold")}</strong>
-            {t("recordSpeech.instruction2_part2")}
-          </div>
-        </div>
-        <img
-          src={mouthSpeechDistance}
-          alt={t("recordSpeech.mouthDistanceAlt")}
-          style={{
-            width: "100%",
-            maxWidth: "40%",
-            height: "auto",
-            margin: "0 auto 2rem",
-            display: "block",
-          }}
-        />
+                <StepWrapper>
+                    <StepCircle>3</StepCircle>
+                    <InstructionText>
+                        {t("recordSpeech.instruction3_part1")}{" "}
+                        <strong>{t("recordSpeech.instruction3_bold1")}</strong>
+                        {t("recordSpeech.instruction3_part2")}
+                        <strong>{t("recordSpeech.instruction3_bold2")}</strong>
+                        {t("recordSpeech.instruction3_part3")}
+                    </InstructionText>
+                </StepWrapper>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "1rem",
-            marginBottom: "2rem",
-          }}
-        >
-          <div
-            style={{
-              minWidth: "28px",
-              height: "28px",
-              backgroundColor: "#DDE9FF",
-              borderRadius: "50%",
-              textAlign: "center",
-              lineHeight: "28px",
-              fontWeight: "bold",
-              color: "#3578de",
-              fontSize: "14px",
-                margin:  "0 0 0 auto",
-            }}
-          >
-            3
-          </div>
-          <div style={{ flex: 1, fontSize: "14px",maxWidth: "600px",
-              margin: "0 auto",marginLeft:"0px" }}>
-            {t("recordSpeech.instruction3_part1")}
-            <strong>{t("recordSpeech.instruction3_bold1")}</strong>
-            {t("recordSpeech.instruction3_part2")}
-            <strong>{t("recordSpeech.instruction3_bold2")}</strong>
-            {t("recordSpeech.instruction3_part3")}
-          </div>
-        </div>
+                <Timer>
+                    <TimerBox>{formatTime(recordingTime)}</TimerBox>
+                </Timer>
 
-        {/* Timer */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            marginBottom: "1.75rem",
-            marginTop: "3.5rem",
-          }}
-        >
-          <div
-            style={{
-              border: "1px solid #3578de",
-              color: "#3578de",
-              padding: "0.6rem 1.5rem",
-              borderRadius: "12px",
-              fontWeight: "bold",
-              fontSize: "20px",
-            }}
-          >
-            {formatTime(recordingTime)}
-          </div>
-        </div>
+                <ButtonRow>
+                    <div style={{ textAlign: "center" }}>
+                        <CircleButton
+                            bg={isRecording ? "#dde9ff" : "#3578de"}
+                            aria-label={t("recordSpeech.recordButton")}
+                            onClick={startRecording}
+                            disabled={isRecording}
+                            style={{
+                                opacity: isRecording ? 0.6 : 1,
+                                cursor: isRecording ? "not-allowed" : "pointer",
+                                width:'56px',
+                                height:'56px'
+                            }}
+                        >
+                            <img
+                                src={StartIcon}
+                                alt={t("recordSpeech.recordButton")}
+                                width={28}
+                                height={28}
+                            />
+                        </CircleButton>
+                        <ButtonLabel>{t("recordSpeech.recordButton")}</ButtonLabel>
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                        <CircleButton
+                            bg={isRecording ? "#3578de" : "#DDE9FF"}
+                            aria-label={t("recordSpeech.stopButton")}
+                            onClick={stopRecording}
+                            disabled={!isRecording}
+                            style={{
+                                opacity: !isRecording ? 0.6 : 1,
+                                cursor: !isRecording ? "not-allowed" : "pointer",
+                                width:'56px',
+                                height:'56px'
+                            }}
+                        >
+                            <img
+                                src={StopIcon}
+                                alt={t("recordSpeech.stopButton")}
+                                width={20}
+                                height={20}
+                            />
+                        </CircleButton>
+                        <ButtonLabel>{t("recordSpeech.stopButton")}</ButtonLabel>
+                    </div>
+                </ButtonRow>
 
-        {/* Buttons */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "2rem",
-            marginBottom: "2.5rem",
-          }}
-        >
-          <div style={{ textAlign: "center" }}>
-            <button
-              onClick={startRecording}
-              disabled={isRecording}
-              style={{
-                width: "64px",
-                height: "64px",
-                borderRadius: "50%",
-                backgroundColor: isRecording ? "#dde9ff" : "#3578de",
-                border: "none",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                cursor: isRecording ? "not-allowed" : "pointer",
-              }}
-            >
-              <img
-                src={StartIcon}
-                alt={t("recordSpeech.recordButton")}
-                width={28}
-                height={28}
-              />
-            </button>
-            <div
-              style={{ fontSize: "18px", marginTop: "0.5rem", color: "#666" }}
-            >
-              {t("recordSpeech.recordButton")}
-            </div>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <button
-              onClick={stopRecording}
-              disabled={!isRecording}
-              style={{
-                width: "64px",
-                height: "64px",
-                borderRadius: "50%",
-                backgroundColor: "#DDE9FF",
-                border: "none",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                cursor: !isRecording ? "not-allowed" : "pointer",
-              }}
-            >
-              <img
-                src={StopIcon}
-                alt={t("recordSpeech.stopButton")}
-                width={20}
-                height={20}
-              />
-            </button>
-            <div
-              style={{ fontSize: "18px", marginTop: "0.5rem", color: "#666" }}
-            >
-              {t("recordSpeech.stopButton")}
-            </div>
-          </div>
-        </div>
+                <ActionButtons>
+                    <button onClick={handleContinue}>
+                        {t("recordSpeech.continueButton")}
+                    </button>
+                    <UploadButton
+                        onClick={triggerFileInput}
+                        aria-label={t("recordSpeech.uploadFile")}
+                    >
+                        <img
+                            src={UploadIcon}
+                            alt={t("recordSpeech.uploadFile")}
+                            width={22}
+                            height={22}
+                            style={{ marginBottom: "0.3rem", marginRight: "0.5rem" }}
+                        />
+                        <UploadText>{t("recordSpeech.uploadFile")}</UploadText>
+                    </UploadButton>
+                    <HiddenFileInput
+                        type="file"
+                        accept="audio/*"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                    />
+                </ActionButtons>
 
-        {/* Continue and Upload */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "1rem",
-            marginBottom: "1rem",
-          }}
-        >
-          {error && (
-            <p
-              style={{ color: "red", textAlign: "center", fontWeight: "bold" }}
-            >
-              {error}
-            </p>
-          )}
-          <button
-            onClick={handleContinue}
-            style={{
-              backgroundColor: "#3578de",
-              color: "white",
-              border: "none",
-              padding: "1.5rem",
-              borderRadius: "15px",
-              fontWeight: "bold",
-              cursor: "pointer",
-            }}
-          >
-            {t("recordSpeech.continueButton")}
-          </button>
-          <button
-            onClick={handleUploadClick}
-            style={{
-              background: "none",
-              border: "none",
-              padding: 0,
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-            }}
-          >
-            <img
-              src={UploadIcon}
-              alt={t("recordSpeech.uploadFile")}
-              width={22}
-              height={22}
-              style={{ marginBottom: "0.3rem", marginRight: "0.5rem" }}
-            />
-            <span style={{ fontSize: "12px", fontWeight: 600, color: "#333" }}>
-              {t("recordSpeech.uploadFile")}
-            </span>
-          </button>
-          <input
-            type="file"
-            accept="audio/*"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            style={{ display: "none" }}
-          />
-        </div>
-
-        {/* Footer */}
-        <div style={{ textAlign: "center" }}>
-          <a
-            href="https://docs.google.com/forms/d/e/1FAIpQLScYsWESIcn1uyEzFQT464qLSYZuUduHzThgTRPJODTQcCwz5w/viewform"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              fontSize: "14px",
-              fontWeight: "bold",
-              color: "#3578de",
-              textDecoration: "underline",
-            }}
-          >
-            {t("recordSpeech.reportIssue")}
-          </a>
-        </div>
-      </div>
-    </div>
-  );
+                <FooterLink
+                    href="https://docs.google.com/forms/d/e/1FAIpQLScYsWESIcn1uyEzFQT464qLSYZuUduHzThgTRPJODTQcCwz5w/viewform"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    {t("recordSpeech.reportIssue")}
+                </FooterLink>
+            </Content>
+        </Container>
+    );
 };
 
 export default SpeechRecordScreen;

@@ -108,7 +108,6 @@ const CoughRecordScreen: React.FC = () => {
     setIsRecording(false);
   };
 
-  /** Updated handleContinue */
   const handleContinue = () => {
     if (audioData) {
       setError(null);
@@ -238,6 +237,8 @@ const CoughRecordScreen: React.FC = () => {
               style={{
                 opacity: isRecording ? 0.6 : 1,
                 cursor: isRecording ? "not-allowed" : "pointer",
+                width:'56px',
+                height:'56px'
               }}
             >
               <img
@@ -251,13 +252,15 @@ const CoughRecordScreen: React.FC = () => {
           </div>
           <div style={{ textAlign: "center" }}>
             <CircleButton
-              bg="#DDE9FF"
+              bg={isRecording ? "#3578de" : "#DDE9FF"}
               aria-label={t("recordCough.stopButton")}
               onClick={stopRecording}
               disabled={!isRecording}
               style={{
                 opacity: !isRecording ? 0.6 : 1,
                 cursor: !isRecording ? "not-allowed" : "pointer",
+                width:'56px',
+                height:'56px'
               }}
             >
               <img
