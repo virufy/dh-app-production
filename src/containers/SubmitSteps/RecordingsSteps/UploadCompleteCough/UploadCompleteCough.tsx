@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import {
   PageWrapper,
   ContentWrapper,
+  ControlsWrapper,
   Header,
   BackButton,
   HeaderTitle,
@@ -14,12 +15,11 @@ import {
   Slider,
   TimeRow,
   PlayButton,
+  ButtonsWrapper,
   RetakeButton,
   SubmitButton,
   Footer,
   ErrorLink,
-  ButtonsWrapper,
-  ControlsWrapper,
 } from "./styles";
 
 import ArrowLeftIcon from "../../../../assets/icons/arrowLeft.svg";
@@ -116,10 +116,8 @@ const UploadCompleteCough: React.FC = () => {
   };
 
   const handleBack = () => navigate(-1);
-
   const handleRetake = () => navigate(-1);
 
-  /** ✅ FIX: Navigate to next step in the flow */
   const handleSubmit = () => {
     if (!nextPage) {
       console.error("No nextPage provided in state");
@@ -127,21 +125,17 @@ const UploadCompleteCough: React.FC = () => {
     }
 
     const nextNextPage = getNextStep(nextPage);
-
     navigate(nextPage, {
-      state: {
-        nextPage: nextNextPage,
-      },
+      state: { nextPage: nextNextPage },
     });
   };
 
-  /** ✅ FIX: Define sequence logic here */
   const getNextStep = (currentPage: string) => {
     switch (currentPage) {
       case "/record-speech":
-        return "/upload-complete"; // after speech recording → upload → then go to breath
+        return "/upload-complete";
       case "/record-breath":
-        return "/upload-complete"; // after breath recording → upload → then confirmation
+        return "/upload-complete";
       default:
         return "/confirmation";
     }
@@ -151,28 +145,24 @@ const UploadCompleteCough: React.FC = () => {
     <PageWrapper>
       <ContentWrapper>
         <audio ref={audioRef} src={audioFileUrl || ""} preload="auto" />
-        <Header>
-          <BackButton
-            onClick={handleBack}
-            aria-label={t("uploadComplete.backAria")}
-            isArabic={isArabic}
-          >
-            <img
-              src={ArrowLeftIcon}
-              alt={t("uploadComplete.backAlt")}
-              width={24}
-              height={24}
-              style={{ transform: isArabic ? "rotate(180deg)" : "none" }}
-            />
-          </BackButton>
-          <HeaderTitle>{t("uploadComplete.title")}</HeaderTitle>
-        </Header>
 
-        <Title>{t("uploadComplete.subtitle")}</Title>
-        <ControlsWrapper style={{ padding: 0 }}>
-          <Subtitle style={{ marginBottom: "2rem" }}>
-            {t("uploadComplete.description")}
-          </Subtitle>
+        <ControlsWrapper>
+          <Header>
+            <BackButton onClick={handleBack} isArabic={isArabic}>
+              <img
+                src={ArrowLeftIcon}
+                alt={t("uploadComplete.backAlt")}
+                width={24}
+                height={24}
+                style={{ transform: isArabic ? "rotate(180deg)" : "none" }}
+              />
+            </BackButton>
+            <HeaderTitle>{t("uploadComplete.title")}</HeaderTitle>
+          </Header>
+
+          <Title>{t("uploadComplete.subtitle")}</Title>
+          <Subtitle>{t("uploadComplete.description")}</Subtitle>
+
           <FileRow>
             <span>{filename}</span>
             <span
@@ -201,20 +191,15 @@ const UploadCompleteCough: React.FC = () => {
             step="0.1"
             onChange={handleSeek}
             aria-label={t("uploadComplete.sliderAria")}
-            style={{ marginTop: "2rem" }}
           />
+
           <TimeRow>
             <span>{formatTime(currentTime)}</span>
             <span>- {formatTime(Math.max(duration - currentTime, 0))}</span>
           </TimeRow>
         </ControlsWrapper>
 
-        <PlayButton
-          onClick={handlePlayPause}
-          aria-label={
-            isPlaying ? t("uploadComplete.pause") : t("uploadComplete.play")
-          }
-        >
+        <PlayButton onClick={handlePlayPause}>
           <img
             src={isPlaying ? PauseIcon : PlayIcon}
             alt={isPlaying ? t("uploadComplete.pause") : t("uploadComplete.play")}
@@ -225,12 +210,8 @@ const UploadCompleteCough: React.FC = () => {
         </PlayButton>
 
         <ButtonsWrapper>
-          <RetakeButton onClick={handleRetake}>
-            {t("uploadComplete.retake")}
-          </RetakeButton>
-          <SubmitButton onClick={handleSubmit}>
-            {t("uploadComplete.submit")}
-          </SubmitButton>
+          <RetakeButton onClick={handleRetake}>{t("uploadComplete.retake")}</RetakeButton>
+          <SubmitButton onClick={handleSubmit}>{t("uploadComplete.submit")}</SubmitButton>
         </ButtonsWrapper>
 
         <Footer>

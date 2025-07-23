@@ -18,7 +18,7 @@ export const ConsentContent = styled.div`
   width: 100%;
 
   @media (min-width: 48rem) {
-    max-width: 40.625rem;
+    max-width: 37.5rem;
     width: 100%;
     background-color: white;
     padding: 2rem;

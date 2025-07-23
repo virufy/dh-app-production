@@ -55,7 +55,7 @@ const ConsentScreen: React.FC = () => {
     const Spacer = ({height}: { height: string }) => <div style={{height}}/>;
 
     const iframeStyle: React.CSSProperties = {
-        height: '500px',
+        height: '250px',
         border: '1px solid #ccc',
         borderRadius: '6px',
         overflow: 'hidden',

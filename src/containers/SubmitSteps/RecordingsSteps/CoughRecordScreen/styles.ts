@@ -20,7 +20,7 @@ export const Container = styled.div`
 export const Content = styled.div`
     width: 100%;
 
-    @media (min-width: 48rem) {
+    @media (min-width: 48rem) {  
         max-width: 26.625rem;
         width: 100%;
         background-color: white;

@@ -171,7 +171,7 @@ const SpeechRecordScreen: React.FC = () => {
                         fontWeight: "600",
                         marginBottom: "2.5rem",
                         color: "#393939",
-                        marginTop: "3.5rem",
+                        marginTop: "2.5rem",
 
                     }}
                 >

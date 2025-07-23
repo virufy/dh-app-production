@@ -1,12 +1,12 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
 export const PageWrapper = styled.div`
   min-height: 94vh;
   padding: 1.5rem 1rem;
   display: flex;
   justify-content: center;
-  background-color: transparent;
-  font-family: 'Source Sans Pro', sans-serif;
+  background-color: #fff;
+  font-family: "Source Sans Pro", sans-serif;
   overflow: auto;
 `;
 
@@ -15,45 +15,62 @@ export const ContentWrapper = styled.div`
   max-width: 1000px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  align-items: center;
+`;
+
+export const ControlsWrapper = styled.div`
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
 `;
 
 export const Header = styled.div`
+  width: 100%;
+  max-width: 500px; 
+  margin: 0 auto; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
-  margin-top: 1.25rem;
 `;
 
 export const BackButton = styled.button<{ isArabic?: boolean }>`
   position: absolute;
   top: 0;
+  ${({ isArabic }) => (isArabic ? "right: 0;" : "left: 0;")}
   background: none;
   border: none;
   cursor: pointer;
-  ${({ isArabic }) => (isArabic ? 'right: 0;' : 'left: 0;')}
+
+  img {
+    width: 24px;
+    height: 24px;
+  }
 `;
 
 export const HeaderTitle = styled.div`
   text-align: center;
-  font-weight: 600;
   font-size: 18px;
   color: #3578de;
+  font-weight: 600;
 `;
 
 export const Title = styled.h2`
   text-align: center;
   font-size: 2rem;
   font-weight: 700;
-  margin-bottom: 0.4rem;
+  margin-bottom: 1rem;
   color: #333;
-  padding: 0 1.5rem;
 `;
 
 export const Subtitle = styled.p`
-  font-weight: 700;
-  font-size: 1.5rem;
+  text-align: left;
+  font-size: 1.2rem;
+  font-weight: 600;
   color: #393939;
-  padding: 0 1.5rem;       // Horizontal padding only
-  box-sizing: border-box;
+  margin-bottom: 1.5rem;
 `;
 
 export const FileRow = styled.div`
@@ -61,27 +78,36 @@ export const FileRow = styled.div`
   justify-content: space-between;
   align-items: center;
   font-size: 1rem;
-  margin-bottom: 0.4rem;
-  padding: 0 1.5rem;
+  margin-bottom: 0.8rem;
+  width: 100%;
 `;
 
 export const Slider = styled.input`
-  width: calc(100% - 3rem); /* full width minus 2 × 1.5rem padding */
-  margin: 0 auto 0.2rem;     /* center it */
+  width: 100%;
+  margin: 0.5rem auto;
   height: 6px;
   appearance: none;
   background-color: #dde9ff;
   border-radius: 4px;
   outline: none;
+
+  &::-webkit-slider-thumb {
+    width: 15px;
+    height: 15px;
+    background-color: #3578de;
+    border-radius: 50%;
+    cursor: pointer;
+    appearance: none;
+  }
 `;
 
 export const TimeRow = styled.div`
   display: flex;
   justify-content: space-between;
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: #888;
-  margin-bottom: 1.5rem;
-  padding: 0 1.5rem;
+  margin-bottom: 2rem;
+  width: 100%;
 `;
 
 export const PlayButton = styled.button`
@@ -94,31 +120,28 @@ export const PlayButton = styled.button`
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  margin: 2rem auto 5.5rem;
+  margin: 1.5rem auto 3rem;
 `;
-// This wrapper centers and aligns the controls.
-export const ControlsWrapper = styled.div`
-  width: 100%;
-  max-width: 400px;      /* caps everything at 400px */
-  margin: 0 auto;        /* centers it horizontally */
-  box-sizing: border-box;/* if you ever add padding, it stays inside */
+
+export const ButtonsWrapper = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: center;
+  width: 100%;
 `;
 
 export const RetakeButton = styled.button`
   width: 100%;
   padding: 0.75rem 1.5rem;
-  border: 3.5px solid #3578de;
+  border: 3px solid #3578de;
   border-radius: 15px;
   font-weight: bold;
   color: #3578de;
   background-color: transparent;
-  margin-bottom: 1.7rem;
+  margin-bottom: 1rem;
   cursor: pointer;
   font-size: 16px;
-  max-width: 400px; 
-
+  max-width: 500px;
 `;
 
 export const SubmitButton = styled.button`
@@ -132,14 +155,7 @@ export const SubmitButton = styled.button`
   cursor: pointer;
   margin-bottom: 0.5rem;
   font-size: 16px;
-  max-width: 400px;
-`;
-// ButtonsWrapper is used to center the buttons.
-export const ButtonsWrapper = styled.div` 
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0 1.5rem; 
+  max-width: 500px;
 `;
 
 export const Footer = styled.div`
