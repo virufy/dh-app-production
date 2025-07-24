@@ -18,7 +18,15 @@ const App: React.FC = () => {
     if (i18n.language === "ar") {
       document.documentElement.style.fontFamily = "'Cairo', 'Amiri', sans-serif";
       document.documentElement.setAttribute("dir", "rtl");
-    } 
+      document.documentElement.style.direction = "rtl";
+      document.documentElement.style.textAlign = "right";
+      document.documentElement.style.unicodeBidi = "isolate";
+    } else {
+      document.documentElement.setAttribute("dir", "ltr");
+      document.documentElement.style.direction = "ltr";
+      document.documentElement.style.textAlign = "left";
+      document.documentElement.style.unicodeBidi = "normal";
+    }
   }, [i18n.language]);
 
   return (

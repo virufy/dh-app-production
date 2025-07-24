@@ -80,7 +80,13 @@ export const InstructionText = styled.div`
     max-width: 400px;
     margin: 0 auto 0 0;
     //margin-left:0px
-    
+
+    [dir="rtl"] & {
+        direction: rtl;
+        text-align: right;
+        unicode-bidi: isolate;
+        margin: 0 0 0 auto; /* Flip margin for RTL */
+    }    
 `;
 
 export const Image = styled.img`

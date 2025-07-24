@@ -7,6 +7,12 @@
   pointer-events: none;
 }
 
+[dir="rtl"] * {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: isolate;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
     animation: App-logo-spin infinite 20s linear;

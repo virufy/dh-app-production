@@ -60,7 +60,8 @@ export const StepWrapper = styled.div`
     gap: 0.75rem;
     margin-bottom: 2rem;
     width: 100%;               
-    text-align: left;         
+    text-align: left;      
+       
 `;
 
 export const StepCircle = styled.div`
@@ -82,8 +83,14 @@ export const InstructionText = styled.div`
     font-size: 14px;
     max-width: 400px;
     margin: 0 auto 0 0;
-    //margin-left:0px
+
     
+    [dir="rtl"] & {
+        direction: rtl;
+        text-align: right;
+        unicode-bidi: isolate;
+        margin: 0 0 0 auto; /* Flip margin for RTL */
+    }
 `;
 
 export const Image = styled.img`

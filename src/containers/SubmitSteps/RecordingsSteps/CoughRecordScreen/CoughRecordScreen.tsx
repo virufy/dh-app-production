@@ -214,7 +214,7 @@ const CoughRecordScreen: React.FC = () => {
 
         <StepWrapper>
           <StepCircle>3</StepCircle>
-          <InstructionText>
+          <InstructionText >
             {t("recordCough.instruction3_part1")}{" "}
             <strong>{t("recordCough.instruction3_bold1")}</strong>
             {t("recordCough.instruction3_part2")}
