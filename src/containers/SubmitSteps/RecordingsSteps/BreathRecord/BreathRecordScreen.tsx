@@ -172,7 +172,7 @@ const BreathRecordScreen: React.FC = () => {
                 </h3>
 
                 <StepWrapper>
-                    <StepCircle>1</StepCircle>
+                    <StepCircle>{isArabic ? "١" : "1"}</StepCircle>
                     <InstructionText>
                         {t("recordBreath.instruction1_part1")}{" "}
                         <strong>{t("recordBreath.instruction1_bold1")}</strong>
@@ -184,7 +184,7 @@ const BreathRecordScreen: React.FC = () => {
                 <Image src={keepDistance} alt={t("recordBreath.keepDistanceAlt")} />
 
                 <StepWrapper>
-                    <StepCircle>2</StepCircle>
+                    <StepCircle>{isArabic ? "٢" : "2"}</StepCircle>
                     <InstructionText>
                         {t("recordBreath.instruction2_part1")}
                         <strong>{t("recordBreath.instruction2_bold")}</strong>
@@ -194,7 +194,7 @@ const BreathRecordScreen: React.FC = () => {
                 <Image src={mouthBreathDistance} alt={t("recordBreath.mouthBreathDistanceAlt")} />
 
                 <StepWrapper>
-                    <StepCircle>3</StepCircle>
+                    <StepCircle>{isArabic ? "٣" : "3"}</StepCircle>
                     <InstructionText>
                         {t("recordBreath.instruction3_part1")}{" "}
                         <strong>{t("recordBreath.instruction3_bold1")}</strong>

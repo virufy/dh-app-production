@@ -34,6 +34,7 @@ import {
 } from "./styles";
 
 const CoughRecordScreen: React.FC = () => {
+  
   const { t } = useTranslation();
   const isArabic = i18n.language === "ar";
   const navigate = useNavigate();
@@ -58,6 +59,11 @@ const CoughRecordScreen: React.FC = () => {
     const mins = Math.floor(seconds / 60).toString();
     const secs = (seconds % 60).toString().padStart(2, "0");
     return `${mins}:${secs}`;
+  };
+
+  const formatNumber = (num: number) => {
+    const locale = isArabic ? "ar" : "en";
+    return new Intl.NumberFormat(locale, { useGrouping: false }).format(num);
   };
 
   const startRecording = async () => {
@@ -191,7 +197,7 @@ const CoughRecordScreen: React.FC = () => {
         </h3>
 
         <StepWrapper>
-          <StepCircle>1</StepCircle>
+          <StepCircle>{isArabic ? "١" : "1"}</StepCircle>
           <InstructionText>
             {t("recordCough.instruction1_part1")}{" "}
             <strong>{t("recordCough.instruction1_bold1")}</strong>
@@ -203,7 +209,7 @@ const CoughRecordScreen: React.FC = () => {
         <Image src={keepDistance} alt={t("recordCough.keepDistanceAlt")} />
 
         <StepWrapper>
-          <StepCircle>2</StepCircle>
+          <StepCircle>{isArabic ? "٢" : "2"}</StepCircle>
           <InstructionText>
             {t("recordCough.instruction2_part1")}
             <strong>{t("recordCough.instruction2_bold")}</strong>
@@ -213,7 +219,7 @@ const CoughRecordScreen: React.FC = () => {
         <Image src={mouthDistance} alt={t("recordCough.mouthDistanceAlt")} />
 
         <StepWrapper>
-          <StepCircle>3</StepCircle>
+          <StepCircle>{isArabic ? "٣" : "3"}</StepCircle>
           <InstructionText >
             {t("recordCough.instruction3_part1")}{" "}
             <strong>{t("recordCough.instruction3_bold1")}</strong>
@@ -348,3 +354,5 @@ const CoughRecordScreen: React.FC = () => {
 };
 
 export default CoughRecordScreen;
+
+

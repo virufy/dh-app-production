@@ -179,7 +179,7 @@ const SpeechRecordScreen: React.FC = () => {
                 </h3>
 
                 <StepWrapper>
-                    <StepCircle>1</StepCircle>
+                    <StepCircle>{isArabic ? "١" : "1"}</StepCircle>
                     <InstructionText>
                         {t("recordSpeech.instruction1_part1")}{" "}
                         <strong>{t("recordSpeech.instruction1_bold1")}</strong>
@@ -191,7 +191,7 @@ const SpeechRecordScreen: React.FC = () => {
                 <Image src={keepDistance} alt={t("recordSpeech.keepDistanceAlt")} />
 
                 <StepWrapper>
-                    <StepCircle>2</StepCircle>
+                    <StepCircle>{isArabic ? "٢" : "2"}</StepCircle>
                     <InstructionText>
                         {t("recordSpeech.instruction2_part1")}
                         <strong>{t("recordSpeech.instruction2_bold")}</strong>
@@ -201,7 +201,7 @@ const SpeechRecordScreen: React.FC = () => {
                 <Image src={mouthSpeechDistance} alt={t("recordSpeech.mouthSpeechDistanceAlt")} />
 
                 <StepWrapper>
-                    <StepCircle>3</StepCircle>
+                    <StepCircle>{isArabic ? "٣" : "3"}</StepCircle>
                     <InstructionText>
                         {t("recordSpeech.instruction3_part1")}{" "}
                         <strong>{t("recordSpeech.instruction3_bold1")}</strong>
