@@ -177,7 +177,11 @@ const ConsentScreen: React.FC = () => {
                             <span style={{fontWeight: 'normal', marginBottom: '2rem'}}>{t('consent.dubaiHealthDesc')}</span>
                             <Spacer height="1rem"/>
                             <a
-                                href="https://drive.google.com/file/d/1vXhM9nFp2TfGdLplxpc4hV9EIuYZBodW/view"
+                                href={
+                                        i18n.language === 'ar'
+                                            ? 'https://drive.google.com/file/d/1-HhFT0XEMkgKjfywYEhVAi1WHNDDSIY3/view'
+                                            : 'https://drive.google.com/file/d/1vXhM9nFp2TfGdLplxpc4hV9EIuYZBodW/view'
+                                    }
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 style={{color: '#000000', fontWeight: 'normal'}}

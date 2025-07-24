@@ -62,14 +62,14 @@ export const Title = styled.h2`
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 1rem;
-  color: #333;
+  color: #000000;
 `;
 
 export const Subtitle = styled.p`
   text-align: left;
   font-size: 1.2rem;
   font-weight: 600;
-  color: #393939;
+  color: #000000;
   margin-bottom: 1.5rem;
 `;
 

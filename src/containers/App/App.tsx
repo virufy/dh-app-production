@@ -15,8 +15,10 @@ const App: React.FC = () => {
   const { i18n } = useTranslation();
 
   useEffect(() => {
-    // Update document direction based on selected language
-    document.documentElement.dir = i18n.language === "ar" ? "rtl" : "ltr";
+    if (i18n.language === "ar") {
+      document.documentElement.style.fontFamily = "'Cairo', 'Amiri', sans-serif";
+      document.documentElement.setAttribute("dir", "rtl");
+    } 
   }, [i18n.language]);
 
   return (
