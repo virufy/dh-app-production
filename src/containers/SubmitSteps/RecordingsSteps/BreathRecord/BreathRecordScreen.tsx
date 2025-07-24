@@ -260,7 +260,22 @@ const BreathRecordScreen: React.FC = () => {
                     {error}
                 </p>
                 )}
-
+                <button
+                    type="button"
+                    onClick={() => navigate('/upload-complete', { state: { nextPage: '/confirmation' } })}
+                    style={{
+                    position: 'absolute',
+                    top: '20px',
+                    right: '20px',
+                    backgroundColor: '#f0f0f0',
+                    border: '1px solid #ccc',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                    }}
+                >
+                    Skip
+                </button>
                 <ActionButtons>
                     <button onClick={handleContinue}>
                         {t("recordBreath.continueButton")}

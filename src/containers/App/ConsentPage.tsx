@@ -71,6 +71,7 @@ const ConsentScreen: React.FC = () => {
 
         if (allChecked) {
             navigate('/record-coughs');
+            window.scrollTo(0, 0);
         } else {
             alert(t('consent.check_all_alert'));
         }
@@ -78,6 +79,7 @@ const ConsentScreen: React.FC = () => {
 
     const handleSignedPaperNext = () => {
         navigate('/record-coughs');
+        window.scrollTo(0, 0);
     };
 
     const handleBack = () => {

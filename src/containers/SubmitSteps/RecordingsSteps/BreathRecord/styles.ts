@@ -144,7 +144,7 @@ export const ActionButtons = styled.div`
         background-color: #3578de;
         color: white;
         border: none;
-        padding: 1.5rem;
+        padding: 1.25rem 1.5rem;
         border-radius: 15px;
         font-weight: bold;
         cursor: pointer;

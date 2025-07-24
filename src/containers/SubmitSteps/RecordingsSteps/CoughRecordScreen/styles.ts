@@ -189,7 +189,7 @@ export const ActionButtons = styled.div`
     flex-direction: column;
     align-items: center;
     gap: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 2.5rem;
 
     & > button:first-child {
         background-color: #3578de;

@@ -135,14 +135,14 @@ export const ActionButtons = styled.div`
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 2.5rem;
     align-items: center;
 
     & > button:first-child {
         background-color: #3578de;
         color: white;
         border: none;
-        padding: 1.5rem;
+        padding: 1.25rem 1.5rem;
         border-radius: 15px;
         font-weight: bold;
         cursor: pointer;
