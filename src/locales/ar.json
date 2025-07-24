@@ -10,7 +10,7 @@
     }, 
     "hospital_options": {
       "barsha": "مركز البرشاء الصحي",
-      "nadd": "مركز ندى الحمر الصحي"
+      "nadd": "مركز ند الحمر الصحي"
     },
     "submit_button": "التالي"
   },
@@ -31,7 +31,7 @@
 
     "virufyDesc": "توضيح سياسة التعامل مع بياناتك من قبل Virufy.",
     "readFull": "اضغط لقراءة المستند الكامل",
-    "confirmationTitle": " مربعات تأكيد الأختيار",
+    "confirmationTitle": " مربعات تأكيد الإختيار",
     "confirmationDesc": "من خلال تحديد المربعات، فأنت تؤكد أنك راجعت المعلومات وتوافق على المشاركة.\u200F",
     "checkbox1": "أُقر أنني أبلغ من العمر 18 عامًا أو أكثر.\u200F",
     "checkbox2": "أُقر أنني قرأت وفهمت نموذج معلومات وموافقة المشارك من هيئة الصحة بدبي.\u200F",
@@ -50,19 +50,19 @@
 
     "instruction1_part1": "ابحث عن ",
     "instruction1_bold1": "مكان هادئ ",
-    "instruction1_part2": "على الأقل ",
+    "instruction1_part2": "على بُعد ",
     "instruction1_bold2": "6 أمتار (20 قدمًا) ",
-    "instruction1_part3": "بعيدًا عن الآخرين. إذا كنت تشعر بتوعك، يرجى الجلوس.",
+    "instruction1_part3": " من الآخرين. إذا كنت تشعر بتوعك، يرجى الجلوس.",
 
     "instruction2_part1": "أمسك الجزء السفلي من جهازك على بُعد ",
     "instruction2_bold": "1–2 قدم (30–60 سم) ",
     "instruction2_part2": "من فمك.",
 
-    "instruction3_part1": "اضغط على زر التسجيل. استمر في نطق صوت ",
+    "instruction3_part1": "اضغط على زر التسجيل. ثم انطق بصوت واضح",
     "instruction3_bold1": "\"آآآآه\"",
     "instruction3_part2": " لمدة ",
-    "instruction3_bold2": "5 ثوانٍ على الأقل.",
-    "instruction3_part3": " ثم اضغط على زر الإيقاف.", 
+    "instruction3_bold2": " لا تقل عن 5 ثوانٍ",
+    "instruction3_part3": " بعدها اضغط على زر ايقاف.", 
     
     "recordButton": "تسجيل",
     "stopButton": "إيقاف",
@@ -85,17 +85,17 @@
     "instruction1_bold1": "مكان هادئ ",
     "instruction1_part2": "على بُعد ",
     "instruction1_bold2": "20 قدمًا (6 أمتار) ",
-    "instruction1_part3": "بعيدًا عن الآخرين. إذا كنت تشعر بتوعك، يرجى الجلوس.",
+    "instruction1_part3": " من الآخرين. إذا كنت تشعر بتوعك، يرجى الجلوس.",
 
     "instruction2_part1": "أمسك الجزء السفلي من جهازك ",
     "instruction2_bold": "1–2 قدم (30–60 سم) ",
     "instruction2_part2": "بعيدًا عن فمك.",
 
     "instruction3_part1": "اضغط على زر التسجيل.",
-    "instruction3_bold1": " تنفس بعمق وبصوت عالٍ",
+    "instruction3_bold1": "ثم خذ نفساً عميقاً وازفره",
     "instruction3_part2": " في الهاتف",
-    "instruction3_bold2": " 3 مرات",
-    "instruction3_part3": ". ثم اضغط على زر الإيقاف.",
+    "instruction3_bold2": "  3 مرات",
+    "instruction3_part3": " .بعد الانتهاء، اضغط على زر ايقاف",
 
 
     "recordButton": "تسجيل",
