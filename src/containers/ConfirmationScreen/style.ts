@@ -55,7 +55,7 @@ export const ButtonStyled = styled.button`
 `;
 
 export const ErrorLink = styled.a`
-    font-size: 1rem;
+    font-size: 14px;
     font-weight: bold;
     color: #3578de;
     text-decoration: underline;
