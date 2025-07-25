@@ -42,6 +42,13 @@ const UploadCompleteCough: React.FC = () => {
   const [duration, setDuration] = useState(0);
 
   useEffect(() => {
+    if (audioFileUrl) {
+      sessionStorage.setItem("coughAudio", audioFileUrl);
+      sessionStorage.setItem("coughFilename", filename);
+    }
+  }, [audioFileUrl, filename]);
+
+  useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -123,6 +130,9 @@ const UploadCompleteCough: React.FC = () => {
       console.error("No nextPage provided in state");
       return;
     }
+
+    sessionStorage.removeItem("coughAudio");
+    sessionStorage.removeItem("coughFilename");
 
     const nextNextPage = getNextStep(nextPage);
     navigate(nextPage, {
