@@ -190,8 +190,12 @@ const ConsentScreen: React.FC = () => {
                             </a>
                             <Spacer height="1rem"/>
                             <div style={{...iframeStyle, marginTop: '1rem'}}>
-                                <iframe
-                                    src="https://drive.google.com/file/d/1vXhM9nFp2TfGdLplxpc4hV9EIuYZBodW/preview"
+                                <iframe 
+                                    src={
+                                        i18n.language === 'ar'
+                                            ? 'https://drive.google.com/file/d/1-HhFT0XEMkgKjfywYEhVAi1WHNDDSIY3/preview'
+                                            : 'https://drive.google.com/file/d/1vXhM9nFp2TfGdLplxpc4hV9EIuYZBodW/preview'
+                                    }
                                     width="100%"
                                     height="100%"
                                     allow="autoplay"
