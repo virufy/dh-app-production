@@ -61,11 +61,6 @@ const CoughRecordScreen: React.FC = () => {
     return `${mins}:${secs}`;
   };
 
-  const formatNumber = (num: number) => {
-    const locale = isArabic ? "ar" : "en";
-    return new Intl.NumberFormat(locale, { useGrouping: false }).format(num);
-  };
-
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -86,6 +81,8 @@ const CoughRecordScreen: React.FC = () => {
             .replace(/[:.]/g, "-")}.wav`,
         });
       };
+
+
       recorder.start();
       setMediaRecorder(recorder);
       setIsRecording(true);
@@ -93,6 +90,13 @@ const CoughRecordScreen: React.FC = () => {
       timerRef.current = setInterval(() => {
         setRecordingTime((prev) => prev + 1);
       }, 1000);
+
+      setTimeout(() => {
+        if (recorder.state === "recording") {
+          stopRecording();
+        }
+      }, 30000); // Auto stop after 30 sec
+
       setError(null);
       setAudioData(null);
     } catch (err) {
@@ -354,5 +358,4 @@ const CoughRecordScreen: React.FC = () => {
 };
 
 export default CoughRecordScreen;
-
 

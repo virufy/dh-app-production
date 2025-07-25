@@ -73,6 +73,12 @@ const BreathRecordScreen: React.FC = () => {
             timerRef.current = setInterval(() => {
                 setRecordingTime((prev) => prev + 1);
             }, 1000);
+
+            setTimeout(() => {
+                if (recorder.state === "recording") {
+                stopRecording();
+                }
+            }, 30000); // Auto stop after 30 sec            
             setError(null);
             setAudioData(null);
         } catch (err) {
