@@ -17,8 +17,23 @@ import {
     HeaderText, HiddenFileInput, Image,
     InstructionText,
     StepCircle,
-    StepWrapper, Timer, TimerBox, UploadButton, UploadText
+    StepWrapper, Timer, TimerBox, UploadButton, UploadText,
+    ModalOverlay,
+    ModalContainer,
+    ModalTitle,
+    ModalText,
+    ModalButton
 } from "./styles";
+
+const MinimumDurationModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
+    <ModalOverlay>
+        <ModalContainer>
+            <ModalTitle>Oops.</ModalTitle>
+            <ModalText>Please make a recording of at least 2 seconds</ModalText>
+            <ModalButton onClick={onClose}>Retry</ModalButton>
+        </ModalContainer>
+    </ModalOverlay>
+);
 const SpeechRecordScreen: React.FC = () => {
 
 
@@ -31,6 +46,7 @@ const SpeechRecordScreen: React.FC = () => {
     const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
         null
     );
+    const [showTooShortModal, setShowTooShortModal] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
     const [recordingTime, setRecordingTime] = useState(0);
     const [audioData, setAudioData] = useState<{
@@ -91,6 +107,10 @@ const SpeechRecordScreen: React.FC = () => {
         if (timerRef.current) {
             clearInterval(timerRef.current);
             timerRef.current = null;
+        }
+        if (recordingTime < 3) {
+            setShowTooShortModal(true);
+            setAudioData(null); // prevent submission
         }
         setIsRecording(false);
     };
@@ -307,6 +327,14 @@ const SpeechRecordScreen: React.FC = () => {
                         onChange={handleFileChange}
                     />
                 </ActionButtons>
+                {showTooShortModal && (
+                    <MinimumDurationModal
+                        onClose={() => {
+                            setShowTooShortModal(false);
+                            startRecording();
+                        }}
+                    />
+                )}
 
                 <FooterLink
                     href="https://docs.google.com/forms/d/e/1FAIpQLScYsWESIcn1uyEzFQT464qLSYZuUduHzThgTRPJODTQcCwz5w/viewform"
