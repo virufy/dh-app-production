@@ -31,8 +31,22 @@ import {
   UploadText,
   HiddenFileInput,
   FooterLink,
+  ModalOverlay,
+  ModalContainer,
+  ModalTitle,
+  ModalText,
+  ModalButton
 } from "./styles";
 
+const MinimumDurationModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
+    <ModalOverlay>
+      <ModalContainer>
+        <ModalTitle>Oops.</ModalTitle>
+        <ModalText>Please make a recording of at least 3 seconds</ModalText>
+        <ModalButton onClick={onClose}>Retry</ModalButton>
+      </ModalContainer>
+    </ModalOverlay>
+);
 const CoughRecordScreen: React.FC = () => {
   
   const { t } = useTranslation();
@@ -40,7 +54,7 @@ const CoughRecordScreen: React.FC = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-
+  const [showTooShortModal, setShowTooShortModal] = useState(false);
   const [involuntary, setInvoluntary] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
@@ -123,6 +137,10 @@ const CoughRecordScreen: React.FC = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
+    }
+    if (recordingTime < 3) {
+      setShowTooShortModal(true);
+      setAudioData(null); // prevent submission
     }
     setIsRecording(false);
     sessionStorage.setItem("coughDuration", recordingTime.toString());
@@ -354,7 +372,14 @@ const CoughRecordScreen: React.FC = () => {
             onChange={handleFileChange}
           />
         </ActionButtons>
-
+        {showTooShortModal && (
+            <MinimumDurationModal
+                onClose={() => {
+                  setShowTooShortModal(false);
+                  startRecording();
+                }}
+            />
+        )}
         <FooterLink
           href="https://docs.google.com/forms/d/e/1FAIpQLScYsWESIcn1uyEzFQT464qLSYZuUduHzThgTRPJODTQcCwz5w/viewform"
           target="_blank"
@@ -362,6 +387,7 @@ const CoughRecordScreen: React.FC = () => {
         >
           {t("recordCough.reportIssue")}
         </FooterLink>
+
       </Content>
     </Container>
   );

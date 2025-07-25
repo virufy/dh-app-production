@@ -234,7 +234,70 @@ export const UploadText = styled.span`
 export const HiddenFileInput = styled.input`
     display: none;
 `;
+export const ModalOverlay = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); // dim background
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+`;
+export const ModalContainer = styled.div`
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 1rem;
+    text-align: center;
+    width: 90%;
+    max-width: 400px;
 
+    @media (max-width: 480px) {
+        padding: 1.5rem 1rem;
+        border-radius: 0.75rem;
+    }
+`;
+
+export const ModalTitle = styled.h2`
+    font-size: 24px;
+    margin-bottom: 1rem;
+    color: #222;
+
+    @media (max-width: 480px) {
+        font-size: 20px;
+    }
+`;
+export const ModalText = styled.p`
+    font-size: 14px; // already mobile-friendly
+    margin-bottom: 2rem;
+
+    @media (max-width: 480px) {
+        margin-bottom: 1.5rem;
+    }
+`;
+
+export const ModalButton = styled.button`
+    background-color: #3578de;
+    color: #fff;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%; // makes it mobile-friendly for touch
+
+    &:hover {
+        background-color: #2e66c7;
+    }
+
+    @media (max-width: 480px) {
+        font-size: 14px;
+        padding: 0.6rem 1.5rem;
+    }
+`;
 export const FooterLink = styled.a`
     font-size: 14px;
     font-weight: bold;

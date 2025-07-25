@@ -18,8 +18,23 @@ import {
     HeaderText, HiddenFileInput, Image,
     InstructionText,
     StepCircle,
-    StepWrapper, Timer, TimerBox, UploadButton, UploadText
+    StepWrapper, Timer, TimerBox, UploadButton, UploadText,
+    ModalOverlay,
+    ModalContainer,
+    ModalTitle,
+    ModalText,
+    ModalButton
 } from "./styles";
+
+const MinimumDurationModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
+    <ModalOverlay>
+        <ModalContainer>
+            <ModalTitle>Oops.</ModalTitle>
+            <ModalText>Please make a recording of at least 3 seconds</ModalText>
+            <ModalButton onClick={onClose}>Retry</ModalButton>
+        </ModalContainer>
+    </ModalOverlay>
+);
 const BreathRecordScreen: React.FC = () => {
     const { t } = useTranslation();
     const isArabic = i18n.language === "ar";
@@ -30,6 +45,7 @@ const BreathRecordScreen: React.FC = () => {
     const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
         null
     );
+    const [showTooShortModal, setShowTooShortModal] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
     const [recordingTime, setRecordingTime] = useState(0);
     const [audioData, setAudioData] = useState<{
@@ -105,6 +121,10 @@ const BreathRecordScreen: React.FC = () => {
         if (timerRef.current) {
             clearInterval(timerRef.current);
             timerRef.current = null;
+        }
+        if (recordingTime < 3) {
+            setShowTooShortModal(true);
+            setAudioData(null); // prevent submission
         }
         setIsRecording(false);
         sessionStorage.setItem("breathDuration", recordingTime.toString());
@@ -316,7 +336,14 @@ const BreathRecordScreen: React.FC = () => {
                         onChange={handleFileChange}
                     />
                 </ActionButtons>
-
+                {showTooShortModal && (
+                    <MinimumDurationModal
+                        onClose={() => {
+                            setShowTooShortModal(false);
+                            startRecording();
+                        }}
+                    />
+                )}
                 <FooterLink
                     href="https://docs.google.com/forms/d/e/1FAIpQLScYsWESIcn1uyEzFQT464qLSYZuUduHzThgTRPJODTQcCwz5w/viewform"
                     target="_blank"
@@ -325,6 +352,7 @@ const BreathRecordScreen: React.FC = () => {
                     {t("recordBreath.reportIssue")}
                 </FooterLink>
             </Content>
+
         </Container>
     );
 };
