@@ -1,4 +1,4 @@
-import React, {useRef, useState} from "react";
+import React, {useRef, useState, useEffect} from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import keepDistance from "../../../../assets/images/keepDistance.png";
@@ -38,6 +38,17 @@ const SpeechRecordScreen: React.FC = () => {
         filename: string;
     } | null>(null);
 
+    useEffect(() => {
+        const storedAudio = sessionStorage.getItem("speechAudio");
+        const storedFilename = sessionStorage.getItem("speechFilename");
+        const storedDuration = sessionStorage.getItem("speechDuration");
+
+        if (storedAudio && storedFilename && storedDuration) {
+            setAudioData({ audioFileUrl: storedAudio, filename: storedFilename });
+            setRecordingTime(parseInt(storedDuration, 10));
+        }
+    }, []);
+
     const handleBack = () => navigate(-1);
 
     const formatTime = (seconds: number) => {
@@ -59,12 +70,10 @@ const SpeechRecordScreen: React.FC = () => {
             recorder.onstop = () => {
                 const audioBlob = new Blob(chunks, { type: "audio/wav" });
                 const audioUrl = URL.createObjectURL(audioBlob);
-                setAudioData({
-                    audioFileUrl: audioUrl,
-                    filename: `speech_recording-${new Date()
-                        .toISOString()
-                        .replace(/[:.]/g, "-")}.wav`,
-                });
+                const filename = `speech_recording-${new Date().toISOString().replace(/[:.]/g, "-")}.wav`;
+                setAudioData({ audioFileUrl: audioUrl, filename });
+                sessionStorage.setItem("speechAudio", audioUrl);
+                sessionStorage.setItem("speechFilename", filename);
             };
             recorder.start();
             setMediaRecorder(recorder);
@@ -100,6 +109,7 @@ const SpeechRecordScreen: React.FC = () => {
             timerRef.current = null;
         }
         setIsRecording(false);
+        sessionStorage.setItem("speechDuration", recordingTime.toString());
     };
 
   /** Updated to always navigate to Upload page with next step */

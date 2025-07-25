@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import keepDistance from "../../../../assets/images/keepDistance.png";
@@ -53,6 +53,17 @@ const CoughRecordScreen: React.FC = () => {
     filename: string;
   } | null>(null);
 
+  useEffect(() => {
+    const storedAudio = sessionStorage.getItem("coughAudio");
+    const storedFilename = sessionStorage.getItem("coughFilename");
+    const storedDuration = sessionStorage.getItem("coughDuration");
+
+    if (storedAudio && storedFilename && storedDuration) {
+      setAudioData({ audioFileUrl: storedAudio, filename: storedFilename });
+      setRecordingTime(parseInt(storedDuration, 10));
+    }
+  }, []);
+
   const handleBack = () => navigate(-1);
 
   const formatTime = (seconds: number) => {
@@ -74,12 +85,10 @@ const CoughRecordScreen: React.FC = () => {
       recorder.onstop = () => {
         const audioBlob = new Blob(chunks, { type: "audio/wav" });
         const audioUrl = URL.createObjectURL(audioBlob);
-        setAudioData({
-          audioFileUrl: audioUrl,
-          filename: `cough_recording-${new Date()
-            .toISOString()
-            .replace(/[:.]/g, "-")}.wav`,
-        });
+        const filename = `cough_recording-${new Date().toISOString().replace(/[:.]/g, "-")}.wav`;
+        setAudioData({ audioFileUrl: audioUrl, filename });
+        sessionStorage.setItem("coughAudio", audioUrl);
+        sessionStorage.setItem("coughFilename", filename);
       };
 
 
@@ -116,6 +125,7 @@ const CoughRecordScreen: React.FC = () => {
       timerRef.current = null;
     }
     setIsRecording(false);
+    sessionStorage.setItem("coughDuration", recordingTime.toString());
   };
 
   const handleContinue = () => {

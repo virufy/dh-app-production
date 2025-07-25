@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef , useEffect} from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 // Assets
@@ -37,6 +37,17 @@ const BreathRecordScreen: React.FC = () => {
         filename: string;
     } | null>(null);
 
+    useEffect(() => {
+        const storedAudio = sessionStorage.getItem("breathAudio");
+        const storedFilename = sessionStorage.getItem("breathFilename");
+        const storedDuration = sessionStorage.getItem("breathDuration");
+
+        if (storedAudio && storedFilename && storedDuration) {
+            setAudioData({ audioFileUrl: storedAudio, filename: storedFilename });
+            setRecordingTime(parseInt(storedDuration, 10));
+        }
+    }, []);
+
     const handleBack = () => navigate(-1);
 
     const formatTime = (seconds: number) => {
@@ -58,12 +69,10 @@ const BreathRecordScreen: React.FC = () => {
             recorder.onstop = () => {
                 const audioBlob = new Blob(chunks, { type: "audio/wav" });
                 const audioUrl = URL.createObjectURL(audioBlob);
-                setAudioData({
-                    audioFileUrl: audioUrl,
-                    filename: `breath_recording-${new Date()
-                        .toISOString()
-                        .replace(/[:.]/g, "-")}.wav`,
-                });
+                const filename = `breath_recording-${new Date().toISOString().replace(/[:.]/g, "-")}.wav`;
+                setAudioData({ audioFileUrl: audioUrl, filename });
+                sessionStorage.setItem("breathAudio", audioUrl);
+                sessionStorage.setItem("breathFilename", filename);
             };
 
             recorder.start();
@@ -98,6 +107,7 @@ const BreathRecordScreen: React.FC = () => {
             timerRef.current = null;
         }
         setIsRecording(false);
+        sessionStorage.setItem("breathDuration", recordingTime.toString());
     };
     const handleContinue = () => {
         if (audioData) {
