@@ -71,6 +71,10 @@ export const Subtitle = styled.p`
   font-weight: 600;
   color: #000000;
   margin-bottom: 1.5rem;
+
+  [dir="rtl"] & {
+    text-align: right;
+  }  
 `;
 
 export const FileRow = styled.div`

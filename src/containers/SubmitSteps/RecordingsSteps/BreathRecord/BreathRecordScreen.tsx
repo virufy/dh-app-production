@@ -26,6 +26,7 @@ import {
     ModalButton
 } from "./styles";
 import { t } from "i18next";
+import { ClientRequest } from "http";
 
 const MinimumDurationModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
     <ModalOverlay>
@@ -190,10 +191,11 @@ const BreathRecordScreen: React.FC = () => {
                             style={{ transform: isArabic ? "rotate(180deg)" : "none" }}
                         />
                     </BackButton>
-                    <HeaderText>{t("recordBreath.title")}</HeaderText>
+                    <HeaderText dir="auto" style={{ textAlign: "center" }}>{t("recordBreath.title")}</HeaderText>
                 </Header>
 
                 <h3
+                    dir="auto"
                     style={{
                         fontFamily: "Source Open Sans, sans-serif",
                         fontSize: "24px",
@@ -202,6 +204,7 @@ const BreathRecordScreen: React.FC = () => {
                         marginBottom: "1.5rem",
                         color: "#000000",
                         marginTop: "1.5rem",
+                        
 
                     }}
                 >
