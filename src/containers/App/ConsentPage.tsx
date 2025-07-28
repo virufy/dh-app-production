@@ -25,6 +25,10 @@ const ConsentScreen: React.FC = () => {
     const [privacyAck, setPrivacyAck] = useState(false);
     const [healthInfoConsent, setHealthInfoConsent] = useState(false);
 
+    const isTablet = window.innerWidth >= 768 && window.innerWidth <= 1024;
+    const baseFontSize = isTablet ? '1rem' : '0.8rem'; // 16px for tablets, 12.8px otherwise
+
+
     const checkboxes: CheckboxItem[] = [
         {
             id: 'ageConfirmed',
@@ -99,7 +103,7 @@ const ConsentScreen: React.FC = () => {
                     justifyContent: 'center',
                     alignItems: 'center',
                     width: '100%',
-                    fontSize: '0.8rem',
+                    fontSize: baseFontSize,
                     fontWeight: 400,
                     letterSpacing: '0.02em',
                     lineHeight: 1.5,
@@ -165,7 +169,7 @@ const ConsentScreen: React.FC = () => {
                         marginTop: '3rem',
                         marginBottom: '2rem',
                         whiteSpace: 'pre-line',
-                        fontSize: '0.8rem',
+                        fontSize: baseFontSize,
                         width: '100%',
                     }}>
                         <u>{t('consent.description')}</u>
@@ -233,7 +237,7 @@ const ConsentScreen: React.FC = () => {
 
                     <h4 style={{marginBottom: '0rem'}}>{t('consent.confirmationTitle')}</h4>
                     <p style={{
-                        fontSize: '0.8rem',
+                        fontSize: baseFontSize,
                         marginTop: '0rem',
                         marginBottom: '1rem',
                         fontWeight: 400,
@@ -273,7 +277,7 @@ const ConsentScreen: React.FC = () => {
                             onClick={handleNext}
                             style={{
                                 backgroundColor: "#3578de",
-                                fontSize:"0.85rem",
+                                fontSize:baseFontSize,
                                 color: "white",
                                 border: "none",
                                 padding: "1.5rem",
@@ -289,7 +293,7 @@ const ConsentScreen: React.FC = () => {
                             onClick={handleSignedPaperNext}
                             style={{
                                 backgroundColor: "#3578de",
-                                fontSize:"0.85rem",
+                                fontSize: baseFontSize,
                                 color: "white",
                                 border: "none",
                                 padding: "1.5rem",
@@ -307,7 +311,7 @@ const ConsentScreen: React.FC = () => {
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
-                                fontSize: "0.8rem",
+                                fontSize: baseFontSize,
                                 fontWeight: "bold",
                                 color: "#3578de",
                                 textDecoration: "underline",

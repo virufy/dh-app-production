@@ -18,10 +18,16 @@ export const ConsentContent = styled.div`
   width: 100%;
 
   @media (min-width: 48rem) {
-    max-width: 37.5rem;
+    max-width: 37.5rem; 
     width: 100%;
     background-color: white;
     padding: 2rem;
     border-radius: 0.75rem;
+
+    p {
+    @media (min-width: 768px) and (max-width: 1024px) {
+      font-size: 3rem; // 16px
+    }
   }
 `;
+

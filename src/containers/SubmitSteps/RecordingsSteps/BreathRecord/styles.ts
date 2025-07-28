@@ -19,7 +19,7 @@ export const Content = styled.div`
     margin: 0 auto;
 
     @media (min-width: 768px) {
-        max-width: 700px;
+        max-width: 500px;
         width: 100%;
     }
 `;
@@ -53,30 +53,27 @@ export const HeaderText = styled.div`
 
 export const StepWrapper = styled.div<{ isArabic?: boolean }>`
   display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
+  align-items: center;
   flex-direction: ${({ isArabic }) => (isArabic ? 'row-reverse' : 'row')};
   gap: 0.75rem;
   margin-bottom: 2rem;
   width: 100%;
 `;
 
-
-
-
-
 export const StepCircle = styled.div`
-  min-width: 28px;
+  width: 28px;
   height: 28px;
   background-color: #DDE9FF;
   border-radius: 50%;
-  text-align: center;
-  line-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-weight: bold;
   color: #3578de;
   font-size: 14px;
+  flex-shrink: 0;
+  
 `;
-
 
 
 export const InstructionText = styled.div`
