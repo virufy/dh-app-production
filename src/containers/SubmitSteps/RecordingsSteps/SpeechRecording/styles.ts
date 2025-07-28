@@ -11,27 +11,23 @@ export const Container = styled.div`
     font-family: 'Source Sans Pro', sans-serif;
     font-size: 14px;
 
-
-    @media (min-width: 48rem) {
-        align-items: center;
-    }
 `;
 
 export const Content = styled.div`
     width: 100%;
+    max-width: 700px;
+    margin: 0 auto;
 
-    @media (min-width: 48rem) {
-        max-width: 26.625rem;
+    @media (min-width: 768px) {
+        max-width: 700px;
         width: 100%;
-        background-color: white;
-        padding: 2rem;
-        border-radius: 0.75rem;
     }
 `;
 
 export const Header = styled.div`
     position: relative;
     margin-top: 0.05rem;
+    text-align: center;
 `;
 
 export const BackButton = styled.button<{ isArabic?: boolean }>`
@@ -40,24 +36,28 @@ export const BackButton = styled.button<{ isArabic?: boolean }>`
     background: none;
     border: none;
     cursor: pointer;
-    ${({ isArabic }) => (isArabic ? 'right: -10px;' : 'left: -10px;')}
+    ${({ isArabic }) => (isArabic ? 'right: -10px;' : 'left: -10px;')};
+    @media (min-width: 768px) {
+        ${({ isArabic }) => (isArabic ? 'right: -30px;' : 'left: -30px;')}
+
 `;
 
 export const HeaderText = styled.div`
     text-align: center;
     font-weight: 600;
-    font-size: 18px;
+    font-size: 16px;
     color: #3578de;
+    margin-top: 0.5rem;
 `;
 
 export const StepWrapper = styled.div`
     display: flex;
     align-items: flex-start;   
-    justify-content: center;   
+    justify-content: flex-start;   
     gap: 0.75rem;
     margin-bottom: 2rem;
     width: 100%;               
-    text-align: left;         
+    //text-align: left;         
 `;
 
 export const StepCircle = styled.div`
@@ -71,6 +71,14 @@ export const StepCircle = styled.div`
   color: #3578de;
   font-size: 14px;
     margin:  0 0 0 auto;
+    @media(min-width:768px ) {
+        max-width: 550px;
+        margin-bottom: 1.5rem;
+        margin-top: 1.5rem;
+        text-align: center;
+        margin-right: 0;
+
+    }
 `;
 
 
@@ -86,7 +94,14 @@ export const InstructionText = styled.div`
         text-align: right;
         unicode-bidi: isolate;
         margin: 0 0 0 auto; /* Flip margin for RTL */
-    }    
+    }
+    @media(min-width:768px ) {
+        max-width: 550px;
+        margin-bottom: 1.5rem;
+        margin-top: 1.5rem;
+        text-align: left;
+
+    }
 `;
 
 export const Image = styled.img`
