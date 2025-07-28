@@ -37,13 +37,14 @@ import {
   ModalText,
   ModalButton
 } from "./styles";
+import { t } from "i18next";
 
 const MinimumDurationModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
     <ModalOverlay>
       <ModalContainer>
-        <ModalTitle>Oops.</ModalTitle>
-        <ModalText>Please make a recording of at least 3 seconds</ModalText>
-        <ModalButton onClick={onClose}>Retry</ModalButton>
+        <ModalTitle>{t("recordCough.minimum_duration_title")}</ModalTitle>
+        <ModalText>{t("recordCough.minimum_duration_text")}</ModalText>
+        <ModalButton onClick={onClose}>{t("recordCough.minimum_duration_retry")}</ModalButton>
       </ModalContainer>
     </ModalOverlay>
 );

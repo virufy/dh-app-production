@@ -71,7 +71,11 @@
       "keepDistanceAlt": "Keep distance illustration",
       "mouthDistanceAlt": "Hold device at mouth distance illustration",
       "defaultFilename": "Speech Recording",
-      "error": "Please upload the audio file first."
+      "error": "Please upload the audio file first.",
+
+      "minimum_duration_title": "Oops.",
+      "minimum_duration_text": "Please make a recording of at least 3 seconds",
+      "minimum_duration_retry": "Retry"
     },
 
     "recordBreath": {
@@ -104,7 +108,11 @@
       "keepDistanceAlt": "Keep distance illustration",
       "mouthDistanceAlt": "Hold device at mouth distance illustration",
       "defaultFilename": "Breath Recording",
-      "error": "Please upload the audio file first."      
+
+      "error": "Please upload the audio file first.",
+      "minimum_duration_title": "Oops.",
+      "minimum_duration_text": "Please make a recording of at least 3 seconds",
+      "minimum_duration_retry": "Retry"
     },
 
   "recordCough": {
@@ -138,7 +146,11 @@
     "keepDistanceAlt": "Keep distance illustration",
     "mouthDistanceAlt": "Hold device at mouth distance illustration",
     "defaultFilename": "Cough Recording",
-    "error": "Please upload the audio file first."
+    "error": "Please upload the audio file first.",
+
+    "minimum_duration_title": "Oops.",
+    "minimum_duration_text": "Please make a recording of at least 3 seconds",
+    "minimum_duration_retry": "Retry"    
   },
   "uploadComplete": {
     "title": "Confirm Recording",

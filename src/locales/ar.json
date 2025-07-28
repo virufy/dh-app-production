@@ -74,7 +74,12 @@
     "keepDistanceAlt": "صورة تبين الحفاظ على المسافة",
     "mouthDistanceAlt": "صورة تبين مسافة الجهاز عن الفم",
     "defaultFilename": "تسجيل الصوت",
-    "error": "يرجى تحميل الملف الصوتي أولاً"
+    "error": "يرجى تحميل الملف الصوتي أولاً",
+
+    "minimum_duration_title": "عذرًا.",
+    "minimum_duration_text": "يرجى تسجيل صوت لا يقل عن 3 ثوانٍ",
+    "minimum_duration_retry": "أعد المحاولة"
+    
 
   },
   "recordBreath": {
@@ -108,7 +113,11 @@
     "keepDistanceAlt": "صورة تبين الحفاظ على المسافة",
     "mouthDistanceAlt": "صورة تبين مسافة الجهاز عن الفم",
     "defaultFilename": "تسجيل التنفس",
-    "error": "يرجى تحميل الملف الصوتي أولاً"
+    "error": "يرجى تحميل الملف الصوتي أولاً",
+    "minimum_duration_title": "عذرًا.",
+    "minimum_duration_text": "يرجى تسجيل صوت لا يقل عن 3 ثوانٍ",
+    "minimum_duration_retry": "أعد المحاولة"
+        
 
   },
   "recordCough": {
@@ -142,7 +151,12 @@
     "keepDistanceAlt": "صورة تبين الحفاظ على المسافة",
     "mouthDistanceAlt": "صورة تبين مسافة الجهاز عن الفم",
     "defaultFilename": "تسجيل السعال",
-    "error": "يرجى تحميل الملف الصوتي أولاً"
+    "error": "يرجى تحميل الملف الصوتي أولاً",
+
+    "minimum_duration_title": "عذرًا.",
+    "minimum_duration_text": "يرجى تسجيل صوت لا يقل عن 3 ثوانٍ",
+    "minimum_duration_retry": "أعد المحاولة"
+    
   },
   "uploadComplete": {
     "title": "تأكيد التسجيل",
