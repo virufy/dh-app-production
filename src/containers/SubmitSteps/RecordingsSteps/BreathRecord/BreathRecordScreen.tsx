@@ -198,9 +198,9 @@ const BreathRecordScreen: React.FC = () => {
                         fontSize: "24px",
                         textAlign: "center",
                         fontWeight: "600",
-                        marginBottom: "2.5rem",
+                        marginBottom: "3rem",
                         color: "#000000",
-                        marginTop: "2.5rem",
+                        marginTop: "1.5rem",
 
                     }}
                 >
