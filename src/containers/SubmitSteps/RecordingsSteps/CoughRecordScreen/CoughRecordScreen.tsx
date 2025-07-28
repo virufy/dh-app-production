@@ -229,7 +229,7 @@ const CoughRecordScreen: React.FC = () => {
           {t("recordCough.instructionsTitle")}
         </h3>
 
-        <StepWrapper>
+        <StepWrapper >
           <StepCircle>{isArabic ? "١" : "1"}</StepCircle>
           <InstructionText>
             {t("recordCough.instruction1_part1")}{" "}

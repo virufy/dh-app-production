@@ -50,15 +50,17 @@ export const HeaderText = styled.div`
     margin-top: 0.5rem;
 `;
 
-export const StepWrapper = styled.div`
-    display: flex;
-    align-items: flex-start;   
-    justify-content: flex-start;   
-    gap: 0.75rem;
-    margin-bottom: 2rem;
-    width: 100%;               
-    //text-align: left;         
+export const StepWrapper = styled.div<{ isArabic?: boolean }>`
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-direction: ${({ isArabic }) => (isArabic ? 'row-reverse' : 'row')};
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  width: 100%;
 `;
+
+
 
 export const StepCircle = styled.div`
   min-width: 28px;
@@ -70,15 +72,6 @@ export const StepCircle = styled.div`
   font-weight: bold;
   color: #3578de;
   font-size: 14px;
-    margin:  0 0 0 auto;
-    @media(min-width:768px ) {
-        max-width: 550px;
-        margin-bottom: 1.5rem;
-        margin-top: 1.5rem;
-        text-align: center;
-        margin-right: 0;
-
-    }
 `;
 
 
