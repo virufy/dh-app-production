@@ -214,7 +214,11 @@ const ConsentScreen: React.FC = () => {
                         <span style={{fontWeight: 'normal'}}>{t('consent.virufyDesc')}</span> <br/>
                         <Spacer height="1rem"/>
                         <a
-                            href="https://drive.google.com/file/d/1hnxvDJ5qHBnUi7cnkNdyD4PuWMz8Ntss/view"
+                            href={
+                                    i18n.language === 'ar'
+                                        ? 'https://drive.google.com/file/d/1rAi_5KC_leQqyefCgsuNYFotCymbjLP_/view'
+                                        : 'https://drive.google.com/file/d/1hnxvDJ5qHBnUi7cnkNdyD4PuWMz8Ntss/view'
+                                }
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{color: '#000000', fontWeight: 'normal'}}
@@ -224,7 +228,10 @@ const ConsentScreen: React.FC = () => {
                         <Spacer height="1rem"/>
                         <div style={{...iframeStyle, marginTop: '1rem'}}>
                             <iframe
-                                src="https://drive.google.com/file/d/1hnxvDJ5qHBnUi7cnkNdyD4PuWMz8Ntss/preview"
+                                src = {i18n.language === 'ar'
+                                        ? 'https://drive.google.com/file/d/1rAi_5KC_leQqyefCgsuNYFotCymbjLP_/preview'
+                                        : 'https://drive.google.com/file/d/1hnxvDJ5qHBnUi7cnkNdyD4PuWMz8Ntss/preview'
+                                }
                                 width="100%"
                                 height="100%"
                                 allow="autoplay"
