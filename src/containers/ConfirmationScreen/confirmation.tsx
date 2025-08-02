@@ -23,7 +23,8 @@ const ConfirmationScreen: React.FC = () => {
                 <ButtonStyled onClick={() => navigate('/')}>
                     {t('confirmation.button')}
                 </ButtonStyled>
-                <ErrorLink href="https://docs.google.com/forms/d/e/1FAIpQLScYsWESIcn1uyEzFQT464qLSYZuUduHzThgTRPJODTQcCwz5w/viewform">
+                <ErrorLink href="https://docs.google.com/forms/d/e/1FAIpQLSdlBAA3drY6NydPkxKkMWTEZQhE9p5BSH5YSuaK18F_rObBFg/viewform">
+                
                     {t('confirmation.report')}
                 </ErrorLink>
             </InnerWrapper>
