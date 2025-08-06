@@ -21,7 +21,6 @@ const Clinical_Login = () => {
   const navigate = useNavigate();
   const isArabic = i18n.language === 'ar';
 
-  // Always reset language to English when this page loads
   useEffect(() => {
     i18n.changeLanguage('en');
   }, [i18n]);
@@ -37,6 +36,7 @@ const Clinical_Login = () => {
       return;
     }
     setError('');
+    sessionStorage.setItem("patientId", patientId.trim());
     navigate('/consent');
   };
 
