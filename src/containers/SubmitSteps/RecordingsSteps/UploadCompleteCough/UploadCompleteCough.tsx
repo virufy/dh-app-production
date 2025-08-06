@@ -33,6 +33,9 @@ const UploadCompleteCough: React.FC = () => {
   const isArabic = i18n.language === "ar";
   const { t } = useTranslation();
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const { audioFileUrl, filename = t("uploadComplete.filename"), nextPage } =
     location.state || {};
 
@@ -41,12 +44,22 @@ const UploadCompleteCough: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
+  //saves the correct audio type based on the filename
   useEffect(() => {
-    if (audioFileUrl) {
-      sessionStorage.setItem("coughAudio", audioFileUrl);
-      sessionStorage.setItem("coughFilename", filename);
+  if (audioFileUrl && filename) {
+    if (filename.includes('cough')) {
+        sessionStorage.setItem("coughAudio", audioFileUrl);
+        sessionStorage.setItem("coughFilename", filename);
+    } else if (filename.includes('speech')) {
+        sessionStorage.setItem("speechAudio", audioFileUrl);
+        sessionStorage.setItem("speechFilename", filename);
+    } else if (filename.includes('breath')) {
+        sessionStorage.setItem("breathAudio", audioFileUrl);
+        sessionStorage.setItem("breathFilename", filename);
     }
-  }, [audioFileUrl, filename]);
+  }
+}, [audioFileUrl, filename]);
+
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -125,19 +138,88 @@ const UploadCompleteCough: React.FC = () => {
   const handleBack = () => navigate(-1);
   const handleRetake = () => navigate(-1);
 
-  const handleSubmit = () => {
-    if (!nextPage) {
-      console.error("No nextPage provided in state");
-      return;
+  const handleSubmit = async () => {
+    
+    if (nextPage === "/confirmation") {
+      
+      
+      setIsSubmitting(true);
+      setSubmitError(null);
+  
+      //collecting data from seession storage
+      const patientId = sessionStorage.getItem("patientId");
+      const coughAudioUrl = sessionStorage.getItem("coughAudio");
+      const coughFilename = sessionStorage.getItem("coughFilename");
+      const speechAudioUrl = sessionStorage.getItem("speechAudio");
+      const speechFilename = sessionStorage.getItem("speechFilename");
+      const breathAudioUrl = audioFileUrl; // The current screen's audio
+      const breathFilename = filename;
+  
+      //confirming all required data present
+      if (!patientId || !coughAudioUrl || !speechAudioUrl || !breathAudioUrl) {
+        setSubmitError("Critical error: Missing data from a previous step. Please start over.");
+        setIsSubmitting(false);
+        return;
+      }
+  
+      //converting url to base64
+      const processAudioFile = async (url: string, file_name: string) => {
+        const response = await fetch(url);
+        const audioBlob = await response.blob();
+        return new Promise<{ fileName: string; audioData: string }>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(audioBlob);
+          reader.onloadend = () => resolve({
+            fileName: file_name,
+            audioData: (reader.result as string).split(',')[1],
+          });
+          reader.onerror = (error) => reject(error);
+        });
+      };
+  
+      try {
+        const preparedFiles = await Promise.all([
+          processAudioFile(coughAudioUrl, coughFilename || 'cough.wav'),
+          processAudioFile(speechAudioUrl, speechFilename || 'speech.wav'),
+          processAudioFile(breathAudioUrl, breathFilename || 'breath.wav'),
+        ]);
+  
+        
+        const requestBody = {
+          patientId: patientId,
+          audioFiles: preparedFiles,
+        };
+  
+        const API_ENDPOINT = "https://tg3he2qa23.execute-api.me-central-1.amazonaws.com/prod/cough-upload"; // <-- PASTE YOUR URL HERE
+  
+        const apiResponse = await fetch(API_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody),
+        });
+  
+        if (!apiResponse.ok) {
+          const errorData = await apiResponse.json();
+          throw new Error(errorData.message || 'Server responded with an error.');
+        }
+  
+        setIsSubmitting(false);
+        sessionStorage.clear();
+        navigate(nextPage); 
+  
+      } catch (error: any) {
+        console.error("Submission failed:", error);
+        setSubmitError(`Submission failed: ${error.message}. Please try again.`);
+        setIsSubmitting(false);
+      }
+  
+    } else {
+      if (!nextPage) {
+        console.error("No nextPage provided in state");
+        return;
+      }
+      navigate(nextPage);
     }
-
-    sessionStorage.removeItem("coughAudio");
-    sessionStorage.removeItem("coughFilename");
-
-    const nextNextPage = getNextStep(nextPage);
-    navigate(nextPage, {
-      state: { nextPage: nextNextPage },
-    });
   };
 
   const getNextStep = (currentPage: string) => {
@@ -148,8 +230,11 @@ const UploadCompleteCough: React.FC = () => {
         return "/upload-complete";
       default:
         return "/confirmation";
+
+
     }
   };
+
 
   return (
     <PageWrapper>
@@ -218,10 +303,16 @@ const UploadCompleteCough: React.FC = () => {
             style={isPlaying ? {} : { marginLeft: "0.3rem" }}
           />
         </PlayButton>
+        
+        {submitError && <p style={{ color: 'red', textAlign: 'center' }}>{submitError}</p>}
 
         <ButtonsWrapper>
           <RetakeButton onClick={handleRetake}>{t("uploadComplete.retake")}</RetakeButton>
-          <SubmitButton onClick={handleSubmit}>{t("uploadComplete.submit")}</SubmitButton>
+          
+          <SubmitButton onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? "Submitting..." : t("uploadComplete.submit")}
+          </SubmitButton>
+
         </ButtonsWrapper>
 
         <Footer>
