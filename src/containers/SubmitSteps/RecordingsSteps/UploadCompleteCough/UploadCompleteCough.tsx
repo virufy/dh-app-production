@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -27,58 +27,62 @@ import PlayIcon from "../../../../assets/icons/play.svg";
 import PauseIcon from "../../../../assets/icons/pause.svg";
 import i18n from "../../../../i18n";
 
+interface LocationState {
+  audioFileUrl?: string;
+  filename?: string;
+  nextPage?: string;
+  patientId?: string;
+  recordingType?: "cough" | "speech" | "breath";
+}
+
 const UploadCompleteCough: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const isArabic = i18n.language === "ar";
   const { t } = useTranslation();
+  const isArabic = i18n.language === "ar";
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const { audioFileUrl, filename, nextPage, recordingType = "unknown" } =
+    (location.state as LocationState) || {};
 
-  const { audioFileUrl, filename = t("uploadComplete.filename"), nextPage } =
-    location.state || {};
+  const storedPatientId =
+    (location.state as LocationState)?.patientId ||
+    localStorage.getItem("patientId") ||
+    "unknown";
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  //saves the correct audio type based on the filename
+  const [uploading, setUploading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  // Persist audio in sessionStorage
   useEffect(() => {
-  if (audioFileUrl && filename) {
-    if (filename.includes('cough')) {
+    try {
+      if (audioFileUrl) {
         sessionStorage.setItem("coughAudio", audioFileUrl);
-        sessionStorage.setItem("coughFilename", filename);
-    } else if (filename.includes('speech')) {
-        sessionStorage.setItem("speechAudio", audioFileUrl);
-        sessionStorage.setItem("speechFilename", filename);
-    } else if (filename.includes('breath')) {
-        sessionStorage.setItem("breathAudio", audioFileUrl);
-        sessionStorage.setItem("breathFilename", filename);
+        sessionStorage.setItem(
+          "coughFilename",
+          filename || t("uploadComplete.filename")
+        );
+      } else {
+        sessionStorage.removeItem("coughAudio");
+        sessionStorage.removeItem("coughFilename");
+      }
+    } catch (err) {
+      console.error("🐛 Session storage error:", err);
     }
-  }
-}, [audioFileUrl, filename]);
+  }, [audioFileUrl, filename, t]);
 
-
+  // Audio event listeners
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const handleLoadedMetadata = () => {
-      if (isFinite(audio.duration)) {
-        setDuration(audio.duration);
-      } else {
-        const fixDuration = () => {
-          audio.currentTime = 1e101;
-          audio.ontimeupdate = () => {
-            audio.ontimeupdate = null;
-            setDuration(audio.duration);
-            audio.currentTime = 0;
-          };
-        };
-        fixDuration();
-      }
+      setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
     };
 
     const handleTimeUpdate = () => {
@@ -97,9 +101,7 @@ const UploadCompleteCough: React.FC = () => {
     audio.addEventListener("timeupdate", handleTimeUpdate);
     audio.addEventListener("ended", handleEnded);
 
-    if (audio.readyState >= 1) {
-      handleLoadedMetadata();
-    }
+    if (audio.readyState >= 1) handleLoadedMetadata();
 
     return () => {
       audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
@@ -109,23 +111,29 @@ const UploadCompleteCough: React.FC = () => {
   }, [audioFileUrl]);
 
   const formatTime = (seconds: number) => {
-    if (!isFinite(seconds) || isNaN(seconds)) return "0:00";
+    if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
-  const handlePlayPause = () => {
+  const handlePlayPause = useCallback(async () => {
     const audio = audioRef.current;
     if (!audio) return;
 
     if (isPlaying) {
       audio.pause();
+      setIsPlaying(false);
     } else {
-      audio.play();
+      try {
+        await audio.play();
+        setIsPlaying(true);
+      } catch (err) {
+        console.error("🐛 Play failed:", err);
+        setErrorMessage(t("uploadComplete.playError"));
+      }
     }
-    setIsPlaying(!isPlaying);
-  };
+  }, [isPlaying, t]);
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTime = parseFloat(e.target.value);
@@ -135,106 +143,99 @@ const UploadCompleteCough: React.FC = () => {
     }
   };
 
-  const handleBack = () => navigate(-1);
-  const handleRetake = () => navigate(-1);
+  const handleBack = useCallback(() => navigate(-1), [navigate]);
+  const handleRetake = handleBack;
 
   const handleSubmit = async () => {
-    
-    if (nextPage === "/confirmation") {
-      
-      
-      setIsSubmitting(true);
-      setSubmitError(null);
-  
-      //collecting data from seession storage
-      const patientId = sessionStorage.getItem("patientId");
-      const coughAudioUrl = sessionStorage.getItem("coughAudio");
-      const coughFilename = sessionStorage.getItem("coughFilename");
-      const speechAudioUrl = sessionStorage.getItem("speechAudio");
-      const speechFilename = sessionStorage.getItem("speechFilename");
-      const breathAudioUrl = audioFileUrl; // The current screen's audio
-      const breathFilename = filename;
-  
-      //confirming all required data present
-      if (!patientId || !coughAudioUrl || !speechAudioUrl || !breathAudioUrl) {
-        setSubmitError("Critical error: Missing data from a previous step. Please start over.");
-        setIsSubmitting(false);
-        return;
-      }
-  
-      //converting url to base64
-      const processAudioFile = async (url: string, file_name: string) => {
-        const response = await fetch(url);
-        const audioBlob = await response.blob();
-        return new Promise<{ fileName: string; audioData: string }>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(audioBlob);
-          reader.onloadend = () => resolve({
-            fileName: file_name,
-            audioData: (reader.result as string).split(',')[1],
-          });
-          reader.onerror = (error) => reject(error);
-        });
-      };
-  
-      try {
-        const preparedFiles = await Promise.all([
-          processAudioFile(coughAudioUrl, coughFilename || 'cough.wav'),
-          processAudioFile(speechAudioUrl, speechFilename || 'speech.wav'),
-          processAudioFile(breathAudioUrl, breathFilename || 'breath.wav'),
-        ]);
-  
-        
-        const requestBody = {
-          patientId: patientId,
-          audioFiles: preparedFiles,
+    if (!nextPage) {
+      setErrorMessage(t("uploadComplete.noNextPage"));
+      return;
+    }
+
+    const timestamp = new Date().toISOString();
+    setUploading(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const controller = new AbortController();
+    const generatedFilename = `${storedPatientId}/cough-${timestamp}.flac`;
+    const { signal } = controller;
+
+    try {
+      const audioUrl = sessionStorage.getItem("coughAudio");
+      if (!audioUrl) throw new Error(t("uploadComplete.noAudio"));
+
+      const response = await fetch(audioUrl, { signal });
+      if (!response.ok) throw new Error(t("uploadComplete.audioFetchError"));
+
+      const blob = await response.blob();
+
+      const base64Audio = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (reader.result) resolve((reader.result as string).split(",")[1]);
+          else reject(new Error(t("uploadComplete.encodingError")));
         };
-  
-        const API_ENDPOINT = "https://tg3he2qa23.execute-api.me-central-1.amazonaws.com/prod/cough-upload"; // <-- PASTE YOUR URL HERE
-  
-        const apiResponse = await fetch(API_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody),
-        });
-  
-        if (!apiResponse.ok) {
-          const errorData = await apiResponse.json();
-          throw new Error(errorData.message || 'Server responded with an error.');
-        }
-  
-        setIsSubmitting(false);
-        sessionStorage.clear();
-        navigate(nextPage); 
-  
-      } catch (error: any) {
-        console.error("Submission failed:", error);
-        setSubmitError(`Submission failed: ${error.message}. Please try again.`);
-        setIsSubmitting(false);
+        reader.onerror = () => reject(new Error(t("uploadComplete.readError")));
+        reader.readAsDataURL(blob);
+      });
+
+      const uploadResponse = await fetch("https://tg3he2qa23.execute-api.me-central-1.amazonaws.com/prod/cough-upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          patientId: storedPatientId,
+          filename: generatedFilename,
+          timestamp,
+          audioType: recordingType,
+          audioBase64: base64Audio,
+        }),
+        signal,
+      });
+
+      if (!uploadResponse.ok)
+        throw new Error(
+          `${t("uploadComplete.uploadError")} (${uploadResponse.status})`
+        );
+
+      sessionStorage.removeItem("coughAudio");
+      sessionStorage.removeItem("coughFilename");
+
+      setSuccessMessage(t("uploadComplete.success"));
+
+      const timer = setTimeout(() => {
+        const nextNextPage = getNextStep(nextPage);
+        navigate(nextPage, { state: { nextPage: nextNextPage } });
+      }, 1500);
+
+      return () => clearTimeout(timer);
+    } catch (error) {
+      let message = "";
+      if (error instanceof Error) {
+        message =
+          error.message === "Failed to fetch"
+            ? t("uploadComplete.networkError") ||
+              "Network error: Unable to reach the server."
+            : error.message;
+      } else {
+        message = t("uploadComplete.uploadError");
       }
-  
-    } else {
-      if (!nextPage) {
-        console.error("No nextPage provided in state");
-        return;
-      }
-      navigate(nextPage);
+      console.error("🐛 Upload error:", message);
+      setErrorMessage(message);
+    } finally {
+      setUploading(false);
     }
   };
 
   const getNextStep = (currentPage: string) => {
     switch (currentPage) {
       case "/record-speech":
-        return "/upload-complete";
       case "/record-breath":
         return "/upload-complete";
       default:
         return "/confirmation";
-
-
     }
   };
-
 
   return (
     <PageWrapper>
@@ -259,30 +260,27 @@ const UploadCompleteCough: React.FC = () => {
           <Subtitle>{t("uploadComplete.description")}</Subtitle>
 
           <FileRow>
-            <span>{filename}</span>
-            <span
+            <span>{filename || t("uploadComplete.filename")}</span>
+            <button
+              onClick={handleBack}
               style={{
                 fontSize: "20px",
+                background: "none",
+                border: "none",
                 cursor: "pointer",
                 alignSelf: "center",
               }}
-              onClick={handleBack}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) =>
-                (e.key === "Enter" || e.key === " ") && handleBack()
-              }
               aria-label={t("uploadComplete.closeAria")}
             >
               ✕
-            </span>
+            </button>
           </FileRow>
 
           <Slider
             type="range"
             min="0"
             max={duration || 1}
-            value={currentTime}
+            value={Number(currentTime.toFixed(1))}
             step="0.1"
             onChange={handleSeek}
             aria-label={t("uploadComplete.sliderAria")}
@@ -294,7 +292,7 @@ const UploadCompleteCough: React.FC = () => {
           </TimeRow>
         </ControlsWrapper>
 
-        <PlayButton onClick={handlePlayPause}>
+        <PlayButton onClick={handlePlayPause} disabled={uploading}>
           <img
             src={isPlaying ? PauseIcon : PlayIcon}
             alt={isPlaying ? t("uploadComplete.pause") : t("uploadComplete.play")}
@@ -303,27 +301,28 @@ const UploadCompleteCough: React.FC = () => {
             style={isPlaying ? {} : { marginLeft: "0.3rem" }}
           />
         </PlayButton>
-        
-        {submitError && <p style={{ color: 'red', textAlign: 'center' }}>{submitError}</p>}
 
         <ButtonsWrapper>
-          <RetakeButton onClick={handleRetake}>{t("uploadComplete.retake")}</RetakeButton>
-          
-          <SubmitButton onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? "Submitting..." : t("uploadComplete.submit")}
+          <RetakeButton onClick={handleRetake} disabled={uploading}>
+            {t("uploadComplete.retake")}
+          </RetakeButton>
+          <SubmitButton onClick={handleSubmit} disabled={uploading}>
+            {uploading
+              ? t("uploadComplete.uploading")
+              : t("uploadComplete.submit")}
           </SubmitButton>
-
         </ButtonsWrapper>
 
-        <Footer>
-          <ErrorLink
-            href="https://docs.google.com/forms/d/e/1FAIpQLSdlBAA3drY6NydPkxKkMWTEZQhE9p5BSH5YSuaK18F_rObBFg/viewform"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {t("uploadComplete.report")}
+        {errorMessage && (
+          <ErrorLink role="alert" aria-live="assertive">
+            {errorMessage}
           </ErrorLink>
-        </Footer>
+        )}
+        {successMessage && (
+          <Footer role="alert" aria-live="polite">
+            {successMessage}
+          </Footer>
+        )}
       </ContentWrapper>
     </PageWrapper>
   );
