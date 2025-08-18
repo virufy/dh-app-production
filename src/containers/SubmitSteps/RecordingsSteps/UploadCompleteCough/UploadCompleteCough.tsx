@@ -44,6 +44,7 @@ const UploadCompleteCough: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
+ /* 
   // Save correct audio type based on filename
   useEffect(() => {
     if (audioFileUrl && filename) {
@@ -59,7 +60,7 @@ const UploadCompleteCough: React.FC = () => {
       }
     }
   }, [audioFileUrl, filename]);
-
+*/
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -137,6 +138,7 @@ const UploadCompleteCough: React.FC = () => {
   const handleBack = () => navigate(-1);
   const handleRetake = () => navigate(-1);
 
+/*  
   const handleSubmit = async () => {
     if (nextPage === "/confirmation") {
       setIsSubmitting(true);
@@ -229,6 +231,105 @@ const UploadCompleteCough: React.FC = () => {
     }
   };
 
+  */
+const handleSubmit = async () => {
+  setIsSubmitting(true);
+  setSubmitError(null);
+
+  // 1. Get the patientId. This is needed for every upload.
+  const patientId = sessionStorage.getItem("patientId");
+  if (!patientId) {
+    setSubmitError("Critical error: Patient ID not found. Please start over.");
+    setIsSubmitting(false);
+    return;
+  }
+
+  // 2. Get the current audio file's data from location.state
+  const { audioFileUrl, filename, nextPage } = location.state || {};
+  if (!audioFileUrl || !filename) {
+    setSubmitError("Error: No audio file found for this step.");
+    setIsSubmitting(false);
+    return;
+  }
+
+  // Helper function to convert audio URL to a Base64 string
+  const processAudioFile = async (
+    url: string,
+    file_name: string
+  ): Promise<{ fileName: string; audioData: string }> => {
+    const response = await fetch(url);
+    const audioBlob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
+      reader.onloadend = () =>
+        resolve({
+          fileName: file_name,
+          audioData: (reader.result as string).split(",")[1],
+        });
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  try {
+    // 3. Process ONLY the current audio file
+    const preparedFile = await processAudioFile(audioFileUrl, filename);
+
+    const API_ENDPOINT =
+      "https://tg3he2qa23.execute-api.me-central-1.amazonaws.com/prod/cough-upload";
+
+    // 4. Determine the audioType from the current filename
+    let audioType = "unknown";
+    if (preparedFile.fileName.includes("cough")) audioType = "cough";
+    else if (preparedFile.fileName.includes("speech")) audioType = "speech";
+    else if (preparedFile.fileName.includes("breath")) audioType = "breath";
+
+    // 5. Prepare the request body for the single file
+    const body = {
+      patientId,
+      audioType,
+      audioBase64: preparedFile.audioData,
+      filename: preparedFile.fileName,
+      timestamp: new Date().toISOString(),
+    };
+
+    // 6. Send the request to the API
+    const response = await fetch(API_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Upload failed for ${filename}`);
+    }
+
+    // 7. On success, navigate to the next page.
+    setIsSubmitting(false);
+
+    // If this was the last audio file, clear patientId from storage.
+    if (nextPage === "/confirmation") {
+      sessionStorage.removeItem("patientId");
+    }
+
+    if (nextPage) {
+      navigate(nextPage);
+    } else {
+      console.error("No nextPage provided in state");
+    }
+
+  } catch (error: any) {
+    console.error(`Submission failed for ${filename}:`, error);
+    setSubmitError(`Submission failed: ${error.message}. Please try again.`);
+    setIsSubmitting(false);
+  }
+};
+
+// You can also remove the getNextStep function as it is not used anymore.
+/*
+
+
   const getNextStep = (currentPage: string) => {
     switch (currentPage) {
       case "/record-speech":
@@ -238,7 +339,7 @@ const UploadCompleteCough: React.FC = () => {
         return "/confirmation";
     }
   };
-
+*/
   return (
     <PageWrapper>
       <ContentWrapper>
