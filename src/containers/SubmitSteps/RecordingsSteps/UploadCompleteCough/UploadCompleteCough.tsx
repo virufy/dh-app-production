@@ -55,7 +55,7 @@ const UploadCompleteCough: React.FC = () => {
         sessionStorage.setItem("speechAudio", audioFileUrl);
         sessionStorage.setItem("speechFilename", filename);
       } else if (filename.includes("breath")) {
-        sessionStorage.setItem("breathAudio", audioFileUrl);
+        sessionStorage.setItem("breathAudio", audioFileUrl);s
         sessionStorage.setItem("breathFilename", filename);
       }
     }
@@ -65,30 +65,48 @@ const UploadCompleteCough: React.FC = () => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    // hard reset
-    audio.pause();
-    audio.currentTime = 0;
-    setCurrentTime(0);
-    setDuration(0);
-    setIsPlaying(false);
-
-    const onLoaded = () => {
-      if (Number.isFinite(audio.duration)) {
+    const handleLoadedMetadata = () => {
+      if (isFinite(audio.duration)) {
         setDuration(audio.duration);
+      } else {
+        const fixDuration = () => {
+          audio.currentTime = 1e101;
+          audio.ontimeupdate = () => {
+            audio.ontimeupdate = null;
+            setDuration(audio.duration);
+            audio.currentTime = 0;
+          };
+        };
+        fixDuration();
       }
     };
 
-    audio.addEventListener('loadedmetadata', onLoaded);
-    audio.load(); // re-read metadata for the new src
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+      if (audio.duration - audio.currentTime <= 0.05) {
+        setIsPlaying(false);
+      }
+    };
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+      setCurrentTime(0);
+    };
+
+    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.addEventListener("ended", handleEnded);
+
+    if (audio.readyState >= 1) {
+      handleLoadedMetadata();
+    }
 
     return () => {
-      audio.removeEventListener('loadedmetadata', onLoaded);
-      // extra safety: stop and reset on unmount
-      audio.pause();
-      audio.currentTime = 0;
+      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("ended", handleEnded);
     };
-  }, [audioFileUrl]); // only when the file actually changes
-
+  }, [audioFileUrl]);
 
   const formatTime = (seconds: number) => {
     if (!isFinite(seconds) || isNaN(seconds)) return "0:00";
@@ -325,13 +343,7 @@ const handleSubmit = async () => {
   return (
     <PageWrapper>
       <ContentWrapper>
-        <audio
-          key={audioFileUrl || 'no-src'}
-          ref={audioRef}
-          src={audioFileUrl || ''}
-          preload="auto"
-        />
-
+        <audio ref={audioRef} src={audioFileUrl || ""} preload="auto" />
 
         <ControlsWrapper>
           <Header>
