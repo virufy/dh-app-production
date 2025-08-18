@@ -55,7 +55,7 @@ const UploadCompleteCough: React.FC = () => {
         sessionStorage.setItem("speechAudio", audioFileUrl);
         sessionStorage.setItem("speechFilename", filename);
       } else if (filename.includes("breath")) {
-        sessionStorage.setItem("breathAudio", audioFileUrl);s
+        sessionStorage.setItem("breathAudio", audioFileUrl);
         sessionStorage.setItem("breathFilename", filename);
       }
     }
@@ -231,6 +231,7 @@ const UploadCompleteCough: React.FC = () => {
     }
   };
 
+
   */
 const handleSubmit = async () => {
   setIsSubmitting(true);
@@ -333,13 +334,13 @@ const handleSubmit = async () => {
   const getNextStep = (currentPage: string) => {
     switch (currentPage) {
       case "/record-speech":
-      case "/record-breath":
-        return "/upload-complete";
-      default:
+@@ -238,7 +339,7 @@ const UploadCompleteCough: React.FC = () => {
         return "/confirmation";
     }
   };
+
 */
+
   return (
     <PageWrapper>
       <ContentWrapper>
