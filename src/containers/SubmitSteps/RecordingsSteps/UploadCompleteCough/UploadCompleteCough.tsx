@@ -62,8 +62,14 @@ const UploadCompleteCough: React.FC = () => {
   }, [audioFileUrl, filename]);
 */
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+      const audio = audioRef.current;
+      if (!audio) return;
+
+      // THE FIX: Reset state when audio file changes 
+      setCurrentTime(0);
+      setDuration(0);
+      setIsPlaying(false);
+      audio.load();
 
     const handleLoadedMetadata = () => {
       if (isFinite(audio.duration)) {
