@@ -62,57 +62,33 @@ const UploadCompleteCough: React.FC = () => {
   }, [audioFileUrl, filename]);
 */
   useEffect(() => {
-      const audio = audioRef.current;
-      if (!audio) return;
+    const audio = audioRef.current;
+    if (!audio) return;
 
-      // THE FIX: Reset state when audio file changes 
-      setCurrentTime(0);
-      setDuration(0);
-      setIsPlaying(false);
-      audio.load();
+    // hard reset
+    audio.pause();
+    audio.currentTime = 0;
+    setCurrentTime(0);
+    setDuration(0);
+    setIsPlaying(false);
 
-    const handleLoadedMetadata = () => {
-      if (isFinite(audio.duration)) {
+    const onLoaded = () => {
+      if (Number.isFinite(audio.duration)) {
         setDuration(audio.duration);
-      } else {
-        const fixDuration = () => {
-          audio.currentTime = 1e101;
-          audio.ontimeupdate = () => {
-            audio.ontimeupdate = null;
-            setDuration(audio.duration);
-            audio.currentTime = 0;
-          };
-        };
-        fixDuration();
       }
     };
 
-    const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
-      if (audio.duration - audio.currentTime <= 0.05) {
-        setIsPlaying(false);
-      }
-    };
-
-    const handleEnded = () => {
-      setIsPlaying(false);
-      setCurrentTime(0);
-    };
-
-    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
-    audio.addEventListener("timeupdate", handleTimeUpdate);
-    audio.addEventListener("ended", handleEnded);
-
-    if (audio.readyState >= 1) {
-      handleLoadedMetadata();
-    }
+    audio.addEventListener('loadedmetadata', onLoaded);
+    audio.load(); // re-read metadata for the new src
 
     return () => {
-      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
-      audio.removeEventListener("timeupdate", handleTimeUpdate);
-      audio.removeEventListener("ended", handleEnded);
+      audio.removeEventListener('loadedmetadata', onLoaded);
+      // extra safety: stop and reset on unmount
+      audio.pause();
+      audio.currentTime = 0;
     };
-  }, [audioFileUrl]);
+  }, [audioFileUrl]); // only when the file actually changes
+
 
   const formatTime = (seconds: number) => {
     if (!isFinite(seconds) || isNaN(seconds)) return "0:00";
@@ -349,7 +325,13 @@ const handleSubmit = async () => {
   return (
     <PageWrapper>
       <ContentWrapper>
-        <audio ref={audioRef} src={audioFileUrl || ""} preload="auto" />
+        <audio
+          key={audioFileUrl || 'no-src'}
+          ref={audioRef}
+          src={audioFileUrl || ''}
+          preload="auto"
+        />
+
 
         <ControlsWrapper>
           <Header>
