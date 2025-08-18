@@ -44,7 +44,7 @@ const UploadCompleteCough: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
- /* 
+/*  
   // Save correct audio type based on filename
   useEffect(() => {
     if (audioFileUrl && filename) {
@@ -138,101 +138,6 @@ const UploadCompleteCough: React.FC = () => {
   const handleBack = () => navigate(-1);
   const handleRetake = () => navigate(-1);
 
-/*  
-  const handleSubmit = async () => {
-    if (nextPage === "/confirmation") {
-      setIsSubmitting(true);
-      setSubmitError(null);
-
-      const patientId = sessionStorage.getItem("patientId");
-      const coughAudioUrl = sessionStorage.getItem("coughAudio");
-      const coughFilename = sessionStorage.getItem("coughFilename");
-      const speechAudioUrl = sessionStorage.getItem("speechAudio");
-      const speechFilename = sessionStorage.getItem("speechFilename");
-      const breathAudioUrl = audioFileUrl; // current audio from this screen
-      const breathFilename = filename;
-
-      if (!patientId || !coughAudioUrl || !speechAudioUrl || !breathAudioUrl) {
-        setSubmitError(
-          "Critical error: Missing data from a previous step. Please start over."
-        );
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Convert URL audio file to base64 string
-      const processAudioFile = async (
-        url: string,
-        file_name: string
-      ): Promise<{ fileName: string; audioData: string }> => {
-        const response = await fetch(url);
-        const audioBlob = await response.blob();
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(audioBlob);
-          reader.onloadend = () =>
-            resolve({
-              fileName: file_name,
-              audioData: (reader.result as string).split(",")[1],
-            });
-          reader.onerror = (error) => reject(error);
-        });
-      };
-
-      try {
-        const preparedFiles = await Promise.all([
-          processAudioFile(coughAudioUrl, coughFilename || "cough.wav"),
-          processAudioFile(speechAudioUrl, speechFilename || "speech.wav"),
-          processAudioFile(breathAudioUrl, breathFilename || "breath.wav"),
-        ]);
-        const API_ENDPOINT =
-          "https://tg3he2qa23.execute-api.me-central-1.amazonaws.com/prod/cough-upload";
-
-        for (const file of preparedFiles) {
-          let audioType = "unknown";
-          if (file.fileName.includes("cough")) audioType = "cough";
-          else if (file.fileName.includes("speech")) audioType = "speech";
-          else if (file.fileName.includes("breath")) audioType = "breath";
-
-          const body = {
-            patientId,
-            audioType,
-            audioBase64: file.audioData,
-            filename: file.fileName,
-            timestamp: new Date().toISOString(),
-          };
-
-          const response = await fetch(API_ENDPOINT, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || "Upload failed");
-          }
-        }
-
-        setIsSubmitting(false);
-        sessionStorage.clear();
-        navigate(nextPage);
-      } catch (error: any) {
-        console.error("Submission failed:", error);
-        setSubmitError(`Submission failed: ${error.message}. Please try again.`);
-        setIsSubmitting(false);
-      }
-    } else {
-      if (!nextPage) {
-        console.error("No nextPage provided in state");
-        return;
-      }
-      navigate(nextPage);
-    }
-  };
-
-
-  */
 const handleSubmit = async () => {
   setIsSubmitting(true);
   setSubmitError(null);
@@ -329,18 +234,19 @@ const handleSubmit = async () => {
 
 // You can also remove the getNextStep function as it is not used anymore.
 /*
+const getNextStep = (currentPage: string) => { ... };
 
 
   const getNextStep = (currentPage: string) => {
     switch (currentPage) {
       case "/record-speech":
-@@ -238,7 +339,7 @@ const UploadCompleteCough: React.FC = () => {
+      case "/record-breath":
+        return "/upload-complete";
+      default:
         return "/confirmation";
     }
   };
-
 */
-
   return (
     <PageWrapper>
       <ContentWrapper>
