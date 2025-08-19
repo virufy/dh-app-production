@@ -154,6 +154,7 @@ const BreathRecordScreen: React.FC = () => {
                     state: {
                         audioFileUrl: audioUrl,
                         filename: file.name,
+                        recordingType: 'breath',
                         nextPage: "/confirmation",
                     },
                 });

@@ -10,6 +10,9 @@ import UploadCompleteCough from "../SubmitSteps/RecordingsSteps/UploadCompleteCo
 import ConsentScreen from "./ConsentPage";
 import Clinical_Login from "./Clinical_Login";
 
+// --- Import your new ProtectedRoute component ---
+import ProtectedRoute from "../../components/ProtectedRoute";
+
 // Main App with routes and language support
 const App: React.FC = () => {
   const { i18n } = useTranslation();
@@ -32,14 +35,15 @@ const App: React.FC = () => {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Clinical_Login />} />
-        <Route path="/consent" element={<ConsentScreen />} />
-        <Route path="/record-breath" element={<BreathRecordScreen />} />
-        <Route path="/confirmation" element={<ConfirmationScreen />} />
-        <Route path="/record-speech" element={<SpeechRecordScreen />} />
-        <Route path="/record-coughs" element={<CoughRecordScreen />} />
-        <Route path="/clinical-login" element={<Clinical_Login />} />
-        <Route path="/upload-complete" element={<UploadCompleteCough />} />
+        {/* Each route's element is now wrapped with <ProtectedRoute> */}
+        <Route path="/" element={<ProtectedRoute><Clinical_Login /></ProtectedRoute>} />
+        <Route path="/consent" element={<ProtectedRoute><ConsentScreen /></ProtectedRoute>} />
+        <Route path="/record-breath" element={<ProtectedRoute><BreathRecordScreen /></ProtectedRoute>} />
+        <Route path="/confirmation" element={<ProtectedRoute><ConfirmationScreen /></ProtectedRoute>} />
+        <Route path="/record-speech" element={<ProtectedRoute><SpeechRecordScreen /></ProtectedRoute>} />
+        <Route path="/record-coughs" element={<ProtectedRoute><CoughRecordScreen /></ProtectedRoute>} />
+        <Route path="/clinical-login" element={<ProtectedRoute><Clinical_Login /></ProtectedRoute>} />
+        <Route path="/upload-complete" element={<ProtectedRoute><UploadCompleteCough /></ProtectedRoute>} />
       </Routes>
     </>
   );

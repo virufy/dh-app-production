@@ -157,6 +157,7 @@ const SpeechRecordScreen: React.FC = () => {
                   state: {
                       audioFileUrl: audioUrl,
                       filename: file.name,
+                      recordingType: 'speech',
                       nextPage: "/record-breath",
                   },
               });

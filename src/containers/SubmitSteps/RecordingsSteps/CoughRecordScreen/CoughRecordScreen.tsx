@@ -169,7 +169,9 @@ const CoughRecordScreen: React.FC = () => {
           state: {
             audioFileUrl: audioUrl,
             filename: file.name,
+            recordingType: 'cough',
             nextPage: "/record-speech",
+            
           },
         });
       }
