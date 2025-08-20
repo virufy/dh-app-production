@@ -33,12 +33,14 @@ const API_BASE =
 
 const NAV_DELAY_MS = 2000; // brief pause so user can read success
 
+type RecType = "cough" | "speech" | "breath" | "unknown";
+
 interface LocationState {
   audioFileUrl?: string;
   filename?: string;
   nextPage?: string;
   patientId?: string;
-  recordingType?: "cough" | "speech" | "breath" | "unknown";
+  recordingType?: RecType;
 }
 
 const UploadCompleteCough: React.FC = () => {
@@ -54,22 +56,35 @@ const UploadCompleteCough: React.FC = () => {
     recordingType: initialRecordingType = "unknown",
   } = (location.state as LocationState) || {};
 
-  // Same patientId handling as your new file
   const storedPatientId =
     (location.state as LocationState)?.patientId ||
     sessionStorage.getItem("patientId") ||
     "";
 
- 
-  let finalRecordingType: "cough" | "speech" | "breath" | "unknown" =
-    initialRecordingType;
-  if (finalRecordingType === "unknown" && filename) {
-    const lower = filename.toLowerCase();
-    if (lower.includes("cough")) finalRecordingType = "cough";
-    else if (lower.includes("speech")) finalRecordingType = "speech";
-    else if (lower.includes("breath")) finalRecordingType = "breath";
-  }
+  // derive type: state -> route -> filename -> fallback
+  const path = location.pathname.toLowerCase();
+  const routeType: RecType =
+    path.includes("speech") ? "speech" :
+    path.includes("breath") ? "breath" :
+    path.includes("cough") ? "cough" : "unknown";
 
+  let finalRecordingType: RecType =
+    initialRecordingType !== "unknown" ? initialRecordingType :
+    routeType !== "unknown" ? routeType :
+    ((): RecType => {
+      if (!filename) return "unknown";
+      const lower = filename.toLowerCase();
+      if (lower.includes("speech")) return "speech";
+      if (lower.includes("breath")) return "breath";
+      if (lower.includes("cough")) return "cough";
+      return "unknown";
+    })();
+
+  if (finalRecordingType === "unknown") finalRecordingType = "cough";
+
+  // type-specific storage keys
+  const AUDIO_KEY = `${finalRecordingType}Audio`;
+  const NAME_KEY = `${finalRecordingType}Filename`;
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -84,19 +99,19 @@ const UploadCompleteCough: React.FC = () => {
   useEffect(() => {
     try {
       if (audioFileUrl) {
-        sessionStorage.setItem("coughAudio", audioFileUrl);
+        sessionStorage.setItem(AUDIO_KEY, audioFileUrl);
         sessionStorage.setItem(
-          "coughFilename",
+          NAME_KEY,
           filename || t("uploadComplete.filename")
         );
       } else {
-        sessionStorage.removeItem("coughAudio");
-        sessionStorage.removeItem("coughFilename");
+        sessionStorage.removeItem(AUDIO_KEY);
+        sessionStorage.removeItem(NAME_KEY);
       }
     } catch (err) {
       console.error("🐛 Session storage error:", err);
     }
-  }, [audioFileUrl, filename, t]);
+  }, [audioFileUrl, filename, t, AUDIO_KEY, NAME_KEY]);
 
   // Basic audio controls
   useEffect(() => {
@@ -185,7 +200,7 @@ const UploadCompleteCough: React.FC = () => {
     setSuccessMessage("");
 
     try {
-      const audioUrl = sessionStorage.getItem("coughAudio");
+      const audioUrl = sessionStorage.getItem(AUDIO_KEY);
       if (!audioUrl)
         throw new Error(t("uploadComplete.noAudio") || "No audio to upload.");
 
@@ -213,9 +228,7 @@ const UploadCompleteCough: React.FC = () => {
         reader.readAsDataURL(blob);
       });
 
-     
       const generatedFilename = `${storedPatientId}/${finalRecordingType}-${timestamp}.flac`;
-    
 
       const uploadResponse = await fetch(`${API_BASE}/cough-upload`, {
         method: "POST",
@@ -224,7 +237,7 @@ const UploadCompleteCough: React.FC = () => {
           patientId: storedPatientId,
           filename: generatedFilename,
           timestamp,
-          audioType: finalRecordingType, // pass inferred type (cough/speech/breath/unknown)
+          audioType: finalRecordingType,
           audioBase64: base64Audio,
         }),
       });
@@ -239,11 +252,10 @@ const UploadCompleteCough: React.FC = () => {
 
       setSuccessMessage("Successfully uploaded.");
 
-      // Clean up local temp
-      sessionStorage.removeItem("coughAudio");
-      sessionStorage.removeItem("coughFilename");
+      // Clean up local temp for this type
+      sessionStorage.removeItem(AUDIO_KEY);
+      sessionStorage.removeItem(NAME_KEY);
 
-      // Short pause so the user can read the success
       setTimeout(() => {
         const nextNextPage = getNextStep(nextPage);
         navigate(nextPage, { state: { nextPage: nextNextPage } });
