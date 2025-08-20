@@ -32,7 +32,6 @@ const API_BASE =
   "https://tg3he2qa23.execute-api.me-central-1.amazonaws.com/prod";
 
 const NAV_DELAY_MS = 2000; // brief pause so user can read success
-const AUDIO_TYPE = "cough"; // force cough on this page
 
 interface LocationState {
   audioFileUrl?: string;
@@ -52,13 +51,25 @@ const UploadCompleteCough: React.FC = () => {
     audioFileUrl,
     filename,
     nextPage,
+    recordingType: initialRecordingType = "unknown",
   } = (location.state as LocationState) || {};
 
-  // ID provided earlier in the flow (you said this is already handled)
+  // Same patientId handling as your new file
   const storedPatientId =
     (location.state as LocationState)?.patientId ||
     sessionStorage.getItem("patientId") ||
     "";
+
+ 
+  let finalRecordingType: "cough" | "speech" | "breath" | "unknown" =
+    initialRecordingType;
+  if (finalRecordingType === "unknown" && filename) {
+    const lower = filename.toLowerCase();
+    if (lower.includes("cough")) finalRecordingType = "cough";
+    else if (lower.includes("speech")) finalRecordingType = "speech";
+    else if (lower.includes("breath")) finalRecordingType = "breath";
+  }
+
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -202,9 +213,9 @@ const UploadCompleteCough: React.FC = () => {
         reader.readAsDataURL(blob);
       });
 
-      // Generate filename path (client-side; server constructs real S3 key
-      // using patientId + audioType with '#timestamp')
-      const generatedFilename = `${storedPatientId}/${AUDIO_TYPE}-${timestamp}.flac`;
+     
+      const generatedFilename = `${storedPatientId}/${finalRecordingType}-${timestamp}.flac`;
+    
 
       const uploadResponse = await fetch(`${API_BASE}/cough-upload`, {
         method: "POST",
@@ -213,12 +224,11 @@ const UploadCompleteCough: React.FC = () => {
           patientId: storedPatientId,
           filename: generatedFilename,
           timestamp,
-          audioType: AUDIO_TYPE, // force cough (prevents "unknown")
+          audioType: finalRecordingType, // pass inferred type (cough/speech/breath/unknown)
           audioBase64: base64Audio,
         }),
       });
 
-      // Accept any 2xx
       if (uploadResponse.status < 200 || uploadResponse.status >= 300) {
         const errTxt = await uploadResponse.text().catch(() => "");
         throw new Error(
@@ -227,7 +237,6 @@ const UploadCompleteCough: React.FC = () => {
         );
       }
 
-      // Show only this one line
       setSuccessMessage("Successfully uploaded.");
 
       // Clean up local temp
@@ -338,7 +347,6 @@ const UploadCompleteCough: React.FC = () => {
           </SubmitButton>
         </ButtonsWrapper>
 
-        {/* Error or success (ONLY keep the single success line) */}
         {errorMessage && (
           <ErrorLink role="alert" aria-live="assertive">
             {errorMessage}
