@@ -18,18 +18,24 @@ const API_BASE =
   process.env.REACT_APP_API_BASE ??
   'https://tg3he2qa23.execute-api.me-central-1.amazonaws.com/prod';
 
-const Clinical_Login = () => {
+const Clinical_Login: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [patientId, setPatientId] = useState('');
   const [error, setError] = useState('');
   const [checking, setChecking] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const navigate = useNavigate();
-  const isArabic = i18n.language === 'ar';
 
+  // robust Arabic check (handles "ar", "ar-AE", etc.)
+  const isArabic = (i18n.resolvedLanguage || i18n.language || '').startsWith('ar');
+
+  // close modal on Escape
   useEffect(() => {
-    i18n.changeLanguage('en');
-  }, [i18n]);
+    if (!showConfirm) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setShowConfirm(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showConfirm]);
 
   const proceedWithId = () => {
     const id = patientId.trim();
@@ -41,7 +47,6 @@ const Clinical_Login = () => {
     e.preventDefault();
     const id = patientId.trim();
 
-    // Basic validation (unchanged)
     if (!id) {
       setError(t('home.error.patient_id_required'));
       return;
@@ -52,28 +57,22 @@ const Clinical_Login = () => {
     }
     setError('');
 
-    // Check existence in S3 / DynamoDB
     try {
       setChecking(true);
       const url = new URL(`${API_BASE}/status/check-patient`);
       url.searchParams.set('patientId', id);
       const res = await fetch(url.toString());
-      if (!res.ok) {
-        throw new Error(`Check failed (${res.status})`);
-      }
-      const data = await res.json(); // { exists, existsS3, existsDDB, ... }
+      if (!res.ok) throw new Error(`Check failed (${res.status})`);
+      const data = await res.json(); // { exists, ... }
 
-      if (data.exists) {
-        // Show confirmation modal
+      if (data?.exists) {
         setShowConfirm(true);
       } else {
-        // Not found → continue normally
         proceedWithId();
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(
-        t('home.error.patient_check_failed') ||
-          'Unable to verify the patient ID. Please try again.'
+        t('home.error.patient_check_failed', 'Unable to verify the patient ID. Please try again.')
       );
     } finally {
       setChecking(false);
@@ -90,11 +89,7 @@ const Clinical_Login = () => {
       <h1 style={title}>{t('home.title')}</h1>
 
       <label style={fieldLabel}>{t('home.language_label')}</label>
-      <select
-        style={dropdown}
-        value={i18n.language}
-        onChange={handleLanguageChange}
-      >
+      <select style={dropdown} value={i18n.language} onChange={handleLanguageChange}>
         <option value="en">English</option>
         <option value="ar">العربية</option>
       </select>
@@ -143,11 +138,16 @@ const Clinical_Login = () => {
         </button>
       </div>
 
-      {/* Simple Yes/No modal */}
+      {/* Confirmation modal */}
       {showConfirm && (
         <div
+          key={i18n.resolvedLanguage || i18n.language}
           role="dialog"
           aria-modal="true"
+          onClick={(e) => {
+            // close when clicking the shaded backdrop only
+            if (e.target === e.currentTarget) setShowConfirm(false);
+          }}
           style={{
             position: 'fixed',
             inset: 0,
@@ -169,13 +169,8 @@ const Clinical_Login = () => {
               direction: isArabic ? 'rtl' : 'ltr',
             }}
           >
-            <h3 style={{ marginTop: 0 }}>
-              {t('home.patient_exists_title') || 'This patient ID already exists'}
-            </h3>
-            <p style={{ marginTop: 8 }}>
-              {t('home.patient_exists_question') ||
-                'Do you want to continue with the same patient ID?'}
-            </p>
+            <h3 style={{ marginTop: 0 }}>{t('home.patient_exists_title')}</h3>
+            <p style={{ marginTop: 8 }}>{t('home.patient_exists_question')}</p>
 
             <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
               <button
@@ -187,9 +182,10 @@ const Clinical_Login = () => {
                   borderRadius: 8,
                   border: '1px solid #ddd',
                   background: '#f7f7f7',
+                  cursor: 'pointer',
                 }}
               >
-                {t('home.common_no') || 'No'}
+                {t('home.common_no')}
               </button>
 
               <button
@@ -205,9 +201,10 @@ const Clinical_Login = () => {
                   border: 'none',
                   background: '#0d6efd',
                   color: 'white',
+                  cursor: 'pointer',
                 }}
               >
-                {t('home.common_yes') || 'Yes'}
+                {t('home.common_yes')}
               </button>
             </div>
           </div>
@@ -217,5 +214,4 @@ const Clinical_Login = () => {
   );
 };
 
-console.log('Clinical Login Loaded');
 export default Clinical_Login;
