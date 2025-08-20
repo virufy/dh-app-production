@@ -31,12 +31,15 @@ const API_BASE =
   process.env.REACT_APP_API_BASE ??
   "https://tg3he2qa23.execute-api.me-central-1.amazonaws.com/prod";
 
+const NAV_DELAY_MS = 2000; // brief pause so user can read success
+const AUDIO_TYPE = "cough"; // force cough on this page
+
 interface LocationState {
   audioFileUrl?: string;
   filename?: string;
   nextPage?: string;
   patientId?: string;
-  recordingType?: "cough" | "speech" | "breath";
+  recordingType?: "cough" | "speech" | "breath" | "unknown";
 }
 
 const UploadCompleteCough: React.FC = () => {
@@ -45,24 +48,17 @@ const UploadCompleteCough: React.FC = () => {
   const { t } = useTranslation();
   const isArabic = i18n.language === "ar";
 
-  const { audioFileUrl, filename, nextPage, recordingType: initialRecordingType = "unknown", } =
-    (location.state as LocationState) || {};
+  const {
+    audioFileUrl,
+    filename,
+    nextPage,
+  } = (location.state as LocationState) || {};
 
-  let finalRecordingType = initialRecordingType;
-  if (finalRecordingType === "unknown" && filename) {
-    const lowerFilename = filename.toLowerCase();
-    if (lowerFilename.includes("cough")) {
-      finalRecordingType = "cough";
-    } else if (lowerFilename.includes("speech")) {
-      finalRecordingType = "speech";
-    } else if (lowerFilename.includes("breath")) {
-      finalRecordingType = "breath";
-    }
-  }
-
+  // ID provided earlier in the flow (you said this is already handled)
   const storedPatientId =
     (location.state as LocationState)?.patientId ||
-    sessionStorage.getItem("patientId");
+    sessionStorage.getItem("patientId") ||
+    "";
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -73,11 +69,7 @@ const UploadCompleteCough: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // New: detailed backend feedback + verification status
-  const [uploadSteps, setUploadSteps] = useState<any>(null);
-  const [verifyStatus, setVerifyStatus] = useState<string>("");
-  const [friendly, setFriendly] = useState<string>("");
-
+  // Persist audio url for this screen
   useEffect(() => {
     try {
       if (audioFileUrl) {
@@ -95,21 +87,17 @@ const UploadCompleteCough: React.FC = () => {
     }
   }, [audioFileUrl, filename, t]);
 
+  // Basic audio controls
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleLoadedMetadata = () => {
+    const handleLoadedMetadata = () =>
       setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
-    };
-
     const handleTimeUpdate = () => {
       setCurrentTime(audio.currentTime);
-      if (audio.duration - audio.currentTime <= 0.05) {
-        setIsPlaying(false);
-      }
+      if (audio.duration - audio.currentTime <= 0.05) setIsPlaying(false);
     };
-
     const handleEnded = () => {
       setIsPlaying(false);
       setCurrentTime(0);
@@ -148,7 +136,9 @@ const UploadCompleteCough: React.FC = () => {
         setIsPlaying(true);
       } catch (err) {
         console.error("🐛 Play failed:", err);
-        setErrorMessage(t("uploadComplete.playError"));
+        setErrorMessage(
+          t("uploadComplete.playError") || "Couldn’t play the audio."
+        );
       }
     }
   }, [isPlaying, t]);
@@ -164,31 +154,17 @@ const UploadCompleteCough: React.FC = () => {
   const handleBack = useCallback(() => navigate(-1), [navigate]);
   const handleRetake = handleBack;
 
-  // Status check helper
-  const checkStatus = useCallback(async (key: string) => {
-    try {
-      const url = new URL(`${API_BASE}/status/check-upload-status`);
-      url.searchParams.set("key", key); // encodes '#'
-      const res = await fetch(url.toString());
-      const status = await res.json();
-
-      if (status.existsS3 && status.existsDDB) {
-        setVerifyStatus("Verified in S3 & DB ✅");
-      } else if (status.existsS3 && !status.existsDDB) {
-        setVerifyStatus("In S3, DB syncing…");
-      } else {
-        setVerifyStatus("Upload not found yet");
-      }
-      if (status.friendly) setFriendly(status.friendly);
-    } catch (e) {
-      setVerifyStatus("Status check failed");
-      console.error("🐛 Status error:", e);
-    }
-  }, []);
-
   const handleSubmit = async () => {
     if (!nextPage) {
-      setErrorMessage(t("uploadComplete.noNextPage"));
+      setErrorMessage(
+        t("uploadComplete.noNextPage") || "Next page not configured."
+      );
+      return;
+    }
+    if (!storedPatientId) {
+      setErrorMessage(
+        "Patient ID missing from earlier step. Please go back and enter the ID."
+      );
       return;
     }
 
@@ -196,31 +172,39 @@ const UploadCompleteCough: React.FC = () => {
     setUploading(true);
     setErrorMessage("");
     setSuccessMessage("");
-    setVerifyStatus("");
-    setUploadSteps(null);
-    setFriendly("");
 
-    const controller = new AbortController();
-    const generatedFilename = `${storedPatientId}/${finalRecordingType}-${timestamp}.flac`;
-    const signal = controller.signal;
     try {
       const audioUrl = sessionStorage.getItem("coughAudio");
-      if (!audioUrl) throw new Error(t("uploadComplete.noAudio"));
+      if (!audioUrl)
+        throw new Error(t("uploadComplete.noAudio") || "No audio to upload.");
 
-      const response = await fetch(audioUrl, { signal });
-      if (!response.ok) throw new Error(t("uploadComplete.audioFetchError"));
+      const response = await fetch(audioUrl);
+      if (!response.ok)
+        throw new Error(
+          t("uploadComplete.audioFetchError") ||
+            "Couldn’t read the recorded audio."
+        );
 
       const blob = await response.blob();
-
       const base64Audio = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => {
           if (reader.result) resolve((reader.result as string).split(",")[1]);
-          else reject(new Error(t("uploadComplete.encodingError")));
+          else
+            reject(
+              new Error(
+                t("uploadComplete.encodingError") || "Encoding failed."
+              )
+            );
         };
-        reader.onerror = () => reject(new Error(t("uploadComplete.readError")));
+        reader.onerror = () =>
+          reject(new Error(t("uploadComplete.readError") || "Read failed."));
         reader.readAsDataURL(blob);
       });
+
+      // Generate filename path (client-side; server constructs real S3 key
+      // using patientId + audioType with '#timestamp')
+      const generatedFilename = `${storedPatientId}/${AUDIO_TYPE}-${timestamp}.flac`;
 
       const uploadResponse = await fetch(`${API_BASE}/cough-upload`, {
         method: "POST",
@@ -229,51 +213,40 @@ const UploadCompleteCough: React.FC = () => {
           patientId: storedPatientId,
           filename: generatedFilename,
           timestamp,
-          audioType: finalRecordingType,
+          audioType: AUDIO_TYPE, // force cough (prevents "unknown")
           audioBase64: base64Audio,
         }),
-        signal,
       });
 
-      const data = await uploadResponse.json().catch(() => ({} as any));
-
-      // Detailed backend steps + friendly text
-      if (data.steps) setUploadSteps(data.steps);
-      if (data.friendly) setFriendly(data.friendly);
-
-      // Accept all 2xx (207 = partial success)
+      // Accept any 2xx
       if (uploadResponse.status < 200 || uploadResponse.status >= 300) {
+        const errTxt = await uploadResponse.text().catch(() => "");
         throw new Error(
-          `${t("uploadComplete.uploadError")} (${uploadResponse.status})`
+          (t("uploadComplete.uploadError") || "Upload failed.") +
+            (errTxt ? ` – ${errTxt}` : ` (${uploadResponse.status})`)
         );
       }
 
-      setSuccessMessage(t("uploadComplete.success"));
+      // Show only this one line
+      setSuccessMessage("Successfully uploaded.");
 
-      if (data.key) {
-        // optional verification call
-        await checkStatus(data.key);
-      }
-
+      // Clean up local temp
       sessionStorage.removeItem("coughAudio");
       sessionStorage.removeItem("coughFilename");
 
-      const timer = setTimeout(() => {
+      // Short pause so the user can read the success
+      setTimeout(() => {
         const nextNextPage = getNextStep(nextPage);
         navigate(nextPage, { state: { nextPage: nextNextPage } });
-      }, 1500);
-      return () => clearTimeout(timer);
-    } catch (error) {
-      let message = "";
-      if (error instanceof Error) {
-        message =
-          error.message === "Failed to fetch"
-            ? t("uploadComplete.networkError") ||
-              "Network error: Unable to reach the server."
-            : error.message;
-      } else {
-        message = t("uploadComplete.uploadError");
-      }
+      }, NAV_DELAY_MS);
+    } catch (error: any) {
+      const message =
+        error?.message === "Failed to fetch"
+          ? t("uploadComplete.networkError") ||
+            "Network error: Unable to reach the server."
+          : error?.message ||
+            t("uploadComplete.uploadError") ||
+            "Upload failed.";
       console.error("🐛 Upload error:", message);
       setErrorMessage(message);
     } finally {
@@ -361,13 +334,11 @@ const UploadCompleteCough: React.FC = () => {
             {t("uploadComplete.retake")}
           </RetakeButton>
           <SubmitButton onClick={handleSubmit} disabled={uploading}>
-            {uploading
-              ? t("uploadComplete.uploading")
-              : t("uploadComplete.submit")}
+            {uploading ? "Submitting…" : t("uploadComplete.submit")}
           </SubmitButton>
         </ButtonsWrapper>
 
-        {/* Error & success */}
+        {/* Error or success (ONLY keep the single success line) */}
         {errorMessage && (
           <ErrorLink role="alert" aria-live="assertive">
             {errorMessage}
@@ -376,39 +347,6 @@ const UploadCompleteCough: React.FC = () => {
         {successMessage && (
           <Footer role="alert" aria-live="polite">
             {successMessage}
-          </Footer>
-        )}
-
-        {/* Friendly, human-readable message */}
-        {friendly && (
-          <Footer role="status" aria-live="polite" style={{ marginTop: 8 }}>
-            {friendly}
-          </Footer>
-        )}
-
-        {/* Step-by-step details */}
-        {uploadSteps && (
-          <Footer role="status" aria-live="polite" style={{ marginTop: 12 }}>
-            <div><strong>Upload steps</strong></div>
-            <div>Parsed request: {String(uploadSteps.requestParsed)}</div>
-            <div>Base64 decoded: {String(uploadSteps.base64Decoded)}</div>
-            <div>
-              S3 put: {uploadSteps.s3Put?.ok
-                ? `OK (key: ${uploadSteps.s3Put?.key ?? "n/a"})`
-                : `❌ ${uploadSteps.s3Put?.error || ""}`}
-            </div>
-            <div>
-              DDB put: {uploadSteps.ddbPut?.ok
-                ? "OK"
-                : `❌ ${uploadSteps.ddbPut?.error || ""}`}
-            </div>
-          </Footer>
-        )}
-
-        {/* Verification status */}
-        {verifyStatus && (
-          <Footer role="status" aria-live="polite" style={{ marginTop: 8 }}>
-            {verifyStatus}
           </Footer>
         )}
       </ContentWrapper>
