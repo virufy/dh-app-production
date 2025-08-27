@@ -1,6 +1,7 @@
 {
   "name": "dhapp",
   "version": "0.1.0",
+  "homepage": "/dh-app",
   "private": true,
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
