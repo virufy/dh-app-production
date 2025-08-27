@@ -14,9 +14,12 @@ const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 
+const base =
+  window.location.pathname.startsWith("/dh-app") ? "/dh-app" : "/";
+
 root.render(
   <React.StrictMode>
-    <BrowserRouter basename="/dh-app">
+    <BrowserRouter basename={base}>
       <App />
     </BrowserRouter>
   </React.StrictMode>
