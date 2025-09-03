@@ -1,4 +1,5 @@
-import React, { useRef, useState, useEffect, useCallback } from "react";
+// UploadCompleteCough.tsx
+import React, { useRef, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -27,53 +28,67 @@ import PlayIcon from "../../../../assets/icons/play.svg";
 import PauseIcon from "../../../../assets/icons/pause.svg";
 import i18n from "../../../../i18n";
 
+/* ==== lossless upload config (added) ==== */
 const API_BASE =
   process.env.REACT_APP_API_BASE ??
   "https://tg3he2qa23.execute-api.me-central-1.amazonaws.com/prod";
-
 const NAV_DELAY_MS = 2000; // brief pause so user can read success
 
 type RecType = "cough" | "speech" | "breath" | "unknown";
 
-interface LocationState {
-  audioFileUrl?: string;
-  filename?: string;
-  nextPage?: string;
-  patientId?: string;
-  recordingType?: RecType;
+/* Convert a blob: URL to base64 (no data: prefix) */
+async function blobUrlToBase64(url: string): Promise<{ base64: string; contentType: string }> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Fetch failed ${res.status}`);
+  const contentType = res.headers.get("Content-Type") || "audio/wav";
+  const buf = await res.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return { base64: btoa(binary), contentType };
 }
 
 const UploadCompleteCough: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useTranslation();
   const isArabic = i18n.language === "ar";
+  const { t } = useTranslation();
 
-  const {
-    audioFileUrl,
-    filename,
-    nextPage,
-    recordingType: initialRecordingType = "unknown",
-  } = (location.state as LocationState) || {};
+  const { audioFileUrl, filename = t("uploadComplete.filename"), nextPage, patientId, recordingType } =
+    (location.state as {
+      audioFileUrl?: string;
+      filename?: string;
+      nextPage?: string;
+      patientId?: string;
+      recordingType?: RecType;
+    }) || {};
 
-  const storedPatientId =
-    (location.state as LocationState)?.patientId ||
-    sessionStorage.getItem("patientId") ||
-    "";
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [errMsg, setErrMsg] = useState<string | null>(null);
 
-  // derive type: state -> route -> filename -> fallback
-  const path = location.pathname.toLowerCase();
+  /* ==== lossless upload flags (added, non-breaking) ==== */
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadErr, setUploadErr] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  /* ==== derive patientId and recordingType like your backend version ==== */
+  const storedPatientId = patientId || sessionStorage.getItem("patientId") || "";
+
+  // infer type from route/prop/filename
+  const path = location.pathname?.toLowerCase() || "";
   const routeType: RecType =
     path.includes("speech") ? "speech" :
     path.includes("breath") ? "breath" :
     path.includes("cough") ? "cough" : "unknown";
 
   let finalRecordingType: RecType =
-    initialRecordingType !== "unknown" ? initialRecordingType :
+    recordingType && recordingType !== "unknown" ? recordingType :
     routeType !== "unknown" ? routeType :
     ((): RecType => {
-      if (!filename) return "unknown";
-      const lower = filename.toLowerCase();
+      const lower = String(filename || "").toLowerCase();
       if (lower.includes("speech")) return "speech";
       if (lower.includes("breath")) return "breath";
       if (lower.includes("cough")) return "cough";
@@ -82,92 +97,82 @@ const UploadCompleteCough: React.FC = () => {
 
   if (finalRecordingType === "unknown") finalRecordingType = "cough";
 
-  // type-specific storage keys
-  const AUDIO_KEY = `${finalRecordingType}Audio`;
-  const NAME_KEY = `${finalRecordingType}Filename`;
-
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-
-  const [uploading, setUploading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-
-  // Persist audio url for this screen
-  useEffect(() => {
-    try {
-      if (audioFileUrl) {
-        sessionStorage.setItem(AUDIO_KEY, audioFileUrl);
-        sessionStorage.setItem(
-          NAME_KEY,
-          filename || t("uploadComplete.filename")
-        );
-      } else {
-        sessionStorage.removeItem(AUDIO_KEY);
-        sessionStorage.removeItem(NAME_KEY);
-      }
-    } catch (err) {
-      console.error("🐛 Session storage error:", err);
-    }
-  }, [audioFileUrl, filename, t, AUDIO_KEY, NAME_KEY]);
-
-  // Basic audio controls
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleLoadedMetadata = () =>
-      setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
-    const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
-      if (audio.duration - audio.currentTime <= 0.05) setIsPlaying(false);
+    const handleLoadedMetadata = () => {
+      if (isFinite(audio.duration)) {
+        setDuration(audio.duration);
+      } else {
+        // force duration calculation for some blob URLs
+        const fix = () => {
+          audio.currentTime = 1e101;
+          audio.ontimeupdate = () => {
+            audio.ontimeupdate = null;
+            setDuration(audio.duration || 0);
+            audio.currentTime = 0;
+          };
+        };
+        fix();
+      }
+      setCurrentTime(audio.currentTime || 0);
     };
-    const handleEnded = () => {
+
+    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+    const handleEnded = () => { setIsPlaying(false); setCurrentTime(0); };
+    const handleError = () => {
+      setErrMsg(audio.error?.message || "Cannot play audio.");
       setIsPlaying(false);
-      setCurrentTime(0);
     };
 
     audio.addEventListener("loadedmetadata", handleLoadedMetadata);
     audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.addEventListener("play", handlePlay);
+    audio.addEventListener("pause", handlePause);
     audio.addEventListener("ended", handleEnded);
+    audio.addEventListener("error", handleError);
 
     if (audio.readyState >= 1) handleLoadedMetadata();
 
     return () => {
       audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
       audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("play", handlePlay);
+      audio.removeEventListener("pause", handlePause);
       audio.removeEventListener("ended", handleEnded);
+      audio.removeEventListener("error", handleError);
     };
   }, [audioFileUrl]);
 
-  const formatTime = (s: number) => {
-    if (!Number.isFinite(s) || s < 0) return "0:00";
-    const m = Math.floor(s / 60);
-    const ss = Math.floor(s % 60);
-    return `${m}:${ss < 10 ? "0" : ""}${ss}`;
+  const formatTime = (seconds: number) => {
+    if (!isFinite(seconds) || isNaN(seconds) || seconds < 0) return "0:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
-  const handlePlayPause = useCallback(async () => {
+  const handlePlayPause = async () => {
     const audio = audioRef.current;
-    if (!audio) return;
-
-    if (isPlaying) {
-      audio.pause();
-      setIsPlaying(false);
-    } else {
-      try {
-        await audio.play();
-        setIsPlaying(true);
-      } catch (err) {
-        console.error("🐛 Play failed:", err);
-        setErrorMessage(
-          t("uploadComplete.playError") || "Couldn’t play the audio."
-        );
-      }
+    if (!audio || !audioFileUrl) {
+      setErrMsg(t("uploadComplete.noAudio", "No audio attached. Go back and record/upload a file."));
+      return;
     }
-  }, [isPlaying, t]);
+    try {
+      if (audio.paused) {
+        if (audio.readyState < 2) audio.load();
+        await audio.play(); // await to catch iOS rejections
+      } else {
+        audio.pause(); // isPlaying will update via 'pause' event
+      }
+    } catch (e) {
+      console.error("Error playing audio:", e);
+      setErrMsg("Playback failed. Try again or re-record.");
+      setIsPlaying(false);
+    }
+  };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTime = parseFloat(e.target.value);
@@ -177,60 +182,37 @@ const UploadCompleteCough: React.FC = () => {
     }
   };
 
-  const handleBack = useCallback(() => navigate(-1), [navigate]);
-  const handleRetake = handleBack;
+  const handleBack = () => navigate(-1);
+  const handleRetake = () => navigate(-1);
 
+  /* ==== lossless upload in handleSubmit (added) ==== */
   const handleSubmit = async () => {
     if (!nextPage) {
-      setErrorMessage(
-        t("uploadComplete.noNextPage") || "Next page not configured."
-      );
+      console.error("No nextPage provided in state");
+      return;
+    }
+    if (!audioFileUrl) {
+      setErrMsg(t("uploadComplete.noAudio", "No audio attached. Go back and record/upload a file."));
       return;
     }
     if (!storedPatientId) {
-      setErrorMessage(
-        "Patient ID missing from earlier step. Please go back and enter the ID."
-      );
+      setErrMsg("Patient ID missing from earlier step. Please go back and enter the ID.");
       return;
     }
 
-    const timestamp = new Date().toISOString();
-    setUploading(true);
-    setErrorMessage("");
-    setSuccessMessage("");
+    setUploadErr(null);
+    setSuccessMsg(null);
+    setIsUploading(true);
 
     try {
-      const audioUrl = sessionStorage.getItem(AUDIO_KEY);
-      if (!audioUrl)
-        throw new Error(t("uploadComplete.noAudio") || "No audio to upload.");
+      // Convert current blob URL (lossless WAV from recorder) to base64
+      const { base64 } = await blobUrlToBase64(audioFileUrl);
 
-      const response = await fetch(audioUrl);
-      if (!response.ok)
-        throw new Error(
-          t("uploadComplete.audioFetchError") ||
-            "Couldn’t read the recorded audio."
-        );
-
-      const blob = await response.blob();
-      const base64Audio = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          if (reader.result) resolve((reader.result as string).split(",")[1]);
-          else
-            reject(
-              new Error(
-                t("uploadComplete.encodingError") || "Encoding failed."
-              )
-            );
-        };
-        reader.onerror = () =>
-          reject(new Error(t("uploadComplete.readError") || "Read failed."));
-        reader.readAsDataURL(blob);
-      });
-
+      const timestamp = new Date().toISOString();
       const generatedFilename = `${storedPatientId}/${finalRecordingType}-${timestamp}.flac`;
 
-      const uploadResponse = await fetch(`${API_BASE}/cough-upload`, {
+      // Send to your backend (same shape as your backend code)
+      const res = await fetch(`${API_BASE}/cough-upload`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -238,46 +220,41 @@ const UploadCompleteCough: React.FC = () => {
           filename: generatedFilename,
           timestamp,
           audioType: finalRecordingType,
-          audioBase64: base64Audio,
+          audioBase64: base64, // base64 WAV payload; backend can transcode to FLAC
         }),
       });
 
-      if (uploadResponse.status < 200 || uploadResponse.status >= 300) {
-        const errTxt = await uploadResponse.text().catch(() => "");
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
         throw new Error(
           (t("uploadComplete.uploadError") || "Upload failed.") +
-            (errTxt ? ` – ${errTxt}` : ` (${uploadResponse.status})`)
+            (txt ? ` – ${txt}` : ` (${res.status})`)
         );
       }
 
-      setSuccessMessage("Successfully uploaded.");
+      setSuccessMsg("Successfully uploaded.");
 
-      // Clean up local temp for this type
-      sessionStorage.removeItem(AUDIO_KEY);
-      sessionStorage.removeItem(NAME_KEY);
-
+      // Small pause so the user sees success, then proceed like your original
       setTimeout(() => {
         const nextNextPage = getNextStep(nextPage);
         navigate(nextPage, { state: { nextPage: nextNextPage } });
       }, NAV_DELAY_MS);
-    } catch (error: any) {
-      const message =
-        error?.message === "Failed to fetch"
-          ? t("uploadComplete.networkError") ||
-            "Network error: Unable to reach the server."
-          : error?.message ||
-            t("uploadComplete.uploadError") ||
-            "Upload failed.";
-      console.error("🐛 Upload error:", message);
-      setErrorMessage(message);
+    } catch (e: any) {
+      console.error("Upload error:", e);
+      setUploadErr(
+        e?.message === "Failed to fetch"
+          ? t("uploadComplete.networkError") || "Network error: Unable to reach the server."
+          : e?.message || t("uploadComplete.uploadError") || "Upload failed."
+      );
     } finally {
-      setUploading(false);
+      setIsUploading(false);
     }
   };
 
   const getNextStep = (currentPage: string) => {
     switch (currentPage) {
       case "/record-speech":
+        return "/upload-complete";
       case "/record-breath":
         return "/upload-complete";
       default:
@@ -307,40 +284,67 @@ const UploadCompleteCough: React.FC = () => {
           <Title>{t("uploadComplete.subtitle")}</Title>
           <Subtitle>{t("uploadComplete.description")}</Subtitle>
 
+          {!audioFileUrl && (
+            <Subtitle style={{ color: "#b00", fontWeight: 600 }}>
+              {t("uploadComplete.noAudio")}
+            </Subtitle>
+          )}
+
           <FileRow>
-            <span>{filename || t("uploadComplete.filename")}</span>
-            <button
+            <span>{filename}</span>
+            <span
+              style={{ fontSize: "20px", cursor: "pointer", alignSelf: "center" }}
               onClick={handleBack}
-              style={{
-                fontSize: "20px",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                alignSelf: "center",
-              }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleBack()}
               aria-label={t("uploadComplete.closeAria")}
             >
               ✕
-            </button>
+            </span>
           </FileRow>
 
           <Slider
             type="range"
             min="0"
-            max={duration || 1}
-            value={Number(currentTime.toFixed(1))}
+            max={duration || 0}
+            value={currentTime}
             step="0.1"
             onChange={handleSeek}
             aria-label={t("uploadComplete.sliderAria")}
+            disabled={!audioFileUrl || duration === 0}
           />
 
           <TimeRow>
             <span>{formatTime(currentTime)}</span>
             <span>- {formatTime(Math.max(duration - currentTime, 0))}</span>
           </TimeRow>
+
+          {errMsg && (
+            <div style={{ color: "#b00", marginTop: 8, fontWeight: 600 }}>
+              {errMsg}
+            </div>
+          )}
+
+          {/* upload status (added, non-breaking) */}
+          {isUploading && (
+            <div style={{ color: "#555", marginTop: 8 }}>
+              {t("uploadComplete.uploading", "Uploading...")}
+            </div>
+          )}
+          {uploadErr && (
+            <div style={{ color: "#b00", marginTop: 8, fontWeight: 600 }}>
+              {uploadErr}
+            </div>
+          )}
+          {successMsg && (
+            <div style={{ color: "#0a0", marginTop: 8, fontWeight: 600 }}>
+              {successMsg}
+            </div>
+          )}
         </ControlsWrapper>
 
-        <PlayButton onClick={handlePlayPause} disabled={uploading}>
+        <PlayButton onClick={handlePlayPause} disabled={!audioFileUrl || duration === 0 || isUploading}>
           <img
             src={isPlaying ? PauseIcon : PlayIcon}
             alt={isPlaying ? t("uploadComplete.pause") : t("uploadComplete.play")}
@@ -351,24 +355,23 @@ const UploadCompleteCough: React.FC = () => {
         </PlayButton>
 
         <ButtonsWrapper>
-          <RetakeButton onClick={handleRetake} disabled={uploading}>
+          <RetakeButton onClick={handleRetake} disabled={isUploading}>
             {t("uploadComplete.retake")}
           </RetakeButton>
-          <SubmitButton onClick={handleSubmit} disabled={uploading}>
-            {uploading ? "Submitting…" : t("uploadComplete.submit")}
+          <SubmitButton onClick={handleSubmit} disabled={isUploading}>
+            {isUploading ? t("uploadComplete.submitting", "Submitting...") : t("uploadComplete.submit")}
           </SubmitButton>
         </ButtonsWrapper>
 
-        {errorMessage && (
-          <ErrorLink role="alert" aria-live="assertive">
-            {errorMessage}
+        <Footer>
+          <ErrorLink
+            href="https://docs.google.com/forms/d/e/1FAIpQLSdlBAA3drY6NydPkxKkMWTEZQhE9p5BSH5YSuaK18F_rObBFg/viewform"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t("uploadComplete.report")}
           </ErrorLink>
-        )}
-        {successMessage && (
-          <Footer role="alert" aria-live="polite">
-            {successMessage}
-          </Footer>
-        )}
+        </Footer>
       </ContentWrapper>
     </PageWrapper>
   );

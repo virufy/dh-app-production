@@ -1,3 +1,4 @@
+// CoughRecordScreen.tsx
 import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -39,44 +40,80 @@ import {
 } from "./styles";
 import { t } from "i18next";
 
+/* ----------------- Minimum Duration Modal ----------------- */
 const MinimumDurationModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
-    <ModalOverlay>
-      <ModalContainer>
-        <ModalTitle>{t("recordCough.minimum_duration_title")}</ModalTitle>
-        <ModalText>{t("recordCough.minimum_duration_text")}</ModalText>
-        <ModalButton onClick={onClose}>{t("recordCough.minimum_duration_retry")}</ModalButton>
-      </ModalContainer>
-    </ModalOverlay>
+  <ModalOverlay>
+    <ModalContainer>
+      <ModalTitle>{t("recordCough.minimum_duration_title")}</ModalTitle>
+      <ModalText>{t("recordCough.minimum_duration_text")}</ModalText>
+      <ModalButton onClick={onClose}>{t("recordCough.minimum_duration_retry")}</ModalButton>
+    </ModalContainer>
+  </ModalOverlay>
 );
+
+/* ----------------- Encode Float32 → PCM WAV ----------------- */
+function encodeWav(samples: Float32Array, sampleRate = 44100): Blob {
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+
+  const writeStr = (off: number, str: string) => {
+    for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i));
+  };
+
+  // WAV header
+  writeStr(0, "RIFF");
+  view.setUint32(4, 36 + samples.length * 2, true);
+  writeStr(8, "WAVE");
+  writeStr(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, 1, true); // mono
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true); // byte rate
+  view.setUint16(32, 2, true); // block align
+  view.setUint16(34, 16, true); // bits per sample
+  writeStr(36, "data");
+  view.setUint32(40, samples.length * 2, true);
+
+  // PCM samples
+  let offset = 44;
+  for (let i = 0; i < samples.length; i++, offset += 2) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+  }
+
+  return new Blob([view], { type: "audio/wav" });
+}
+
 const CoughRecordScreen: React.FC = () => {
-  
   const { t } = useTranslation();
   const isArabic = i18n.language === "ar";
   const navigate = useNavigate();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Audio context + buffers
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const chunksRef = useRef<Float32Array[]>([]);
+
   const [showTooShortModal, setShowTooShortModal] = useState(false);
   const [involuntary, setInvoluntary] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
-    null
-  );
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  const [audioData, setAudioData] = useState<{
-    audioFileUrl: string;
-    filename: string;
-  } | null>(null);
+  const [audioData, setAudioData] = useState<{ audioFileUrl: string; filename: string } | null>(null);
+
+  const timerRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const storedAudio = sessionStorage.getItem("coughAudio");
-    const storedFilename = sessionStorage.getItem("coughFilename");
-    const storedDuration = sessionStorage.getItem("coughDuration");
-
-    if (storedAudio && storedFilename && storedDuration) {
-      setAudioData({ audioFileUrl: storedAudio, filename: storedFilename });
-      setRecordingTime(parseInt(storedDuration, 10));
-    }
+    return () => {
+      stopRecording();
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close().catch(() => {});
+      }
+    };
   }, []);
 
   const handleBack = () => navigate(-1);
@@ -87,112 +124,121 @@ const CoughRecordScreen: React.FC = () => {
     return `${mins}:${secs}`;
   };
 
+  /* ----------------- Start Recording (lossless) ----------------- */
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      const chunks: Blob[] = [];
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunks.push(event.data);
-        }
-      };
-      recorder.onstop = () => {
-        const audioBlob = new Blob(chunks, { type: "audio/wav" });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        const filename = `cough_recording-${new Date().toISOString().replace(/[:.]/g, "-")}.wav`;
-        setAudioData({ audioFileUrl: audioUrl, filename });
-        sessionStorage.setItem("coughAudio", audioUrl);
-        sessionStorage.setItem("coughFilename", filename);
+      const ctx = new AudioContext({ sampleRate: 44100 });
+      const source = ctx.createMediaStreamSource(stream);
+      const processor = ctx.createScriptProcessor(4096, 1, 1);
+
+      chunksRef.current = [];
+      source.connect(processor);
+      processor.connect(ctx.destination);
+
+      processor.onaudioprocess = (e) => {
+        const input = e.inputBuffer.getChannelData(0);
+        chunksRef.current.push(new Float32Array(input));
       };
 
+      audioCtxRef.current = ctx;
+      processorRef.current = processor;
 
-      recorder.start();
-      setMediaRecorder(recorder);
       setIsRecording(true);
       setRecordingTime(0);
-      timerRef.current = setInterval(() => {
-        setRecordingTime((prev) => prev + 1);
-      }, 1000);
-
-      setTimeout(() => {
-        if (recorder.state === "recording") {
-          stopRecording();
-        }
-      }, 30000); // Auto stop after 30 sec
-
       setError(null);
       setAudioData(null);
+
+      // timer
+      startTimeRef.current = Date.now();
+      timerRef.current = window.setInterval(() => {
+        if (startTimeRef.current != null) {
+          const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+          setRecordingTime(elapsed);
+        }
+      }, 1000);
+
+      // auto stop
+      setTimeout(() => stopRecording(), 30000);
     } catch (err) {
       console.error("Microphone access error:", err);
-      setError(
-        t("recordCough.microphoneAccessError") || "Microphone access denied."
-      );
+      setError(t("recordCough.microphoneAccessError") || "Microphone access denied.");
+      setIsRecording(false);
     }
   };
 
+  /* ----------------- Stop Recording ----------------- */
   const stopRecording = () => {
-    if (mediaRecorder) {
-      mediaRecorder.stop();
-    }
+    if (!isRecording) return;
+
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    if (recordingTime < 3) {
-      setShowTooShortModal(true);
-      setAudioData(null); // prevent submission
+
+    const ctx = audioCtxRef.current;
+    const processor = processorRef.current;
+    if (processor) {
+      processor.disconnect();
     }
+    if (ctx) {
+      ctx.close().catch(() => {});
+    }
+
+    const flat = chunksRef.current.length
+      ? new Float32Array(chunksRef.current.reduce((acc, cur) => acc + cur.length, 0))
+      : null;
+
+    if (flat) {
+      let offset = 0;
+      for (const chunk of chunksRef.current) {
+        flat.set(chunk, offset);
+        offset += chunk.length;
+      }
+
+      const wavBlob = encodeWav(flat, 44100);
+      const wavUrl = URL.createObjectURL(wavBlob);
+      const filename = `cough_recording-${new Date().toISOString().replace(/[:.]/g, "-")}.wav`;
+
+      if (recordingTime < 3) {
+        setShowTooShortModal(true);
+        setAudioData(null);
+      } else {
+        setAudioData({ audioFileUrl: wavUrl, filename });
+      }
+    }
+
     setIsRecording(false);
-    sessionStorage.setItem("coughDuration", recordingTime.toString());
   };
 
+  /* ----------------- Continue / Upload ----------------- */
   const handleContinue = () => {
     if (audioData) {
       setError(null);
       navigate("/upload-complete", {
-        state: {
-          ...audioData,
-          nextPage: "/record-speech", // Go to Speech after upload
-        },
+        state: { ...audioData, nextPage: "/record-speech" },
       });
     } else {
       const file = fileInputRef.current?.files?.[0];
       if (!file) {
-        setError(
-          t("recordCough.error") ||
-            "Please record or upload an audio file first."
-        );
+        setError(t("recordCough.error") || "Please record or upload an audio file first.");
       } else {
         const audioUrl = URL.createObjectURL(file);
         navigate("/upload-complete", {
-          state: {
-            audioFileUrl: audioUrl,
-            filename: file.name,
-            recordingType: 'cough',
-            nextPage: "/record-speech",
-            
-          },
+          state: { audioFileUrl: audioUrl, filename: file.name, nextPage: "/record-speech" },
         });
       }
     }
   };
 
-  /** Updated handleFileChange */
   const triggerFileInput = () => fileInputRef.current?.click();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const audioUrl = URL.createObjectURL(file);
-
     navigate("/upload-complete", {
-      state: {
-        audioFileUrl: audioUrl,
-        filename: file.name,
-        nextPage: "/record-speech",
-      },
+      state: { audioFileUrl: audioUrl, filename: file.name, nextPage: "/record-speech" },
     });
   };
 
@@ -200,44 +246,21 @@ const CoughRecordScreen: React.FC = () => {
     <Container>
       <Content>
         <Header>
-          <BackButton
-            onClick={handleBack}
-            aria-label={t("recordCough.goBackAria")}
-            isArabic={isArabic}
-          >
-            <img
-              src={BackIcon}
-              alt={t("recordCough.goBackAlt")}
-              width={24}
-              height={24}
-              style={{ transform: isArabic ? "rotate(180deg)" : "none" }}
-            />
+          <BackButton onClick={handleBack} aria-label={t("recordCough.goBackAria")} isArabic={isArabic}>
+            <img src={BackIcon} alt={t("recordCough.goBackAlt")} width={24} height={24} style={{ transform: isArabic ? "rotate(180deg)" : "none" }} />
           </BackButton>
           <HeaderText>{t("recordCough.title")}</HeaderText>
         </Header>
 
-        <h3
-          style={{
-            fontFamily: "Source Open Sans, sans-serif",
-            fontSize: "24px",
-            textAlign: "center",
-            fontWeight: "600",
-            marginBottom: "1.5rem",
-            color: "#000000",
-            marginTop: "1.5rem",
-
-          }}
-        >
+        <h3 style={{ fontFamily: "Source Open Sans, sans-serif", fontSize: "24px", textAlign: "center", fontWeight: 600, marginBottom: "1.5rem", color: "#000000", marginTop: "1.5rem" }}>
           {t("recordCough.instructionsTitle")}
         </h3>
 
         <StepWrapper>
           <StepCircle>{isArabic ? "١" : "1"}</StepCircle>
           <InstructionText>
-            {t("recordCough.instruction1_part1")}{" "}
-            <strong>{t("recordCough.instruction1_bold1")}</strong>
-            {t("recordCough.instruction1_part2")}{" "}
-            <strong>{t("recordCough.instruction1_bold2")}</strong>
+            {t("recordCough.instruction1_part1")} <strong>{t("recordCough.instruction1_bold1")}</strong>
+            {t("recordCough.instruction1_part2")} <strong>{t("recordCough.instruction1_bold2")}</strong>
             {t("recordCough.instruction1_part3")}
           </InstructionText>
         </StepWrapper>
@@ -255,9 +278,8 @@ const CoughRecordScreen: React.FC = () => {
 
         <StepWrapper>
           <StepCircle>{isArabic ? "٣" : "3"}</StepCircle>
-          <InstructionText >
-            {t("recordCough.instruction3_part1")}{" "}
-            <strong>{t("recordCough.instruction3_bold1")}</strong>
+          <InstructionText>
+            {t("recordCough.instruction3_part1")} <strong>{t("recordCough.instruction3_bold1")}</strong>
             {t("recordCough.instruction3_part2")}
             <strong>{t("recordCough.instruction3_bold2")}</strong>
             {t("recordCough.instruction3_part3")}
@@ -275,19 +297,9 @@ const CoughRecordScreen: React.FC = () => {
               aria-label={t("recordCough.recordButton")}
               onClick={startRecording}
               disabled={isRecording}
-              style={{
-                opacity: isRecording ? 0.6 : 1,
-                cursor: isRecording ? "not-allowed" : "pointer",
-                width:'56px',
-                height:'56px'
-              }}
+              style={{ opacity: isRecording ? 0.6 : 1, cursor: isRecording ? "not-allowed" : "pointer", width: "56px", height: "56px" }}
             >
-              <img
-                src={StartIcon}
-                alt={t("recordCough.recordButton")}
-                width={28}
-                height={28}
-              />
+              <img src={StartIcon} alt={t("recordCough.recordButton")} width={28} height={28} />
             </CircleButton>
             <ButtonLabel>{t("recordCough.recordButton")}</ButtonLabel>
           </div>
@@ -297,92 +309,47 @@ const CoughRecordScreen: React.FC = () => {
               aria-label={t("recordCough.stopButton")}
               onClick={stopRecording}
               disabled={!isRecording}
-              style={{
-                opacity: !isRecording ? 0.6 : 1,
-                cursor: !isRecording ? "not-allowed" : "pointer",
-                width:'56px',
-                height:'56px'
-              }}
+              style={{ opacity: !isRecording ? 0.6 : 1, cursor: !isRecording ? "not-allowed" : "pointer", width: "56px", height: "56px" }}
             >
-              <img
-                src={StopIcon}
-                alt={t("recordCough.stopButton")}
-                width={20}
-                height={20}
-              />
+              <img src={StopIcon} alt={t("recordCough.stopButton")} width={20} height={20} />
             </CircleButton>
             <ButtonLabel>{t("recordCough.stopButton")}</ButtonLabel>
           </div>
         </ButtonRow>
 
         <CheckboxRow>
-          <Label htmlFor="involuntary" style={{ userSelect: "none" }}>
-            {t("recordCough.checkboxLabel")}
-          </Label>
-          <Checkbox
-            id="involuntary"
-            type="checkbox"
-            checked={involuntary}
-            onChange={() => setInvoluntary(!involuntary)}
-            style={{ cursor: "pointer" }}
-          />
+          <Label htmlFor="involuntary" style={{ userSelect: "none" }}>{t("recordCough.checkboxLabel")}</Label>
+          <Checkbox id="involuntary" type="checkbox" checked={involuntary} onChange={() => setInvoluntary(!involuntary)} style={{ cursor: "pointer" }} />
         </CheckboxRow>
 
-        {error && (
-          <p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>
-            {error}
-          </p>
-        )}
+        {error && (<p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>{error}</p>)}
+
         <button
-            type="button"
-            onClick={() => navigate('/upload-complete', { state: { nextPage: '/record-speech' } })}
-            style={{
-              position: 'absolute',
-              top: '20px',
-              right: '20px',
-              backgroundColor: '#f0f0f0',
-              border: '1px solid #ccc',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            Skip
+          type="button"
+          onClick={() => navigate("/upload-complete", { state: { nextPage: "/record-speech" } })}
+          style={{ position: "absolute", top: "20px", right: "20px", backgroundColor: "#f0f0f0", border: "1px solid #ccc", padding: "8px 16px", borderRadius: "4px", cursor: "pointer" }}
+        >
+          Skip
         </button>
 
-
         <ActionButtons>
-          <button onClick={handleContinue}>
-            {t("recordCough.continueButton")}
-          </button>
-          <UploadButton
-            onClick={triggerFileInput}
-            aria-label={t("recordCough.uploadFile")}
-          >
-            <img
-              src={UploadIcon}
-              alt={t("recordCough.uploadFile")}
-              width={22}
-              height={22}
-              style={{ marginBottom: "0.3rem", marginRight: "0.5rem" }}
-            />
+          <button onClick={handleContinue}>{t("recordCough.continueButton")}</button>
+          <UploadButton onClick={triggerFileInput} aria-label={t("recordCough.uploadFile")}>
+            <img src={UploadIcon} alt={t("recordCough.uploadFile")} width={22} height={22} style={{ marginBottom: "0.3rem", marginRight: "0.5rem" }} />
             <UploadText>{t("recordCough.uploadFile")}</UploadText>
           </UploadButton>
-          <HiddenFileInput
-            type="file"
-            accept="audio/*"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-          />
+          <HiddenFileInput type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} />
         </ActionButtons>
+
         {showTooShortModal && (
-            <MinimumDurationModal
-                onClose={() => {
-                  setShowTooShortModal(false);
-                  startRecording();
-                }}
-            />
+          <MinimumDurationModal
+            onClose={() => {
+              setShowTooShortModal(false);
+              startRecording();
+            }}
+          />
         )}
+
         <FooterLink
           href="https://docs.google.com/forms/d/e/1FAIpQLSdlBAA3drY6NydPkxKkMWTEZQhE9p5BSH5YSuaK18F_rObBFg/viewform"
           target="_blank"
@@ -390,11 +357,9 @@ const CoughRecordScreen: React.FC = () => {
         >
           {t("recordCough.reportIssue")}
         </FooterLink>
-
       </Content>
     </Container>
   );
 };
 
 export default CoughRecordScreen;
-

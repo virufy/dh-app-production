@@ -8,10 +8,6 @@
       "patient_id_required": "Patient ID is required",
       "patient_id_numeric": "Patient ID must be a valid number."
     },
-    "patient_exists_title": "Patient ID Already Exists",
-    "patient_exists_question": "Do you want to continue with the same patient ID?",
-    "common_no": "No",
-    "common_yes": "Yes",
     "hospital_label": "Hospital Name",
     "hospital_options": {
       "barsha": "Al Barsha Health Centre",
@@ -170,7 +166,8 @@
     "backAlt": "Back",
     "sliderAria": "Audio seek slider",
     "play": "Play audio",
-    "pause": "Pause audio"
+    "pause": "Pause audio",
+    "noAudio": "No audio attached. Go back and record/upload a file."
 
   }
 }

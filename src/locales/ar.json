@@ -6,14 +6,8 @@
     "patient_id_placeholder": "أدخل رقم هوية المريض",
     "hospital_label": "اسم المستشفى",
     "error": {
-      "patient_id_required": "رقم هوية المريض مطلوب",
-       "patient_id_numeric": "رقم هوية المريض يجب أن يكون رقماَ."
-
+      "patient_id_required": "رقم هوية المريض مطلوب"
     }, 
-    "patient_exists_title": "رقم هوية المريض موجود مسبقاَ",
-    "patient_exists_question": "هل تريد المتابعة باستخدام رقم هوية المريض الموجود مسبقاَ؟",
-    "common_no": "لا",
-    "common_yes": "نعم",
     "hospital_options": {
       "barsha": "مركز البرشاء الصحي",
       "nadd": "مركز ند الحمر الصحي"
@@ -178,7 +172,8 @@
     "backAlt": "رجوع",
     "sliderAria": "شريط تحكم الصوت",
     "play": "تشغيل الصوت",
-    "pause": "إيقاف الصوت مؤقتًا"
+    "pause": "إيقاف الصوت مؤقتًا",
+    "noAudio": "لا يوجد صوت مرفق. ارجع وسجل/قم بتحميل ملف."
 
   }
 }
