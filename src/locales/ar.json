@@ -12,7 +12,11 @@
       "barsha": "مركز البرشاء الصحي",
       "nadd": "مركز ند الحمر الصحي"
     },
-    "submit_button": "التالي"
+    "submit_button": "التالي",
+    "patient_exists_title": "رقم هوية المريض موجود بالفعل",
+    "patient_exists_question": "هل تريد المتابعة باستخدام رقم هوية المريض هذا؟",
+    "common_yes": "نعم",  
+    "common_no": "لا"
   },
   "confirmation": {
     "titleLine1": "شكرًا جزيلًا على إرسال",

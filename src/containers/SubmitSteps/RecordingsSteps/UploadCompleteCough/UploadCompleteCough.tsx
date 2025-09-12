@@ -27,6 +27,7 @@ import ArrowLeftIcon from "../../../../assets/icons/arrowLeft.svg";
 import PlayIcon from "../../../../assets/icons/play.svg";
 import PauseIcon from "../../../../assets/icons/pause.svg";
 import i18n from "../../../../i18n";
+import { generateSignature } from "../../../../utils/signature";
 
 /* ==== lossless upload config (added) ==== */
 const API_BASE =
@@ -210,11 +211,16 @@ const UploadCompleteCough: React.FC = () => {
 
       const timestamp = new Date().toISOString();
       const generatedFilename = `${storedPatientId}/${finalRecordingType}-${timestamp}.flac`;
+      
 
       // Send to your backend (same shape as your backend code)
+
+      const signature = await generateSignature();
+      console.log("Signature before fetch:", signature, typeof signature);
+
       const res = await fetch(`${API_BASE}/cough-upload`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-unique-signature": signature },
         body: JSON.stringify({
           patientId: storedPatientId,
           filename: generatedFilename,

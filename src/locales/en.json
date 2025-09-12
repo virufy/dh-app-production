@@ -13,7 +13,11 @@
       "barsha": "Al Barsha Health Centre",
       "nadd": "Nadd Al Hammar Health Centre"
     },
-    "submit_button": "Next"
+    "submit_button": "Next",
+    "patient_exists_title": "Patient ID already exists",
+    "patient_exists_question": "Do you want to continue with this Patient ID?",
+    "common_yes": "Yes",
+    "common_no": "No"
   },
   "confirmation": {
     "titleLine1": "Thank you for",
