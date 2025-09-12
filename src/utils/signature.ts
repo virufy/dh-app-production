@@ -1,7 +1,22 @@
 import CryptoJS from "crypto-js";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
+import { v4 as uuidv4 } from "uuid";
+
 
 const SECRET = process.env.REACT_APP_SIGNATURE_SECRET ?? "shared-secret";
+
+// --- UUID helper ---
+function getOrCreateUUID(): string {
+  const storageKey: string = "app_user_uuid";
+  let uuid: string | null = localStorage.getItem(storageKey);
+
+  if (!uuid) {
+    uuid = uuidv4();
+    localStorage.setItem(storageKey, uuid);
+  }
+
+  return uuid;
+}
 
 // 1. Get geo-data
 async function getGeoData() {
@@ -28,8 +43,10 @@ async function getDeviceId() {
 export async function generateSignature() {
   const geo = await getGeoData();
   const deviceId = await getDeviceId();
+  const userUUID = getOrCreateUUID();
 
   const payload = {
+    uuid: userUUID,
     deviceId,
     lat: geo.lat,
     lon: geo.lon,
