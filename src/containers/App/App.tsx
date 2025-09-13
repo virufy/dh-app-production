@@ -9,9 +9,7 @@ import CoughRecordScreen from "../SubmitSteps/RecordingsSteps/CoughRecordScreen"
 import UploadCompleteCough from "../SubmitSteps/RecordingsSteps/UploadCompleteCough";
 import ConsentScreen from "./ConsentPage";
 import Clinical_Login from "./Clinical_Login";
-import ProtectedRoute from "../../components/ProtectedRoute";
 
-// --- Import your new ProtectedRoute component ---
 //import ProtectedRoute from "../../components/ProtectedRoute";
 
 // Main App with routes and language support
