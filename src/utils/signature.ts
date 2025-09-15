@@ -56,3 +56,4 @@ export async function generateSignature() {
 
   return CryptoJS.AES.encrypt(JSON.stringify(payload), SECRET).toString();
 }
+

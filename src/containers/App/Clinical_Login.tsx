@@ -31,6 +31,11 @@ const Clinical_Login: React.FC = () => {
   // robust Arabic check (handles "ar", "ar-AE", etc.)
   const isArabic = (i18n.resolvedLanguage || i18n.language || '').startsWith('ar');
 
+  // Always reset language to English when this page loads
+  useEffect(() => {
+    i18n.changeLanguage('en');
+  }, [i18n]);
+
   // close modal on Escape
   useEffect(() => {
     if (!showConfirm) return;
