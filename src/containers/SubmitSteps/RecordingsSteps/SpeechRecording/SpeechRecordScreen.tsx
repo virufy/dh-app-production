@@ -191,7 +191,7 @@ const SpeechRecordScreen: React.FC = () => {
 
       const wavBlob = encodeWav(flat, 44100);
       const wavUrl = URL.createObjectURL(wavBlob);
-      const filename = `speech_recording-${new Date().toISOString().replace(/[:.]/g, "-")}.wav`;
+      const filename = `${storedPatientId}_speechS-${new Date().toISOString().replace(/\.\d+Z$/, "").replace(/:/g, "-")}.wav`;
 
       if (recordingTime < 3) {
         setShowTooShortModal(true);
