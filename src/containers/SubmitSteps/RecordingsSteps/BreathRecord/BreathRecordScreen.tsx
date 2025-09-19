@@ -106,6 +106,8 @@ const BreathRecordScreen: React.FC = () => {
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
 
+  const storedPatientId = sessionStorage.getItem("id") || "unknown";
+
   useEffect(() => {
     return () => {
       stopRecording();
@@ -200,7 +202,7 @@ const BreathRecordScreen: React.FC = () => {
 
       const wavBlob = encodeWav(flat, 44100);
       const wavUrl = URL.createObjectURL(wavBlob);
-      const filename = `breath_recording-${new Date().toISOString().replace(/[:.]/g, "-")}.wav`;
+      const filename = `${storedPatientId}_breath-${new Date().toISOString().replace(/\.\d+Z$/, "").replace(/:/g, "-")}.wav`;
 
       if (recordingTime < 3) {
         setShowTooShortModal(true);

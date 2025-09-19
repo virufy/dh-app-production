@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import SehaDubaiLogo from '../../assets/images/SehaDubaiLogo.png';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { generateSignature } from "../../utils/signature";
+
 import {
   pageContainer,
   title,
@@ -29,6 +31,11 @@ const Clinical_Login: React.FC = () => {
   // robust Arabic check (handles "ar", "ar-AE", etc.)
   const isArabic = (i18n.resolvedLanguage || i18n.language || '').startsWith('ar');
 
+  // Always reset language to English when this page loads
+  useEffect(() => {
+    i18n.changeLanguage('en');
+  }, [i18n]);
+
   // close modal on Escape
   useEffect(() => {
     if (!showConfirm) return;
@@ -36,6 +43,20 @@ const Clinical_Login: React.FC = () => {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [showConfirm]);
+
+    useEffect(() => {
+    async function initSignature() {
+      try {
+        const sig = await generateSignature();
+        console.log("Initial app signature:", sig);
+        sessionStorage.setItem("app_signature", sig);
+      } catch (err) {
+        console.error("Failed to generate initial signature:", err);
+      }
+    }
+    initSignature();
+  }, []);
+
 
   const proceedWithId = () => {
     const id = patientId.trim();

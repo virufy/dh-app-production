@@ -55,13 +55,14 @@ const UploadCompleteCough: React.FC = () => {
   const isArabic = i18n.language === "ar";
   const { t } = useTranslation();
 
-  const { audioFileUrl, filename = t("uploadComplete.filename"), nextPage, patientId, recordingType } =
+  const { audioFileUrl, filename = t("uploadComplete.filename"), nextPage, patientId, recordingType, skipped } =
     (location.state as {
       audioFileUrl?: string;
       filename?: string;
       nextPage?: string;
       patientId?: string;
       recordingType?: RecType;
+      skipped?: boolean;
     }) || {};
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -192,7 +193,7 @@ const UploadCompleteCough: React.FC = () => {
       console.error("No nextPage provided in state");
       return;
     }
-    if (!audioFileUrl) {
+    if (!audioFileUrl ) {
       setErrMsg(t("uploadComplete.noAudio", "No audio attached. Go back and record/upload a file."));
       return;
     }
@@ -290,7 +291,7 @@ const UploadCompleteCough: React.FC = () => {
           <Title>{t("uploadComplete.subtitle")}</Title>
           <Subtitle>{t("uploadComplete.description")}</Subtitle>
 
-          {!audioFileUrl && (
+          {!audioFileUrl && !skipped && (
             <Subtitle style={{ color: "#b00", fontWeight: 600 }}>
               {t("uploadComplete.noAudio")}
             </Subtitle>

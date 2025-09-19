@@ -107,6 +107,8 @@ const CoughRecordScreen: React.FC = () => {
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
 
+  const storedPatientId = sessionStorage.getItem("id") || "unknown";
+
   useEffect(() => {
     return () => {
       stopRecording();
@@ -198,7 +200,7 @@ const CoughRecordScreen: React.FC = () => {
 
       const wavBlob = encodeWav(flat, 44100);
       const wavUrl = URL.createObjectURL(wavBlob);
-      const filename = `cough_recording-${new Date().toISOString().replace(/[:.]/g, "-")}.wav`;
+      const filename = `${storedPatientId}_cough-${new Date().toISOString().replace(/\.\d+Z$/, "").replace(/:/g, "-")}.wav`;
 
       if (recordingTime < 3) {
         setShowTooShortModal(true);
