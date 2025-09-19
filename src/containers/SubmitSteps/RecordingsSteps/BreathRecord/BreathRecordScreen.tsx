@@ -106,7 +106,7 @@ const BreathRecordScreen: React.FC = () => {
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
 
-  const storedPatientId = sessionStorage.getItem("id") || "unknown";
+  const storedPatientId = sessionStorage.getItem("patientId") || "unknown";
 
   useEffect(() => {
     return () => {
