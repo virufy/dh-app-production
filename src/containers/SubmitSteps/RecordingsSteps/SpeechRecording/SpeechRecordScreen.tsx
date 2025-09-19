@@ -345,9 +345,9 @@ const SpeechRecordScreen: React.FC = () => {
         {error && (<p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>{error}</p>)}
 
         {/* Quick Skip for testing */}
-        <button
+       <button
           type="button"
-          onClick={() => navigate("/upload-complete", { state: { nextPage: "/record-breath", skipped: true } })}
+          onClick={() => navigate("/record-breath", { state: { skipped: true } })}
           style={{
             position: "absolute",
             top: "20px",
@@ -356,7 +356,7 @@ const SpeechRecordScreen: React.FC = () => {
             border: "1px solid #ccc",
             padding: "8px 16px",
             borderRadius: "4px",
-            cursor: "pointer",
+            cursor: "pointer"
           }}
         >
           Skip
