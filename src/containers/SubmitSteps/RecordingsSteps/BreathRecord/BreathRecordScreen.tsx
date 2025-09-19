@@ -112,7 +112,7 @@ const BreathRecordScreen: React.FC = () => {
     return () => {
       stopRecording();
       if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => {});
+        audioCtxRef.current.close().catch(() => { });
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -182,10 +182,10 @@ const BreathRecordScreen: React.FC = () => {
     const ctx = audioCtxRef.current;
     const processor = processorRef.current;
     if (processor) {
-      try { processor.disconnect(); } catch {}
+      try { processor.disconnect(); } catch { }
     }
     if (ctx) {
-      try { ctx.close(); } catch {}
+      try { ctx.close(); } catch { }
     }
 
     // flatten chunks → single Float32Array
