@@ -7,9 +7,6 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 import './i18n';
 import './assets/fonts/font.css';
-
-
-
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
@@ -24,5 +21,5 @@ root.render(
     </BrowserRouter>
   </React.StrictMode>
 );
-
+   
 reportWebVitals();

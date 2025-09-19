@@ -324,10 +324,19 @@ const CoughRecordScreen: React.FC = () => {
 
         {error && (<p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>{error}</p>)}
 
-        <button
+ <button
           type="button"
-          onClick={() => navigate("/upload-complete", { state: { nextPage: "/record-speech" } })}
-          style={{ position: "absolute", top: "20px", right: "20px", backgroundColor: "#f0f0f0", border: "1px solid #ccc", padding: "8px 16px", borderRadius: "4px", cursor: "pointer" }}
+          onClick={() => navigate("/record-speech", { state: { skipped: true } })}
+          style={{
+            position: "absolute",
+            top: "20px",
+            right: "20px",
+            backgroundColor: "#f0f0f0",
+            border: "1px solid #ccc",
+            padding: "8px 16px",
+            borderRadius: "4px",
+            cursor: "pointer"
+          }}
         >
           Skip
         </button>
