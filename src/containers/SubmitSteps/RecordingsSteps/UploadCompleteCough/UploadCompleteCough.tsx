@@ -77,6 +77,7 @@ const UploadCompleteCough: React.FC = () => {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   /* ==== derive patientId and recordingType like your backend version ==== */
+  // patientId in sessionStorage is now CNM_PatientID (e.g., BHC_12345 or NAH_12345)
   const storedPatientId = patientId || sessionStorage.getItem("patientId") || "";
 
   // infer type from route/prop/filename
@@ -211,7 +212,7 @@ const UploadCompleteCough: React.FC = () => {
       const { base64 } = await blobUrlToBase64(audioFileUrl);
 
       const timestamp = new Date().toISOString();
-      const generatedFilename = `${storedPatientId}/${finalRecordingType}-${timestamp}.flac`;
+      const generatedFilename = `${storedPatientId}/${finalRecordingType}-${timestamp}.flac`; 
       
 
       // Send to your backend (same shape as your backend code)

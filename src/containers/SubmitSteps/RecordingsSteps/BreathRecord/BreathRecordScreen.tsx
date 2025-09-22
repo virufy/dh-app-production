@@ -106,6 +106,7 @@ const BreathRecordScreen: React.FC = () => {
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
 
+  // patientId in sessionStorage is now CNM_PatientID (e.g., BHC_12345 or NAH_12345)
   const storedPatientId = sessionStorage.getItem("patientId") || "unknown";
 
   useEffect(() => {
