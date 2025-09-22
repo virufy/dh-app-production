@@ -1,48 +1,55 @@
-# Getting Started with Create React App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# 🚀 React + TypeScript App
 
-## Available Scripts
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app) using the TypeScript template.
 
-In the project directory, you can run:
 
-### `npm start`
+## 📦 Prerequisites
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Make sure you have the following installed on your machine:
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+* **Node.js** (>= 14.x recommended, check with `node -v`)
+* **npm** (comes with Node, check with `npm -v`)
 
-If you encounter an ERESOLVE dependency conflict error after running `npm install` on a fresh clone, you can bypass the issue by running `npm install --legacy-peer-deps`. This will install the dependencies correctly and allow you to start the project.
+## ▶️ Getting Started
 
-### `npm test`
+### 1. Clone the repository
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+git clone <repo-url>
+cd <your-project-folder>
+```
 
-### `npm run build`
+### 2. Install dependencies
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+npm install
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+⚠️ If you encounter a dependency conflict (common with CRA + TypeScript):
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+npm install --legacy-peer-deps
+```
 
-### `npm run eject`
+This will skip peer dependency strict checks and install packages correctly.
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### 3. Start the development server
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+npm start
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+* Runs the app in **development mode**
+* Opens [http://localhost:3000](http://localhost:3000) automatically in your browser
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
 
-## Learn More
+### 4. Build for production
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+npm run build
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+* Creates a production-ready build in the `build/` folder
+* Bundles React in production mode and optimizes for performance
+
