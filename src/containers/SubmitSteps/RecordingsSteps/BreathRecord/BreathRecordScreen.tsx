@@ -401,7 +401,7 @@ const BreathRecordScreen: React.FC = () => {
           <MinimumDurationModal
             onClose={() => {
               setShowTooShortModal(false);
-              startRecording();
+              setRecordingTime(0);
             }}
           />
         )}

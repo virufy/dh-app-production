@@ -404,13 +404,6 @@ const Clinical_Login: React.FC = () => {
         ))}
       </select>
 
-      <div style={{ marginTop: 8, marginBottom: 8 }}>
-        {/* show preview of resulting ID so user knows the CNM is prepended */}
-        <small>
-          {t('home.patient_id_preview') || 'Resulting ID:'}{' '}
-          <strong>{buildFullPatientId(patientId || '...', hospitalCode)}</strong>
-        </small>
-      </div>
 
       <div style={buttonContainer}>
         <button style={buttonCircle} type="submit" disabled={checking}>

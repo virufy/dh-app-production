@@ -1,5 +1,7 @@
 // CoughRecordScreen.tsx
-import React, { useRef, useState, useEffect } from "react";
+// import React, { useRef, useState } from "react";
+
+import React, { useRef, useState,useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import keepDistance from "../../../../assets/images/keepDistance.png";
@@ -109,12 +111,11 @@ const CoughRecordScreen: React.FC = () => {
 
   // patientId in sessionStorage is now CNM_PatientID (e.g., BHC_12345 or NAH_12345)
   const storedPatientId = sessionStorage.getItem("patientId") || "unknown";
-
   useEffect(() => {
     return () => {
       stopRecording();
       if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => {});
+        audioCtxRef.current.close().catch(() => { });
       }
     };
   }, []);
@@ -171,48 +172,49 @@ const CoughRecordScreen: React.FC = () => {
   };
 
   /* ----------------- Stop Recording ----------------- */
-  const stopRecording = () => {
-    if (!isRecording) return;
+  const stopRecording = useCallback(() => {
+  if (!isRecording) return;
 
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
+  if (timerRef.current) {
+    clearInterval(timerRef.current);
+    timerRef.current = null;
+  }
+
+  const ctx = audioCtxRef.current;
+  const processor = processorRef.current;
+  if (processor) processor.disconnect();
+  if (ctx) ctx.close().catch(() => {});
+
+  const flat = chunksRef.current.length
+    ? new Float32Array(chunksRef.current.reduce((acc, cur) => acc + cur.length, 0))
+    : null;
+
+  if (flat) {
+    let offset = 0;
+    for (const chunk of chunksRef.current) {
+      flat.set(chunk, offset);
+      offset += chunk.length;
     }
 
-    const ctx = audioCtxRef.current;
-    const processor = processorRef.current;
-    if (processor) {
-      processor.disconnect();
+    const wavBlob = encodeWav(flat, 44100);
+    const wavUrl = URL.createObjectURL(wavBlob);
+    const filename = `${storedPatientId}_cough-${new Date().toISOString().replace(/\.\d+Z$/, "").replace(/:/g, "-")}.wav`;
+
+    if (recordingTime < 3) {
+      setShowTooShortModal(true);
+      setAudioData(null);
+    } else {
+      setAudioData({ audioFileUrl: wavUrl, filename });
     }
-    if (ctx) {
-      ctx.close().catch(() => {});
-    }
+  }
 
-    const flat = chunksRef.current.length
-      ? new Float32Array(chunksRef.current.reduce((acc, cur) => acc + cur.length, 0))
-      : null;
+  setIsRecording(false);
+}, [isRecording, recordingTime, storedPatientId]);
 
-    if (flat) {
-      let offset = 0;
-      for (const chunk of chunksRef.current) {
-        flat.set(chunk, offset);
-        offset += chunk.length;
-      }
-
-      const wavBlob = encodeWav(flat, 44100);
-      const wavUrl = URL.createObjectURL(wavBlob);
-      const filename = `${storedPatientId}_cough-${new Date().toISOString().replace(/\.\d+Z$/, "").replace(/:/g, "-")}.wav`;
-
-      if (recordingTime < 3) {
-        setShowTooShortModal(true);
-        setAudioData(null);
-      } else {
-        setAudioData({ audioFileUrl: wavUrl, filename });
-      }
-    }
-
-    setIsRecording(false);
-  };
+useEffect(() => {
+  const autoStop = setTimeout(() => stopRecording(), 30000);
+  return () => clearTimeout(autoStop);
+}, [stopRecording]);
 
   /* ----------------- Continue / Upload ----------------- */
   const handleContinue = () => {
@@ -327,7 +329,7 @@ const CoughRecordScreen: React.FC = () => {
 
         {error && (<p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>{error}</p>)}
 
- <button
+        <button
           type="button"
           onClick={() => navigate("/record-speech", { state: { skipped: true } })}
           style={{
@@ -357,7 +359,7 @@ const CoughRecordScreen: React.FC = () => {
           <MinimumDurationModal
             onClose={() => {
               setShowTooShortModal(false);
-              startRecording();
+              setRecordingTime(0);
             }}
           />
         )}
