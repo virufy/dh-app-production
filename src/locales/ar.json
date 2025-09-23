@@ -82,7 +82,8 @@
 
     "minimum_duration_title": "عذرًا.",
     "minimum_duration_text": "يرجى تسجيل صوت لا يقل عن 3 ثوانٍ",
-    "minimum_duration_retry": "أعد المحاولة"
+    "minimum_duration_retry": "أعد المحاولة",
+    "skipButton": "تخطي"
     
 
   },
@@ -120,7 +121,8 @@
     "error": "يرجى تحميل الملف الصوتي أولاً",
     "minimum_duration_title": "عذرًا.",
     "minimum_duration_text": "يرجى تسجيل صوت لا يقل عن 3 ثوانٍ",
-    "minimum_duration_retry": "أعد المحاولة"
+    "minimum_duration_retry": "أعد المحاولة",
+    "skipButton": "تخطي"
         
 
   },
@@ -159,7 +161,8 @@
 
     "minimum_duration_title": "عذرًا.",
     "minimum_duration_text": "يرجى تسجيل صوت لا يقل عن 3 ثوانٍ",
-    "minimum_duration_retry": "أعد المحاولة"
+    "minimum_duration_retry": "أعد المحاولة",
+    "skipButton": "تخطي"
     
   },
   "uploadComplete": {

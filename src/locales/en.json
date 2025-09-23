@@ -79,7 +79,8 @@
 
       "minimum_duration_title": "Oops.",
       "minimum_duration_text": "Please make a recording of at least 3 seconds",
-      "minimum_duration_retry": "Retry"
+      "minimum_duration_retry": "Retry",
+      "skipButton": "Skip"
     },
 
     "recordBreath": {
@@ -116,7 +117,8 @@
       "error": "Please upload the audio file first.",
       "minimum_duration_title": "Oops.",
       "minimum_duration_text": "Please make a recording of at least 3 seconds",
-      "minimum_duration_retry": "Retry"
+      "minimum_duration_retry": "Retry",
+      "skipButton": "Skip"
     },
 
   "recordCough": {
@@ -154,7 +156,8 @@
 
     "minimum_duration_title": "Oops.",
     "minimum_duration_text": "Please make a recording of at least 3 seconds",
-    "minimum_duration_retry": "Retry"    
+    "minimum_duration_retry": "Retry",
+    "skipButton": "Skip"    
   },
   "uploadComplete": {
     "title": "Confirm Recording",

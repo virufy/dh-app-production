@@ -360,7 +360,7 @@ const SpeechRecordScreen: React.FC = () => {
             cursor: "pointer"
           }}
         >
-          Skip
+          {t("recordSpeech.skipButton")}
         </button>
 
         <ActionButtons>

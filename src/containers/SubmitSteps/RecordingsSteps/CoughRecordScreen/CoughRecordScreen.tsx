@@ -343,7 +343,7 @@ useEffect(() => {
             cursor: "pointer"
           }}
         >
-          Skip
+          {t("recordCough.skipButton")}
         </button>
 
         <ActionButtons>
