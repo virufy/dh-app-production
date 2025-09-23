@@ -175,7 +175,7 @@ const ConsentScreen: React.FC = () => {
                                     fontSize: baseFontSize,
                                     width: '100%',
                                 }}>
-                                {t('consent.description')}
+                                    {t('consent.description')}
                                 </p>
 
                                 <div style={{ marginBottom: '1.5rem', fontWeight: 'bold' }}>
@@ -189,8 +189,8 @@ const ConsentScreen: React.FC = () => {
                                         <a
                                             href={
                                                 i18n.language === 'ar'
-                                                    ? 'https://docs.google.com/document/d/19Bh9fvKUxitJNisLe_M-S0qATHEIDqWr/edit'
-                                                    : 'https://docs.google.com/document/d/1SFQKg-7drRktzvTFBaxSFg_TY3QZDQoQ/edit'
+                                                    ? 'https://drive.google.com/file/d/1YdHC4Wu0zs8dWwBWdYpEyfYTjsJpYOTi/view'
+                                                    : 'https://drive.google.com/file/d/1rXh2N6-EFfsVo_0xeSKXqGRzMTxtw5cE/view'
 
                                             }
                                             target="_blank"
