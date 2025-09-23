@@ -439,7 +439,7 @@ const Clinical_Login: React.FC = () => {
             zIndex: 1000,
           }}
         >
-          <div           
+          <div
             style={{
               background: 'white',
               borderRadius: 12,
@@ -462,7 +462,7 @@ const Clinical_Login: React.FC = () => {
                   padding: 12,
                   borderRadius: 8,
                   border: '1px solid #ddd',
-                  background: '#f7f7f7',
+                  backgroundColor: "#007BFF", // blue
                   cursor: 'pointer',
                 }}
               >
@@ -479,7 +479,7 @@ const Clinical_Login: React.FC = () => {
                   padding: 12,
                   borderRadius: 8,
                   border: 'none',
-                  background: '#0d6efd',
+                  backgroundColor: "#dc3545", // red for destructive
                   color: 'white',
                   cursor: 'pointer',
                 }}

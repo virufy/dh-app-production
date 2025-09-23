@@ -14,8 +14,8 @@
       "nadd": "Nadd Al Hammar Health Centre"
     },
     "submit_button": "Next",
-    "patient_exists_title": "Patient ID already exists",
-    "patient_exists_question": "Do you want to continue with this Patient ID?",
+    "patient_exists_title": "Duplicate Patient ID",
+    "patient_exists_question": "This Patient ID is already in use. Do you still want to continue with it?",
     "common_yes": "Yes",
     "common_no": "No"
   },

@@ -13,8 +13,8 @@
       "nadd": "مركز ند الحمر الصحي"
     },
     "submit_button": "التالي",
-    "patient_exists_title": "رقم هوية المريض موجود بالفعل",
-    "patient_exists_question": "هل تريد المتابعة باستخدام رقم هوية المريض هذا؟",
+    "patient_exists_title": "معرف المريض مكرر",
+    "patient_exists_question": "مُعرِّف المريض هذا مُستخدَم بالفعل. هل ترغب في الاستمرار باستخدامه؟",
     "common_yes": "نعم",  
     "common_no": "لا"
   },
