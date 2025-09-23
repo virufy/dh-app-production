@@ -1,5 +1,24 @@
 import styled from "styled-components";
 
+ export const CheckboxRow = styled.div`
+  display: flex;
+  align-items: center;
+  margin: 1rem 0;
+`;
+
+export const Label = styled.label`
+  font-size: 1rem;
+  font-weight: 500;
+  margin-right: 0.75rem;
+`;
+
+export const Checkbox = styled.input`
+  width: 20px;
+  height: 20px;
+  accent-color: #3578de;
+  margin-right: 0.5rem;
+`;
+
 export const PageWrapper = styled.div`
   min-height: 94vh;
   padding: 1.5rem 1rem;

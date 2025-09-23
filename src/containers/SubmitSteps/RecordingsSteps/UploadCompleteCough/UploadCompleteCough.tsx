@@ -16,6 +16,9 @@ import {
   Slider,
   TimeRow,
   PlayButton,
+  CheckboxRow,
+  Label,
+  Checkbox,
   ButtonsWrapper,
   RetakeButton,
   SubmitButton,
@@ -54,6 +57,9 @@ const UploadCompleteCough: React.FC = () => {
   const location = useLocation();
   const isArabic = i18n.language === "ar";
   const { t } = useTranslation();
+
+  // Add involuntary state for cough checkbox
+  const [involuntary, setInvoluntary] = useState(false);
 
   const { audioFileUrl, filename = t("uploadComplete.filename"), nextPage, patientId, recordingType, skipped } =
     (location.state as {
@@ -362,10 +368,20 @@ const UploadCompleteCough: React.FC = () => {
           />
         </PlayButton>
 
+
+       
+
         <ButtonsWrapper>
           <RetakeButton onClick={handleRetake} disabled={isUploading}>
             {t("uploadComplete.retake")}
           </RetakeButton>
+           {/* Show involuntary checkbox only for cough recording */}
+        {finalRecordingType === "cough" && (
+          <CheckboxRow>
+            <Label htmlFor="involuntary" style={{ userSelect: "none" }}>{t("recordCough.checkboxLabel")}</Label>
+            <Checkbox id="involuntary" type="checkbox" checked={involuntary} onChange={() => setInvoluntary(!involuntary)} style={{ cursor: "pointer" }} />
+          </CheckboxRow>
+        )}
           <SubmitButton onClick={handleSubmit} disabled={isUploading}>
             {isUploading ? t("uploadComplete.submitting", "Submitting...") : t("uploadComplete.submit")}
           </SubmitButton>

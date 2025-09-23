@@ -26,9 +26,9 @@ import {
   ButtonRow,
   CircleButton,
   ButtonLabel,
-  CheckboxRow,
-  Label,
-  Checkbox,
+  // CheckboxRow,
+  // Label,
+  // Checkbox,
   ActionButtons,
   UploadButton,
   UploadText,
@@ -100,7 +100,7 @@ const CoughRecordScreen: React.FC = () => {
   const chunksRef = useRef<Float32Array[]>([]);
 
   const [showTooShortModal, setShowTooShortModal] = useState(false);
-  const [involuntary, setInvoluntary] = useState(false);
+  // const [involuntary, setInvoluntary] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -322,10 +322,10 @@ useEffect(() => {
           </div>
         </ButtonRow>
 
-        <CheckboxRow>
+        {/* <CheckboxRow>
           <Label htmlFor="involuntary" style={{ userSelect: "none" }}>{t("recordCough.checkboxLabel")}</Label>
           <Checkbox id="involuntary" type="checkbox" checked={involuntary} onChange={() => setInvoluntary(!involuntary)} style={{ cursor: "pointer" }} />
-        </CheckboxRow>
+        </CheckboxRow> */}
 
         {error && (<p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>{error}</p>)}
 
