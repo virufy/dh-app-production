@@ -62,8 +62,8 @@
       "instruction3_part1": "Press the record button. Keep saying ",
       "instruction3_bold1": "\"aaaah\"",
       "instruction3_part2": " for at least",
-      "instruction3_bold2": " 5 seconds.",
-      "instruction3_part3": " Then press stop.",
+      "instruction3_bold2": " 3 seconds.",
+      "instruction3_part3": " Then tap stop.",
 
       "recordButton": "Record",
       "stopButton": "Stop",
