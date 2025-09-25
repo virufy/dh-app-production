@@ -20,6 +20,8 @@ const API_BASE =
   process.env.REACT_APP_API_BASE ??
   'https://tg3he2qa23.execute-api.me-central-1.amazonaws.com/prod';
 
+const AUTH_API_BASE = 'https://edu6dzi6bi.execute-api.me-central-1.amazonaws.com/version1';
+
 const Clinical_Login: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [patientId, setPatientId] = useState('');
@@ -63,6 +65,7 @@ const Clinical_Login: React.FC = () => {
     e.preventDefault();
     const id = patientId.trim();
 
+    // This validation logic is unchanged
     if (!id) {
       setError(t('home.error.patient_id_required'));
       return;
@@ -75,20 +78,45 @@ const Clinical_Login: React.FC = () => {
 
     try {
       setChecking(true);
-      const url = new URL(`${API_BASE}/status/check-patient`);
+      
+      // Get the signature from session storage
+      const signature = sessionStorage.getItem("app_signature");
+      if (!signature) {
+        throw new Error("Application signature not found. Please refresh the page.");
+      }
+
+      // --- MODIFIED LINE: Use the NEW AUTH_API_BASE constant ---
+      // We are calling the original endpoint path, but on our new secure API
+      const url = new URL(`${AUTH_API_BASE}/status/check-user`);
       url.searchParams.set('patientId', id);
-      const res = await fetch(url.toString());
-      if (!res.ok) throw new Error(`Check failed (${res.status})`);
-      const data = await res.json(); // { exists, ... }
+
+      // Add the Authorization header to the fetch call
+      const res = await fetch(url.toString(), {
+        headers: {
+          'Authorization': signature
+        }
+      });
+
+      // Handle authorization failure specifically
+      if (!res.ok) {
+        if (res.status === 403) {
+          throw new Error("Authorization Failed: Your device or location could not be verified.");
+        }
+        throw new Error(`Check failed (${res.status})`);
+      }
+      
+      // This is your original success logic, completely preserved.
+      // It assumes the backend will return { "exists": true/false }
+      const data = await res.json(); 
 
       if (data?.exists) {
         setShowConfirm(true);
       } else {
         proceedWithId();
       }
-    } catch (err) {
+    } catch (err: any) {
       setError(
-        t('home.error.patient_check_failed', 'Unable to verify the patient ID. Please try again.')
+        err.message || t('home.error.patient_check_failed', 'Unable to verify the patient ID. Please try again.')
       );
     } finally {
       setChecking(false);
