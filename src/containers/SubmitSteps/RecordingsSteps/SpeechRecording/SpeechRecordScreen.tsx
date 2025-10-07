@@ -11,6 +11,7 @@ import StartIcon from "../../../../assets/icons/start.svg";
 import StopIcon from "../../../../assets/icons/stop.svg";
 import UploadIcon from "../../../../assets/icons/upload.svg";
 import i18n from "../../../../i18n";
+import AppHeader from "../../../../components/AppHeader";
 
 // Styled comps
 import {
@@ -192,7 +193,7 @@ const SpeechRecordScreen: React.FC = () => {
 
       const wavBlob = encodeWav(flat, 44100);
       const wavUrl = URL.createObjectURL(wavBlob);
-      const filename = `${storedPatientId}_speechS-${new Date().toISOString().replace(/\.\d+Z$/, "").replace(/:/g, "-")}.wav`;
+      const filename = `${storedPatientId}_speech-${new Date().toISOString().replace(/\.\d+Z$/, "").replace(/:/g, "-")}.wav`;
 
       if (recordingTime < 3) {
         setShowTooShortModal(true);
@@ -236,6 +237,9 @@ const SpeechRecordScreen: React.FC = () => {
   };
 
   return (
+    
+<>
+      < AppHeader />
     <Container>
       <Content>
         <Header>
@@ -401,6 +405,7 @@ const SpeechRecordScreen: React.FC = () => {
         </FooterLink>
       </Content>
     </Container>
+   </>
   );
 };
 

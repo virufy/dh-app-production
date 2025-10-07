@@ -11,6 +11,7 @@ import StartIcon from "../../../../assets/icons/start.svg";
 import StopIcon from "../../../../assets/icons/stop.svg";
 import UploadIcon from "../../../../assets/icons/upload.svg";
 import i18n from "../../../../i18n";
+import AppHeader from "../../../../components/AppHeader";
 
 import {
   ActionButtons,
@@ -259,6 +260,9 @@ const BreathRecordScreen: React.FC = () => {
   };
 
   return (
+   <>
+         < AppHeader />
+
     <Container>
       <Content>
         <Header>
@@ -415,6 +419,7 @@ const BreathRecordScreen: React.FC = () => {
         </FooterLink>
       </Content>
     </Container>
+</>
   );
 };
 

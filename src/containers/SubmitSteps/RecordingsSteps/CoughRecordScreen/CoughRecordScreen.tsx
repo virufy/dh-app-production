@@ -1,7 +1,7 @@
 // CoughRecordScreen.tsx
 // import React, { useRef, useState } from "react";
 
-import React, { useRef, useState,useCallback, useEffect } from "react";
+import React, { useRef, useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import keepDistance from "../../../../assets/images/keepDistance.png";
@@ -11,6 +11,8 @@ import UploadIcon from "../../../../assets/icons/upload.svg";
 import StartIcon from "../../../../assets/icons/start.svg";
 import StopIcon from "../../../../assets/icons/stop.svg";
 import i18n from "../../../../i18n";
+import AppHeader from "../../../../components/AppHeader";
+
 import {
   Container,
   Content,
@@ -173,48 +175,48 @@ const CoughRecordScreen: React.FC = () => {
 
   /* ----------------- Stop Recording ----------------- */
   const stopRecording = useCallback(() => {
-  if (!isRecording) return;
+    if (!isRecording) return;
 
-  if (timerRef.current) {
-    clearInterval(timerRef.current);
-    timerRef.current = null;
-  }
-
-  const ctx = audioCtxRef.current;
-  const processor = processorRef.current;
-  if (processor) processor.disconnect();
-  if (ctx) ctx.close().catch(() => {});
-
-  const flat = chunksRef.current.length
-    ? new Float32Array(chunksRef.current.reduce((acc, cur) => acc + cur.length, 0))
-    : null;
-
-  if (flat) {
-    let offset = 0;
-    for (const chunk of chunksRef.current) {
-      flat.set(chunk, offset);
-      offset += chunk.length;
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
     }
 
-    const wavBlob = encodeWav(flat, 44100);
-    const wavUrl = URL.createObjectURL(wavBlob);
-    const filename = `${storedPatientId}_cough-${new Date().toISOString().replace(/\.\d+Z$/, "").replace(/:/g, "-")}.wav`;
+    const ctx = audioCtxRef.current;
+    const processor = processorRef.current;
+    if (processor) processor.disconnect();
+    if (ctx) ctx.close().catch(() => { });
 
-    if (recordingTime < 3) {
-      setShowTooShortModal(true);
-      setAudioData(null);
-    } else {
-      setAudioData({ audioFileUrl: wavUrl, filename });
+    const flat = chunksRef.current.length
+      ? new Float32Array(chunksRef.current.reduce((acc, cur) => acc + cur.length, 0))
+      : null;
+
+    if (flat) {
+      let offset = 0;
+      for (const chunk of chunksRef.current) {
+        flat.set(chunk, offset);
+        offset += chunk.length;
+      }
+
+      const wavBlob = encodeWav(flat, 44100);
+      const wavUrl = URL.createObjectURL(wavBlob);
+      const filename = `${storedPatientId}_cough-${new Date().toISOString().replace(/\.\d+Z$/, "").replace(/:/g, "-")}.wav`;
+
+      if (recordingTime < 3) {
+        setShowTooShortModal(true);
+        setAudioData(null);
+      } else {
+        setAudioData({ audioFileUrl: wavUrl, filename });
+      }
     }
-  }
 
-  setIsRecording(false);
-}, [isRecording, recordingTime, storedPatientId]);
+    setIsRecording(false);
+  }, [isRecording, recordingTime, storedPatientId]);
 
-useEffect(() => {
-  const autoStop = setTimeout(() => stopRecording(), 30000);
-  return () => clearTimeout(autoStop);
-}, [stopRecording]);
+  useEffect(() => {
+    const autoStop = setTimeout(() => stopRecording(), 30000);
+    return () => clearTimeout(autoStop);
+  }, [stopRecording]);
 
   /* ----------------- Continue / Upload ----------------- */
   const handleContinue = () => {
@@ -248,132 +250,136 @@ useEffect(() => {
   };
 
   return (
-    <Container>
-      <Content>
-        <Header>
-          <BackButton onClick={handleBack} aria-label={t("recordCough.goBackAria")} isArabic={isArabic}>
-            <img src={BackIcon} alt={t("recordCough.goBackAlt")} width={24} height={24} style={{ transform: isArabic ? "rotate(180deg)" : "none" }} />
-          </BackButton>
-          <HeaderText>{t("recordCough.title")}</HeaderText>
-        </Header>
+ <>
+      < AppHeader />
 
-        <h3 style={{ fontFamily: "Source Open Sans, sans-serif", fontSize: "24px", textAlign: "center", fontWeight: 600, marginBottom: "1.5rem", color: "#000000", marginTop: "1.5rem" }}>
-          {t("recordCough.instructionsTitle")}
-        </h3>
+      <Container>
+        <Content>
+          <Header>
+            <BackButton onClick={handleBack} aria-label={t("recordCough.goBackAria")} isArabic={isArabic}>
+              <img src={BackIcon} alt={t("recordCough.goBackAlt")} width={24} height={24} style={{ transform: isArabic ? "rotate(180deg)" : "none" }} />
+            </BackButton>
+            <HeaderText>{t("recordCough.title")}</HeaderText>
+          </Header>
 
-        <StepWrapper>
-          <StepCircle>{isArabic ? "١" : "1"}</StepCircle>
-          <InstructionText>
-            {t("recordCough.instruction1_part1")} <strong>{t("recordCough.instruction1_bold1")}</strong>
-            {t("recordCough.instruction1_part2")} <strong>{t("recordCough.instruction1_bold2")}</strong>
-            {t("recordCough.instruction1_part3")}
-          </InstructionText>
-        </StepWrapper>
-        <Image src={keepDistance} alt={t("recordCough.keepDistanceAlt")} />
+          <h3 style={{ fontFamily: "Source Open Sans, sans-serif", fontSize: "24px", textAlign: "center", fontWeight: 600, marginBottom: "1.5rem", color: "#000000", marginTop: "1.5rem" }}>
+            {t("recordCough.instructionsTitle")}
+          </h3>
 
-        <StepWrapper>
-          <StepCircle>{isArabic ? "٢" : "2"}</StepCircle>
-          <InstructionText>
-            {t("recordCough.instruction2_part1")}
-            <strong>{t("recordCough.instruction2_bold")}</strong>
-            {t("recordCough.instruction2_part2")}
-          </InstructionText>
-        </StepWrapper>
-        <Image src={mouthDistance} alt={t("recordCough.mouthDistanceAlt")} />
+          <StepWrapper>
+            <StepCircle>{isArabic ? "١" : "1"}</StepCircle>
+            <InstructionText>
+              {t("recordCough.instruction1_part1")} <strong>{t("recordCough.instruction1_bold1")}</strong>
+              {t("recordCough.instruction1_part2")} <strong>{t("recordCough.instruction1_bold2")}</strong>
+              {t("recordCough.instruction1_part3")}
+            </InstructionText>
+          </StepWrapper>
+          <Image src={keepDistance} alt={t("recordCough.keepDistanceAlt")} />
 
-        <StepWrapper>
-          <StepCircle>{isArabic ? "٣" : "3"}</StepCircle>
-          <InstructionText>
-            {t("recordCough.instruction3_part1")} <strong>{t("recordCough.instruction3_bold1")}</strong>
-            {t("recordCough.instruction3_part2")}
-            <strong>{t("recordCough.instruction3_bold2")}</strong>
-            {t("recordCough.instruction3_part3")}
-          </InstructionText>
-        </StepWrapper>
+          <StepWrapper>
+            <StepCircle>{isArabic ? "٢" : "2"}</StepCircle>
+            <InstructionText>
+              {t("recordCough.instruction2_part1")}
+              <strong>{t("recordCough.instruction2_bold")}</strong>
+              {t("recordCough.instruction2_part2")}
+            </InstructionText>
+          </StepWrapper>
+          <Image src={mouthDistance} alt={t("recordCough.mouthDistanceAlt")} />
 
-        <Timer>
-          <TimerBox>{formatTime(recordingTime)}</TimerBox>
-        </Timer>
+          <StepWrapper>
+            <StepCircle>{isArabic ? "٣" : "3"}</StepCircle>
+            <InstructionText>
+              {t("recordCough.instruction3_part1")} <strong>{t("recordCough.instruction3_bold1")}</strong>
+              {t("recordCough.instruction3_part2")}
+              <strong>{t("recordCough.instruction3_bold2")}</strong>
+              {t("recordCough.instruction3_part3")}
+            </InstructionText>
+          </StepWrapper>
 
-        <ButtonRow>
-          <div style={{ textAlign: "center" }}>
-            <CircleButton
-              bg={isRecording ? "#dde9ff" : "#3578de"}
-              aria-label={t("recordCough.recordButton")}
-              onClick={startRecording}
-              disabled={isRecording}
-              style={{ opacity: isRecording ? 0.6 : 1, cursor: isRecording ? "not-allowed" : "pointer", width: "56px", height: "56px" }}
-            >
-              <img src={StartIcon} alt={t("recordCough.recordButton")} width={28} height={28} />
-            </CircleButton>
-            <ButtonLabel>{t("recordCough.recordButton")}</ButtonLabel>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <CircleButton
-              bg={isRecording ? "#3578de" : "#DDE9FF"}
-              aria-label={t("recordCough.stopButton")}
-              onClick={stopRecording}
-              disabled={!isRecording}
-              style={{ opacity: !isRecording ? 0.6 : 1, cursor: !isRecording ? "not-allowed" : "pointer", width: "56px", height: "56px" }}
-            >
-              <img src={StopIcon} alt={t("recordCough.stopButton")} width={20} height={20} />
-            </CircleButton>
-            <ButtonLabel>{t("recordCough.stopButton")}</ButtonLabel>
-          </div>
-        </ButtonRow>
+          <Timer>
+            <TimerBox>{formatTime(recordingTime)}</TimerBox>
+          </Timer>
 
-        {/* <CheckboxRow>
+          <ButtonRow>
+            <div style={{ textAlign: "center" }}>
+              <CircleButton
+                bg={isRecording ? "#dde9ff" : "#3578de"}
+                aria-label={t("recordCough.recordButton")}
+                onClick={startRecording}
+                disabled={isRecording}
+                style={{ opacity: isRecording ? 0.6 : 1, cursor: isRecording ? "not-allowed" : "pointer", width: "56px", height: "56px" }}
+              >
+                <img src={StartIcon} alt={t("recordCough.recordButton")} width={28} height={28} />
+              </CircleButton>
+              <ButtonLabel>{t("recordCough.recordButton")}</ButtonLabel>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <CircleButton
+                bg={isRecording ? "#3578de" : "#DDE9FF"}
+                aria-label={t("recordCough.stopButton")}
+                onClick={stopRecording}
+                disabled={!isRecording}
+                style={{ opacity: !isRecording ? 0.6 : 1, cursor: !isRecording ? "not-allowed" : "pointer", width: "56px", height: "56px" }}
+              >
+                <img src={StopIcon} alt={t("recordCough.stopButton")} width={20} height={20} />
+              </CircleButton>
+              <ButtonLabel>{t("recordCough.stopButton")}</ButtonLabel>
+            </div>
+          </ButtonRow>
+
+          {/* <CheckboxRow>
           <Label htmlFor="involuntary" style={{ userSelect: "none" }}>{t("recordCough.checkboxLabel")}</Label>
           <Checkbox id="involuntary" type="checkbox" checked={involuntary} onChange={() => setInvoluntary(!involuntary)} style={{ cursor: "pointer" }} />
         </CheckboxRow> */}
 
-        {error && (<p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>{error}</p>)}
+          {error && (<p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>{error}</p>)}
 
-        <button
-          type="button"
-          onClick={() => navigate("/record-speech", { state: { skipped: true } })}
-          style={{
-            position: "absolute",
-            top: "20px",
-            right: "20px",
-            backgroundColor: "#f0f0f0",
-            border: "1px solid #ccc",
-            padding: "8px 16px",
-            borderRadius: "4px",
-            cursor: "pointer"
-          }}
-        >
-          {t("recordCough.skipButton")}
-        </button>
-
-        <ActionButtons>
-          <button onClick={handleContinue}>{t("recordCough.continueButton")}</button>
-          <UploadButton onClick={triggerFileInput} aria-label={t("recordCough.uploadFile")}>
-            <img src={UploadIcon} alt={t("recordCough.uploadFile")} width={22} height={22} style={{ marginBottom: "0.3rem", marginRight: "0.5rem" }} />
-            <UploadText>{t("recordCough.uploadFile")}</UploadText>
-          </UploadButton>
-          <HiddenFileInput type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} />
-        </ActionButtons>
-
-        {showTooShortModal && (
-          <MinimumDurationModal
-            onClose={() => {
-              setShowTooShortModal(false);
-              setRecordingTime(0);
+          <button
+            type="button"
+            onClick={() => navigate("/record-speech", { state: { skipped: true } })}
+            style={{
+              position: "absolute",
+              top: "20px",
+              right: "20px",
+              backgroundColor: "#f0f0f0",
+              border: "1px solid #ccc",
+              padding: "8px 16px",
+              borderRadius: "4px",
+              cursor: "pointer"
             }}
-          />
-        )}
+          >
+            {t("recordCough.skipButton")}
+          </button>
 
-        <FooterLink
-          href="https://docs.google.com/forms/d/e/1FAIpQLSdlBAA3drY6NydPkxKkMWTEZQhE9p5BSH5YSuaK18F_rObBFg/viewform"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {t("recordCough.reportIssue")}
-        </FooterLink>
-      </Content>
-    </Container>
-  );
+          <ActionButtons>
+            <button onClick={handleContinue}>{t("recordCough.continueButton")}</button>
+            <UploadButton onClick={triggerFileInput} aria-label={t("recordCough.uploadFile")}>
+              <img src={UploadIcon} alt={t("recordCough.uploadFile")} width={22} height={22} style={{ marginBottom: "0.3rem", marginRight: "0.5rem" }} />
+              <UploadText>{t("recordCough.uploadFile")}</UploadText>
+            </UploadButton>
+            <HiddenFileInput type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} />
+          </ActionButtons>
+
+          {showTooShortModal && (
+            <MinimumDurationModal
+              onClose={() => {
+                setShowTooShortModal(false);
+                setRecordingTime(0);
+              }}
+            />
+          )}
+
+          <FooterLink
+            href="https://docs.google.com/forms/d/e/1FAIpQLSdlBAA3drY6NydPkxKkMWTEZQhE9p5BSH5YSuaK18F_rObBFg/viewform"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t("recordCough.reportIssue")}
+          </FooterLink>
+        </Content>
+      </Container>
+</>
+      );
 };
 
-export default CoughRecordScreen;
+      export default CoughRecordScreen;

@@ -2,6 +2,9 @@ import React from 'react';
 import SehaDubaiLogo from '../../assets/images/SehaDubaiLogo.png';
 import { useNavigate } from 'react-router-dom';
 import { t } from 'i18next';
+import AppHeader from "../../components/AppHeader";
+
+
 import {
     Container,
     InnerWrapper,
@@ -15,6 +18,9 @@ const ConfirmationScreen: React.FC = () => {
     const navigate = useNavigate();
 
     return (
+       
+<>
+      < AppHeader />
         <Container>
             <InnerWrapper>
                 <Logo src={SehaDubaiLogo} alt="Dubai Health Logo" />
@@ -29,6 +35,7 @@ const ConfirmationScreen: React.FC = () => {
                 </ErrorLink>
             </InnerWrapper>
         </Container>
+        </>
     );
 };
 

@@ -22,7 +22,8 @@
 
 // const Clinical_Login: React.FC = () => {
 //   const { t, i18n } = useTranslation();
-//   const [patientId, setPatientId] = useState('');
+//   const [patientId, setPatientId] = useState(''); // numeric portion only
+//   const [hospitalCode, setHospitalCode] = useState('BHC'); // CNM code e.g. BHC or NAH
 //   const [error, setError] = useState('');
 //   const [checking, setChecking] = useState(false);
 //   const [showConfirm, setShowConfirm] = useState(false);
@@ -44,7 +45,7 @@
 //     return () => window.removeEventListener('keydown', onKey);
 //   }, [showConfirm]);
 
-//     useEffect(() => {
+//   useEffect(() => {
 //     async function initSignature() {
 //       try {
 //         const sig = await generateSignature();
@@ -56,30 +57,40 @@
 //     }
 //     initSignature();
 //   }, []);
+
+//   // helper: build full patient id (CNM_numeric)
+//   const buildFullPatientId = (numericId: string, code: string) => {
+//     return `${code}_${numericId}`;
+//   };
+
 //   const proceedWithId = () => {
-//     const id = patientId.trim();
-//     sessionStorage.setItem('patientId', id);
-//     navigate('/consent', { state: { patientId: id } });
+//     const numeric = patientId.trim();
+//     const fullId = buildFullPatientId(numeric, hospitalCode);
+//     sessionStorage.setItem('patientId', fullId);
+//     navigate('/consent', { state: { patientId: fullId } });
 //   };
 
 //   const handleSubmit = async (e: React.FormEvent) => {
 //     e.preventDefault();
-//     const id = patientId.trim();
+//     const numeric = patientId.trim();
 
-//     if (!id) {
+//     if (!numeric) {
 //       setError(t('home.error.patient_id_required'));
 //       return;
 //     }
-//     if (!/^\d+$/.test(id)) {
+//     if (!/^\d+$/.test(numeric)) {
 //       setError(t('home.error.patient_id_numeric'));
 //       return;
 //     }
 //     setError('');
 
+//     const fullId = buildFullPatientId(numeric, hospitalCode);
+
 //     try {
 //       setChecking(true);
 //       const url = new URL(`${API_BASE}/status/check-patient`);
-//       url.searchParams.set('patientId', id);
+//       // send full CNM patient id to backend e.g. "NAH_1607"
+//       url.searchParams.set('patientId', fullId);
 //       const res = await fetch(url.toString());
 //       if (!res.ok) throw new Error(`Check failed (${res.status})`);
 //       const data = await res.json(); // { exists, ... }
@@ -87,6 +98,7 @@
 //       if (data?.exists) {
 //         setShowConfirm(true);
 //       } else {
+//         // saved & navigate with prefixed id
 //         proceedWithId();
 //       }
 //     } catch (err) {
@@ -101,6 +113,12 @@
 //   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
 //     i18n.changeLanguage(e.target.value);
 //   };
+
+//   // Hospital options: value is the CNM code, label is localized text
+//   const hospitalOptions = [
+//     { value: 'BHC', label: t('home.hospital_options.barsha') }, // Al Barsha Health Centre => BHC
+//     { value: 'NAH', label: t('home.hospital_options.nadd') },   // Nadd Al Hammar Health Centre => NAH
+//   ];
 
 //   return (
 //     <form onSubmit={handleSubmit} style={pageContainer} noValidate>
@@ -124,6 +142,7 @@
 //         placeholder={t('home.patient_id_placeholder')}
 //         value={patientId}
 //         onChange={(e) => {
+//           // only numeric, max length 10
 //           const value = e.target.value.replace(/\D/g, '').slice(0, 10);
 //           setPatientId(value);
 //         }}
@@ -138,10 +157,18 @@
 //       )}
 
 //       <label style={fieldLabel}>{t('home.hospital_label')}</label>
-//       <select style={dropdown} defaultValue="Al Barsha Health Centre">
-//         <option>{t('home.hospital_options.barsha')}</option>
-//         <option>{t('home.hospital_options.nadd')}</option>
+//       <select
+//         style={dropdown}
+//         value={hospitalCode}
+//         onChange={(e) => setHospitalCode(e.target.value)}
+//       >
+//         {hospitalOptions.map((h) => (
+//           <option key={h.value} value={h.value}>
+//             {h.label}
+//           </option>
+//         ))}
 //       </select>
+
 
 //       <div style={buttonContainer}>
 //         <button style={buttonCircle} type="submit" disabled={checking}>
@@ -200,7 +227,7 @@
 //                   padding: 12,
 //                   borderRadius: 8,
 //                   border: '1px solid #ddd',
-//                   background: '#f7f7f7',
+//                   backgroundColor: "#007BFF", // blue
 //                   cursor: 'pointer',
 //                 }}
 //               >
@@ -217,7 +244,7 @@
 //                   padding: 12,
 //                   borderRadius: 8,
 //                   border: 'none',
-//                   background: '#0d6efd',
+//                   backgroundColor: "#dc3545", // red for destructive
 //                   color: 'white',
 //                   cursor: 'pointer',
 //                 }}
@@ -233,12 +260,27 @@
 // };
 
 // export default Clinical_Login;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//new updated
 import React, { useState, useEffect } from 'react';
 import SehaDubaiLogo from '../../assets/images/SehaDubaiLogo.png';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { generateSignature } from "../../utils/signature";
-
+import AppHeader from '../../components/AppHeader';
 import {
   pageContainer,
   title,
@@ -257,22 +299,20 @@ const API_BASE =
 
 const Clinical_Login: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const [patientId, setPatientId] = useState(''); // numeric portion only
-  const [hospitalCode, setHospitalCode] = useState('BHC'); // CNM code e.g. BHC or NAH
+  const [patientId, setPatientId] = useState(''); // auto-generated numeric portion
+  const [hospitalCode, setHospitalCode] = useState('AB'); // default hospital
   const [error, setError] = useState('');
   const [checking, setChecking] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const navigate = useNavigate();
 
-  // robust Arabic check (handles "ar", "ar-AE", etc.)
   const isArabic = (i18n.resolvedLanguage || i18n.language || '').startsWith('ar');
 
-  // Always reset language to English when this page loads
   useEffect(() => {
     i18n.changeLanguage('en');
   }, [i18n]);
 
-  // close modal on Escape
+  // Close modal on Escape key
   useEffect(() => {
     if (!showConfirm) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setShowConfirm(false);
@@ -280,6 +320,7 @@ const Clinical_Login: React.FC = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, [showConfirm]);
 
+  // Initialize app signature once
   useEffect(() => {
     async function initSignature() {
       try {
@@ -293,47 +334,71 @@ const Clinical_Login: React.FC = () => {
     initSignature();
   }, []);
 
-  // helper: build full patient id (CNM_numeric)
+  // Helper: build full patient ID
   const buildFullPatientId = (numericId: string, code: string) => {
     return `${code}_${numericId}`;
   };
 
+  // ✅ Fetch and generate next sequential patient ID automatically
+  useEffect(() => {
+    async function generateNextPatientId() {
+      try {
+        // Try fetching the latest patient number from backend
+        const url = new URL(`${API_BASE}/status/last-patient`);
+        url.searchParams.set('hospital', hospitalCode);
+        const res = await fetch(url.toString());
+        let nextIdNum: number;
+
+        if (res.ok) {
+          const data = await res.json(); // e.g. { lastPatientId: "BHC_105" }
+          const lastNumeric = parseInt(data?.lastPatientId?.split('_')[1] ?? '1000', 10);
+          nextIdNum = lastNumeric + 1;
+        } else {
+          // Fallback: use localStorage if API unavailable
+          const localLast = parseInt(localStorage.getItem(`lastPatient_${hospitalCode}`) || '1000', 10);
+          nextIdNum = localLast + 1;
+        }
+
+        const nextIdStr = nextIdNum.toString();
+        setPatientId(nextIdStr);
+        localStorage.setItem(`lastPatient_${hospitalCode}`, nextIdStr);
+        console.log(`Generated next patient ID: ${hospitalCode}_${nextIdStr}`);
+      } catch (err) {
+        console.error("Failed to generate patient ID automatically:", err);
+        setError("Unable to generate new patient ID. Please refresh the page.");
+      }
+    }
+
+    generateNextPatientId();
+  }, [hospitalCode]);
+
   const proceedWithId = () => {
-    const numeric = patientId.trim();
-    const fullId = buildFullPatientId(numeric, hospitalCode);
+    const fullId = buildFullPatientId(patientId, hospitalCode);
     sessionStorage.setItem('patientId', fullId);
     navigate('/consent', { state: { patientId: fullId } });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const numeric = patientId.trim();
-
-    if (!numeric) {
-      setError(t('home.error.patient_id_required'));
+    if (!patientId) {
+      setError("Unable to generate patient ID. Please try again.");
       return;
     }
-    if (!/^\d+$/.test(numeric)) {
-      setError(t('home.error.patient_id_numeric'));
-      return;
-    }
-    setError('');
 
-    const fullId = buildFullPatientId(numeric, hospitalCode);
+    const fullId = buildFullPatientId(patientId, hospitalCode);
 
     try {
       setChecking(true);
       const url = new URL(`${API_BASE}/status/check-patient`);
-      // send full CNM patient id to backend e.g. "NAH_1607"
       url.searchParams.set('patientId', fullId);
       const res = await fetch(url.toString());
+
       if (!res.ok) throw new Error(`Check failed (${res.status})`);
-      const data = await res.json(); // { exists, ... }
+      const data = await res.json(); // { exists: boolean }
 
       if (data?.exists) {
         setShowConfirm(true);
       } else {
-        // saved & navigate with prefixed id
         proceedWithId();
       }
     } catch (err) {
@@ -349,13 +414,16 @@ const Clinical_Login: React.FC = () => {
     i18n.changeLanguage(e.target.value);
   };
 
-  // Hospital options: value is the CNM code, label is localized text
   const hospitalOptions = [
-    { value: 'BHC', label: t('home.hospital_options.barsha') }, // Al Barsha Health Centre => BHC
-    { value: 'NAH', label: t('home.hospital_options.nadd') },   // Nadd Al Hammar Health Centre => NAH
+    { value: 'AB', label: t('home.hospital_options.barsha') },
+    { value: 'NA', label: t('home.hospital_options.nadd') },
   ];
 
   return (
+    <>
+    <AppHeader patientId={buildFullPatientId(patientId, hospitalCode)}
+      isArabic={isArabic}
+    />
     <form onSubmit={handleSubmit} style={pageContainer} noValidate>
       <img src={SehaDubaiLogo} alt="Dubai Health Logo" style={logoStyle} />
       <h1 style={title}>{t('home.title')}</h1>
@@ -365,31 +433,6 @@ const Clinical_Login: React.FC = () => {
         <option value="en">English</option>
         <option value="ar">العربية</option>
       </select>
-
-      <label style={fieldLabel}>
-        {t('home.patient_id_label')} <span style={{ color: 'red' }}>*</span>
-      </label>
-      <input
-        type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        style={fieldInput}
-        placeholder={t('home.patient_id_placeholder')}
-        value={patientId}
-        onChange={(e) => {
-          // only numeric, max length 10
-          const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-          setPatientId(value);
-        }}
-        aria-invalid={!!error}
-        aria-describedby="patientId-error"
-      />
-
-      {error && (
-        <div id="patientId-error" style={{ color: 'red', marginTop: 4 }}>
-          {error}
-        </div>
-      )}
 
       <label style={fieldLabel}>{t('home.hospital_label')}</label>
       <select
@@ -404,6 +447,19 @@ const Clinical_Login: React.FC = () => {
         ))}
       </select>
 
+      {/* <label style={fieldLabel}>{t('home.patient_id_label')}</label>
+      <input
+        type="text"
+        style={{ ...fieldInput, backgroundColor: '#f5f5f5' }}
+        value={buildFullPatientId(patientId, hospitalCode)}
+        readOnly
+      /> */}
+
+      {error && (
+        <div id="patientId-error" style={{ color: 'red', marginTop: 4 }}>
+          {error}
+        </div>
+      )}
 
       <div style={buttonContainer}>
         <button style={buttonCircle} type="submit" disabled={checking}>
@@ -422,13 +478,9 @@ const Clinical_Login: React.FC = () => {
       {/* Confirmation modal */}
       {showConfirm && (
         <div
-          key={i18n.resolvedLanguage || i18n.language}
           role="dialog"
           aria-modal="true"
-          onClick={(e) => {
-            // close when clicking the shaded backdrop only
-            if (e.target === e.currentTarget) setShowConfirm(false);
-          }}
+          onClick={(e) => e.target === e.currentTarget && setShowConfirm(false)}
           style={{
             position: 'fixed',
             inset: 0,
@@ -462,7 +514,8 @@ const Clinical_Login: React.FC = () => {
                   padding: 12,
                   borderRadius: 8,
                   border: '1px solid #ddd',
-                  backgroundColor: "#007BFF", // blue
+                  backgroundColor: "#007BFF",
+                  color: 'white',
                   cursor: 'pointer',
                 }}
               >
@@ -479,7 +532,7 @@ const Clinical_Login: React.FC = () => {
                   padding: 12,
                   borderRadius: 8,
                   border: 'none',
-                  backgroundColor: "#dc3545", // red for destructive
+                  backgroundColor: "#dc3545",
                   color: 'white',
                   cursor: 'pointer',
                 }}
@@ -491,6 +544,7 @@ const Clinical_Login: React.FC = () => {
         </div>
       )}
     </form>
+    </>
   );
 };
 
