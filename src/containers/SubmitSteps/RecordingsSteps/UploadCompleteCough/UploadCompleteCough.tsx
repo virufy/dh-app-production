@@ -423,7 +423,7 @@ const UploadCompleteCough: React.FC = () => {
 
   return (
    <>
-         < AppHeader /> 
+         < AppHeader maxWidth={490} locale={isArabic ? "ar" : "en"}/> 
     <PageWrapper>
       <ContentWrapper>
         <audio ref={audioRef} src={audioFileUrl || ""} preload="auto" />

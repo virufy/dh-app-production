@@ -20,7 +20,7 @@ const ConfirmationScreen: React.FC = () => {
     return (
        
 <>
-      < AppHeader />
+      < AppHeader maxWidth={500} />
         <Container>
             <InnerWrapper>
                 <Logo src={SehaDubaiLogo} alt="Dubai Health Logo" />

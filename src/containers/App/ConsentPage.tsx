@@ -357,9 +357,8 @@ const sessionPatientId = typeof window !== 'undefined' ? sessionStorage.getItem(
 
   return (
     <>
-        
-            <AppHeader patientId={sessionPatientId} isArabic={isArabic} />
-    <ConsentContainer style={{ paddingTop: 48 }}>
+            <AppHeader  maxWidth={530} patientId={sessionPatientId} locale={isArabic ? "ar" : "en"} />
+    <ConsentContainer style={{ paddingTop: 0 }}>
       <ConsentContent>
         <div className="consent-container">
           <div className="consent-content">

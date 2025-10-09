@@ -261,7 +261,7 @@ const BreathRecordScreen: React.FC = () => {
 
   return (
    <>
-         < AppHeader />
+         < AppHeader maxWidth={450} locale={isArabic ? "ar" : "en"} />
 
     <Container>
       <Content>
