@@ -18,7 +18,7 @@ import {
 
 const API_BASE =
   process.env.REACT_APP_API_BASE ??
-  'https://x0ia47e70k.execute-api.me-central-1.amazonaws.com/prod/';
+  'https://x0ia47e70k.execute-api.me-central-1.amazonaws.com/prod';
 
 const Clinical_Login: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -88,13 +88,8 @@ const Clinical_Login: React.FC = () => {
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-        const text = await res.text();
-        let body: any;
-        try {
-          body = JSON.parse(text);
-        } catch {
-          body = { suggested: `${hospitalCode}_1000` };
-        }
+        const body = await res.json();
+        console.log("✅ API JSON:", body);
 
         const suggested = normalizeBackendId(body?.suggested, hospitalCode);
 
