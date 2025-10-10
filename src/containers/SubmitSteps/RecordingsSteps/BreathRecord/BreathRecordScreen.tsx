@@ -1,5 +1,5 @@
-// BreathRecordScreen.tsx
-import React, { useState, useRef, useEffect } from "react";
+// BreathRecordScreen.tsx (refactored & RTL-aware skip button)
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -39,20 +39,24 @@ import {
   ModalText,
   ModalButton,
 } from "./styles";
-import { t } from "i18next";
+
+/* ----------------- helper: t for static contexts ----------------- */
+function tStatic(key: string) {
+  return i18n.t ? (i18n.t(key) as string) : key;
+}
 
 /* ----------------- Minimum Duration Modal ----------------- */
 const MinimumDurationModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
   <ModalOverlay>
     <ModalContainer>
-      <ModalTitle>{t("recordBreath.minimum_duration_title")}</ModalTitle>
-      <ModalText>{t("recordBreath.minimum_duration_text")}</ModalText>
-      <ModalButton onClick={onClose}>{t("recordBreath.minimum_duration_retry")}</ModalButton>
+      <ModalTitle>{tStatic("recordBreath.minimum_duration_title")}</ModalTitle>
+      <ModalText>{tStatic("recordBreath.minimum_duration_text")}</ModalText>
+      <ModalButton onClick={onClose}>{tStatic("recordBreath.minimum_duration_retry")}</ModalButton>
     </ModalContainer>
   </ModalOverlay>
 );
 
-/* ----------------- Encode Float32 → PCM WAV (same as cough) ----------------- */
+/* ----------------- Encode Float32 → PCM WAV ----------------- */
 function encodeWav(samples: Float32Array, sampleRate = 44100): Blob {
   const buffer = new ArrayBuffer(44 + samples.length * 2);
   const view = new DataView(buffer);
@@ -93,10 +97,16 @@ const BreathRecordScreen: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // EXACT same scheme as cough: AudioContext + ScriptProcessor + Float32 chunks
+  // Audio system refs
   const audioCtxRef = useRef<AudioContext | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Float32Array[]>([]);
+
+  // timers
+  const elapsedTimerRef = useRef<number | null>(null);
+  const maxDurationTimerRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number | null>(null);
 
   const [error, setError] = useState<string | null>(null);
   const [showTooShortModal, setShowTooShortModal] = useState(false);
@@ -104,21 +114,62 @@ const BreathRecordScreen: React.FC = () => {
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioData, setAudioData] = useState<{ audioFileUrl: string; filename: string } | null>(null);
 
-  const timerRef = useRef<number | null>(null);
-  const startTimeRef = useRef<number | null>(null);
-
   // patientId in sessionStorage is now CNM_PatientID (e.g., BHC_12345 or NAH_12345)
   const storedPatientId = sessionStorage.getItem("patientId") || "unknown";
 
+  // refs for dynamic skip placement
+  const headerRef = useRef<HTMLDivElement | null>(null);
+  const skipBtnRef = useRef<HTMLButtonElement | null>(null);
+
+  // Cleanup resources function
+  const cleanupRecordingResources = useCallback(() => {
+    // clear timers
+    if (elapsedTimerRef.current) {
+      clearInterval(elapsedTimerRef.current);
+      elapsedTimerRef.current = null;
+    }
+    if (maxDurationTimerRef.current) {
+      clearTimeout(maxDurationTimerRef.current);
+      maxDurationTimerRef.current = null;
+    }
+
+    // disconnect processor
+    if (processorRef.current) {
+      try {
+        processorRef.current.onaudioprocess = null;
+        processorRef.current.disconnect();
+      } catch (e) {
+        // ignore
+      }
+      processorRef.current = null;
+    }
+
+    // close audio context
+    if (audioCtxRef.current) {
+      try {
+        audioCtxRef.current.close();
+      } catch (e) {
+        // ignore
+      }
+      audioCtxRef.current = null;
+    }
+
+    // stop media tracks
+    if (mediaStreamRef.current) {
+      try {
+        mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+      } catch (e) {
+        // ignore
+      }
+      mediaStreamRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     return () => {
-      stopRecording();
-      if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => { });
-      }
+      cleanupRecordingResources();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [cleanupRecordingResources]);
 
   const handleBack = () => navigate(-1);
 
@@ -128,35 +179,47 @@ const BreathRecordScreen: React.FC = () => {
     return `${mins}:${secs}`;
   };
 
-  /* ----------------- Start Recording (lossless, like cough) ----------------- */
-  const startRecording = async () => {
+  /* ----------------- Start Recording ----------------- */
+  const startRecording = useCallback(async () => {
+    if (isRecording) return;
+
     try {
+      setError(null);
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+
       const ctx = new AudioContext({ sampleRate: 44100 });
+      audioCtxRef.current = ctx;
+
       const source = ctx.createMediaStreamSource(stream);
       const processor = ctx.createScriptProcessor(4096, 1, 1);
 
+      // reset chunks
       chunksRef.current = [];
+
+      processor.onaudioprocess = (e) => {
+        try {
+          const input = e.inputBuffer.getChannelData(0);
+          // copy buffer so it isn't overwritten
+          chunksRef.current.push(new Float32Array(input));
+        } catch (err) {
+          // ignore audio process errors
+        }
+      };
+
       source.connect(processor);
       processor.connect(ctx.destination);
 
-      processor.onaudioprocess = (e) => {
-        const input = e.inputBuffer.getChannelData(0);
-        // copy so we don't keep a reference to the same buffer
-        chunksRef.current.push(new Float32Array(input));
-      };
-
-      audioCtxRef.current = ctx;
       processorRef.current = processor;
 
       setIsRecording(true);
       setRecordingTime(0);
-      setError(null);
       setAudioData(null);
 
-      // timer
+      // start timers
       startTimeRef.current = Date.now();
-      timerRef.current = window.setInterval(() => {
+      elapsedTimerRef.current = window.setInterval(() => {
         if (startTimeRef.current != null) {
           const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
           setRecordingTime(elapsed);
@@ -164,33 +227,67 @@ const BreathRecordScreen: React.FC = () => {
       }, 1000);
 
       // auto stop after 30s
-      setTimeout(() => stopRecording(), 30000);
+      maxDurationTimerRef.current = window.setTimeout(() => {
+        stopRecording();
+      }, 30_000);
     } catch (err) {
       console.error("Microphone access error:", err);
       setError(t("recordBreath.microphoneAccessError") || "Microphone access denied.");
       setIsRecording(false);
+      cleanupRecordingResources();
     }
-  };
+  }, [isRecording, t, cleanupRecordingResources]);
 
-  /* ----------------- Stop Recording (same flow as cough) ----------------- */
-  const stopRecording = () => {
-    if (!isRecording) return;
-
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-
-    const ctx = audioCtxRef.current;
-    const processor = processorRef.current;
-    if (processor) {
-      try { processor.disconnect(); } catch { }
-    }
-    if (ctx) {
-      try { ctx.close(); } catch { }
+  /* ----------------- Stop Recording ----------------- */
+  const stopRecording = useCallback(() => {
+    // allow stopping even if isRecording flag mismatches (defensive)
+    if (!isRecording && chunksRef.current.length === 0) {
+      // nothing to do
+      return;
     }
 
-    // flatten chunks → single Float32Array
+    // clear timers
+    if (elapsedTimerRef.current) {
+      clearInterval(elapsedTimerRef.current);
+      elapsedTimerRef.current = null;
+    }
+    if (maxDurationTimerRef.current) {
+      clearTimeout(maxDurationTimerRef.current);
+      maxDurationTimerRef.current = null;
+    }
+
+    // disconnect processor
+    if (processorRef.current) {
+      try {
+        processorRef.current.onaudioprocess = null;
+        processorRef.current.disconnect();
+      } catch (e) {
+        // ignore
+      }
+      processorRef.current = null;
+    }
+
+    // close audio context
+    if (audioCtxRef.current) {
+      try {
+        audioCtxRef.current.close();
+      } catch (e) {
+        // ignore
+      }
+      audioCtxRef.current = null;
+    }
+
+    // stop media tracks
+    if (mediaStreamRef.current) {
+      try {
+        mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+      } catch (e) {
+        // ignore
+      }
+      mediaStreamRef.current = null;
+    }
+
+    // flatten chunks
     const flat = chunksRef.current.length
       ? new Float32Array(chunksRef.current.reduce((acc, cur) => acc + cur.length, 0))
       : null;
@@ -202,11 +299,17 @@ const BreathRecordScreen: React.FC = () => {
         offset += chunk.length;
       }
 
+      // free raw chunks memory
+      chunksRef.current = [];
+
       const wavBlob = encodeWav(flat, 44100);
       const wavUrl = URL.createObjectURL(wavBlob);
       const filename = `${storedPatientId}_breath-${new Date().toISOString().replace(/\.\d+Z$/, "").replace(/:/g, "-")}.wav`;
 
-      if (recordingTime < 3) {
+      const elapsedSeconds =
+        startTimeRef.current != null ? Math.floor((Date.now() - startTimeRef.current) / 1000) : recordingTime;
+
+      if (elapsedSeconds < 3 || recordingTime < 3) {
         setShowTooShortModal(true);
         setAudioData(null);
       } else {
@@ -215,9 +318,10 @@ const BreathRecordScreen: React.FC = () => {
     }
 
     setIsRecording(false);
-  };
+    startTimeRef.current = null;
+  }, [isRecording, recordingTime, storedPatientId]);
 
-  /* ----------------- Continue / Upload / Skip ----------------- */
+  /* ----------------- Continue / Upload / File handling ----------------- */
   const handleContinue = () => {
     if (audioData) {
       setError(null);
@@ -227,21 +331,23 @@ const BreathRecordScreen: React.FC = () => {
           nextPage: "/confirmation",
         },
       });
-    } else {
-      const file = fileInputRef.current?.files?.[0];
-      if (!file) {
-        setError(t("recordBreath.error") || "Please record or upload an audio file first.");
-      } else {
-        const audioUrl = URL.createObjectURL(file);
-        navigate("/upload-complete", {
-          state: {
-            audioFileUrl: audioUrl,
-            filename: file.name,
-            nextPage: "/confirmation",
-          },
-        });
-      }
+      return;
     }
+
+    const file = fileInputRef.current?.files?.[0];
+    if (!file) {
+      setError(t("recordBreath.error") || "Please record or upload an audio file first.");
+      return;
+    }
+
+    const audioUrl = URL.createObjectURL(file);
+    navigate("/upload-complete", {
+      state: {
+        audioFileUrl: audioUrl,
+        filename: file.name,
+        nextPage: "/confirmation",
+      },
+    });
   };
 
   const triggerFileInput = () => fileInputRef.current?.click();
@@ -259,167 +365,210 @@ const BreathRecordScreen: React.FC = () => {
     });
   };
 
+  /* ----------------- Place Skip Button dynamically (RTL-aware) ----------------- */
+  useEffect(() => {
+    const placeSkipButton = () => {
+      const headerEl = headerRef.current;
+      const skipEl = skipBtnRef.current;
+      if (!skipEl) return;
+
+      // default fallback header heights (in px)
+      const isMobile = window.matchMedia("(max-width: 767px)").matches;
+      const defaultHeaderHeight = isMobile ? 56 : 64;
+      const gap = isMobile ? 6 : 12;
+
+      let headerBottom = defaultHeaderHeight;
+
+      if (headerEl) {
+        const rect = headerEl.getBoundingClientRect();
+        if (rect && typeof rect.bottom === "number" && rect.bottom > 0) {
+          headerBottom = rect.bottom;
+        } else {
+          headerBottom = headerEl.offsetHeight || defaultHeaderHeight;
+        }
+      } else {
+        const globalHeader = document.querySelector("header");
+        if (globalHeader) {
+          const rect = globalHeader.getBoundingClientRect();
+          if (rect && typeof rect.bottom === "number" && rect.bottom > 0) {
+            headerBottom = rect.bottom;
+          }
+        }
+      }
+
+      const top = Math.max(8, Math.round(headerBottom + gap));
+      skipEl.style.position = "fixed";
+      skipEl.style.top = `${top}px`;
+      skipEl.style.zIndex = "2000";
+
+      // RTL-aware horizontal placement: left for Arabic, right otherwise.
+      if (isArabic) {
+        skipEl.style.left = "20px";
+        skipEl.style.removeProperty("right");
+      } else {
+        skipEl.style.right = "20px";
+        skipEl.style.removeProperty("left");
+      }
+
+      skipEl.style.direction = isArabic ? "rtl" : "ltr";
+    };
+
+    placeSkipButton();
+    window.addEventListener("resize", placeSkipButton);
+    window.addEventListener("orientationchange", placeSkipButton);
+
+    return () => {
+      window.removeEventListener("resize", placeSkipButton);
+      window.removeEventListener("orientationchange", placeSkipButton);
+    };
+  }, [isArabic]);
+
   return (
-   <>
-         < AppHeader maxWidth={450} locale={isArabic ? "ar" : "en"} />
+    <>
+      <AppHeader maxWidth={450} locale={isArabic ? "ar" : "en"} />
 
-    <Container>
-      <Content>
-        <Header>
-          <BackButton
-            onClick={handleBack}
-            aria-label={t("recordBreath.goBackAria")}
-            isArabic={isArabic}
-          >
-            <img
-              src={BackIcon}
-              alt={t("recordBreath.goBackAlt")}
-              width={24}
-              height={24}
-              style={{ transform: isArabic ? "rotate(180deg)" : "none" }}
-            />
-          </BackButton>
-          <HeaderText dir="auto" style={{ textAlign: "center" }}>{t("recordBreath.title")}</HeaderText>
-        </Header>
+      <Container>
+        <Content>
+          <Header ref={headerRef}>
+            <BackButton onClick={handleBack} aria-label={t("recordBreath.goBackAria")} isArabic={isArabic}>
+              <img
+                src={BackIcon}
+                alt={t("recordBreath.goBackAlt")}
+                width={24}
+                height={24}
+                style={{ transform: isArabic ? "rotate(180deg)" : "none" }}
+              />
+            </BackButton>
+            <HeaderText dir="auto" style={{ textAlign: "center" }}>
+              {t("recordBreath.title")}
+            </HeaderText>
+          </Header>
 
-        <h3
-          dir="auto"
-          style={{
-            fontFamily: "Source Open Sans, sans-serif",
-            fontSize: "24px",
-            textAlign: "center",
-            fontWeight: 600,
-            marginBottom: "1.5rem",
-            color: "#000000",
-            marginTop: "1.5rem",
-          }}
-        >
-          {t("recordBreath.instructionsTitle")}
-        </h3>
+          <h3 dir="auto" style={{ fontFamily: "Source Open Sans, sans-serif", fontSize: "24px", textAlign: "center", fontWeight: 600, marginBottom: "1.5rem", color: "#000000", marginTop: "1.5rem" }}>
+            {t("recordBreath.instructionsTitle")}
+          </h3>
 
-        <StepWrapper>
-          <StepCircle>{isArabic ? "١" : "1"}</StepCircle>
-          <InstructionText>
-            {t("recordBreath.instruction1_part1")}{" "}
-            <strong>{t("recordBreath.instruction1_bold1")}</strong>
-            {t("recordBreath.instruction1_part2")}{" "}
-            <strong>{t("recordBreath.instruction1_bold2")}</strong>
-            {t("recordBreath.instruction1_part3")}
-          </InstructionText>
-        </StepWrapper>
-        <Image src={keepDistance} alt={t("recordBreath.keepDistanceAlt")} />
+          <StepWrapper>
+            <StepCircle>{isArabic ? "١" : "1"}</StepCircle>
+            <InstructionText>
+              {t("recordBreath.instruction1_part1")} <strong>{t("recordBreath.instruction1_bold1")}</strong>
+              {t("recordBreath.instruction1_part2")} <strong>{t("recordBreath.instruction1_bold2")}</strong>
+              {t("recordBreath.instruction1_part3")}
+            </InstructionText>
+          </StepWrapper>
+          <Image src={keepDistance} alt={t("recordBreath.keepDistanceAlt")} />
 
-        <StepWrapper>
-          <StepCircle>{isArabic ? "٢" : "2"}</StepCircle>
-          <InstructionText>
-            {t("recordBreath.instruction2_part1")}
-            <strong>{t("recordBreath.instruction2_bold")}</strong>
-            {t("recordBreath.instruction2_part2")}
-          </InstructionText>
-        </StepWrapper>
-        <Image src={mouthBreathDistance} alt={t("recordBreath.mouthBreathDistanceAlt")} />
+          <StepWrapper>
+            <StepCircle>{isArabic ? "٢" : "2"}</StepCircle>
+            <InstructionText>
+              {t("recordBreath.instruction2_part1")}
+              <strong>{t("recordBreath.instruction2_bold")}</strong>
+              {t("recordBreath.instruction2_part2")}
+            </InstructionText>
+          </StepWrapper>
+          <Image src={mouthBreathDistance} alt={t("recordBreath.mouthBreathDistanceAlt")} />
 
-        <StepWrapper>
-          <StepCircle>{isArabic ? "٣" : "3"}</StepCircle>
-          <InstructionText>
-            {t("recordBreath.instruction3_part1")}{" "}
-            <strong>{t("recordBreath.instruction3_bold1")}</strong>
-            {t("recordBreath.instruction3_part2")}
-            <strong>{t("recordBreath.instruction3_bold2")}</strong>
-            {t("recordBreath.instruction3_part3")}
-          </InstructionText>
-        </StepWrapper>
+          <StepWrapper>
+            <StepCircle>{isArabic ? "٣" : "3"}</StepCircle>
+            <InstructionText>
+              {t("recordBreath.instruction3_part1")} <strong>{t("recordBreath.instruction3_bold1")}</strong>
+              {t("recordBreath.instruction3_part2")}
+              <strong>{t("recordBreath.instruction3_bold2")}</strong>
+              {t("recordBreath.instruction3_part3")}
+            </InstructionText>
+          </StepWrapper>
 
-        <Timer>
-          <TimerBox>{formatTime(recordingTime)}</TimerBox>
-        </Timer>
+          <Timer>
+            <TimerBox>{formatTime(recordingTime)}</TimerBox>
+          </Timer>
 
-        <ButtonRow>
-          <div style={{ textAlign: "center" }}>
-            <CircleButton
-              bg={isRecording ? "#dde9ff" : "#3578de"}
-              aria-label={t("recordBreath.recordButton")}
-              onClick={startRecording}
-              disabled={isRecording}
-              style={{ opacity: isRecording ? 0.6 : 1, cursor: isRecording ? "not-allowed" : "pointer", width: "56px", height: "56px" }}
-            >
-              <img src={StartIcon} alt={t("recordBreath.recordButton")} width={28} height={28} />
-            </CircleButton>
-            <ButtonLabel>{t("recordBreath.recordButton")}</ButtonLabel>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <CircleButton
-              bg={isRecording ? "#3578de" : "#DDE9FF"}
-              aria-label={t("recordBreath.stopButton")}
-              onClick={stopRecording}
-              disabled={!isRecording}
-              style={{ opacity: !isRecording ? 0.6 : 1, cursor: !isRecording ? "not-allowed" : "pointer", width: "56px", height: "56px" }}
-            >
-              <img src={StopIcon} alt={t("recordBreath.stopButton")} width={20} height={20} />
-            </CircleButton>
-            <ButtonLabel>{t("recordBreath.stopButton")}</ButtonLabel>
-          </div>
-        </ButtonRow>
+          <ButtonRow>
+            <div style={{ textAlign: "center" }}>
+              <CircleButton
+                bg={isRecording ? "#dde9ff" : "#3578de"}
+                aria-label={t("recordBreath.recordButton")}
+                onClick={startRecording}
+                disabled={isRecording}
+                style={{ opacity: isRecording ? 0.6 : 1, cursor: isRecording ? "not-allowed" : "pointer", width: "56px", height: "56px" }}
+              >
+                <img src={StartIcon} alt={t("recordBreath.recordButton")} width={28} height={28} />
+              </CircleButton>
+              <ButtonLabel>{t("recordBreath.recordButton")}</ButtonLabel>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <CircleButton
+                bg={isRecording ? "#3578de" : "#DDE9FF"}
+                aria-label={t("recordBreath.stopButton")}
+                onClick={stopRecording}
+                disabled={!isRecording}
+                style={{ opacity: !isRecording ? 0.6 : 1, cursor: !isRecording ? "not-allowed" : "pointer", width: "56px", height: "56px" }}
+              >
+                <img src={StopIcon} alt={t("recordBreath.stopButton")} width={20} height={20} />
+              </CircleButton>
+              <ButtonLabel>{t("recordBreath.stopButton")}</ButtonLabel>
+            </div>
+          </ButtonRow>
 
-        {error && (
-          <p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>
-            {error}
-          </p>
-        )}
+          {error && (
+            <p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>
+              {error}
+            </p>
+          )}
 
-        {/* Quick Skip for testing */}
-        <button
-          type="button"
-          onClick={() => navigate("/confirmation")}
-          style={{ position: "absolute", top: "20px", right: "20px", backgroundColor: "#f0f0f0", border: "1px solid #ccc", padding: "8px 16px", borderRadius: "4px", cursor: "pointer" }}
-        >
-          {t("recordBreath.skipButton")}
-        </button>
-
-        <ActionButtons>
-          <button onClick={handleContinue}>
-            {t("recordBreath.continueButton")}
-          </button>
-          <UploadButton
-            onClick={triggerFileInput}
-            aria-label={t("recordBreath.uploadFile")}
-          >
-            <img
-              src={UploadIcon}
-              alt={t("recordBreath.uploadFile")}
-              width={22}
-              height={22}
-              style={{ marginBottom: "0.3rem", marginRight: "0.5rem" }}
-            />
-            <UploadText>{t("recordBreath.uploadFile")}</UploadText>
-          </UploadButton>
-          <HiddenFileInput
-            type="file"
-            accept="audio/*"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-          />
-        </ActionButtons>
-
-        {showTooShortModal && (
-          <MinimumDurationModal
-            onClose={() => {
-              setShowTooShortModal(false);
-              setRecordingTime(0);
+          {/* Skip button (position set dynamically in useEffect) */}
+          <button
+            ref={skipBtnRef}
+            type="button"
+            aria-label={t("recordBreath.skipButton")}
+            onClick={() => navigate("/confirmation", { state: { skipped: true } })}
+            style={{
+              backgroundColor: "#f0f0f0",
+              border: "1px solid #ccc",
+              padding: "8px 16px",
+              borderRadius: 4,
+              cursor: "pointer",
+              pointerEvents: "auto",
             }}
-          />
-        )}
+          >
+            {t("recordBreath.skipButton")}
+          </button>
 
-        <FooterLink
-          href="https://docs.google.com/forms/d/e/1FAIpQLSdlBAA3drY6NydPkxKkMWTEZQhE9p5BSH5YSuaK18F_rObBFg/viewform"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {t("recordBreath.reportIssue")}
-        </FooterLink>
-      </Content>
-    </Container>
-</>
+          <ActionButtons>
+            <button onClick={handleContinue}>
+              {t("recordBreath.continueButton")}
+            </button>
+            <UploadButton onClick={triggerFileInput} aria-label={t("recordBreath.uploadFile")}>
+              <img
+                src={UploadIcon}
+                alt={t("recordBreath.uploadFile")}
+                width={22}
+                height={22}
+                style={{ marginBottom: "0.3rem", marginRight: "0.5rem" }}
+              />
+              <UploadText>{t("recordBreath.uploadFile")}</UploadText>
+            </UploadButton>
+            <HiddenFileInput type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} />
+          </ActionButtons>
+
+          {showTooShortModal && (
+            <MinimumDurationModal
+              onClose={() => {
+                setShowTooShortModal(false);
+                setRecordingTime(0);
+              }}
+            />
+          )}
+
+          <FooterLink
+            href="https://docs.google.com/forms/d/e/1FAIpQLSdlBAA3drY6NydPkxKkMWTEZQhE9p5BSH5YSuaK18F_rObBFg/viewform"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t("recordBreath.reportIssue")}
+          </FooterLink>
+        </Content>
+      </Container>
+    </>
   );
 };
 

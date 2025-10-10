@@ -1,6 +1,4 @@
-// CoughRecordScreen.tsx
-// import React, { useRef, useState } from "react";
-
+// CoughRecordScreen.tsx (refactored & skip button repositioning — RTL fix)
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -28,9 +26,9 @@ import {
   ButtonRow,
   CircleButton,
   ButtonLabel,
-  // CheckboxRow,
-  // Label,
-  // Checkbox,
+  CheckboxRow,
+  Label,
+  Checkbox,
   ActionButtons,
   UploadButton,
   UploadText,
@@ -42,18 +40,23 @@ import {
   ModalText,
   ModalButton
 } from "./styles";
-import { t } from "i18next";
 
 /* ----------------- Minimum Duration Modal ----------------- */
 const MinimumDurationModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
   <ModalOverlay>
     <ModalContainer>
-      <ModalTitle>{t("recordCough.minimum_duration_title")}</ModalTitle>
-      <ModalText>{t("recordCough.minimum_duration_text")}</ModalText>
-      <ModalButton onClick={onClose}>{t("recordCough.minimum_duration_retry")}</ModalButton>
+      <ModalTitle>{tStatic("recordCough.minimum_duration_title")}</ModalTitle>
+      <ModalText>{tStatic("recordCough.minimum_duration_text")}</ModalText>
+      <ModalButton onClick={onClose}>{tStatic("recordCough.minimum_duration_retry")}</ModalButton>
     </ModalContainer>
   </ModalOverlay>
 );
+
+/* ----------------- helper: t without importing i18next directly ----------------- */
+function tStatic(key: string) {
+  // use i18n directly for static contexts outside components
+  return i18n.t ? (i18n.t(key) as string) : key;
+}
 
 /* ----------------- Encode Float32 → PCM WAV ----------------- */
 function encodeWav(samples: Float32Array, sampleRate = 44100): Blob {
@@ -99,27 +102,74 @@ const CoughRecordScreen: React.FC = () => {
   // Audio context + buffers
   const audioCtxRef = useRef<AudioContext | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Float32Array[]>([]);
 
   const [showTooShortModal, setShowTooShortModal] = useState(false);
-  // const [involuntary, setInvoluntary] = useState(false);
+  const [involuntary, setInvoluntary] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioData, setAudioData] = useState<{ audioFileUrl: string; filename: string } | null>(null);
 
-  const timerRef = useRef<number | null>(null);
+  const elapsedTimerRef = useRef<number | null>(null);
+  const maxDurationTimerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
 
   // patientId in sessionStorage is now CNM_PatientID (e.g., BHC_12345 or NAH_12345)
   const storedPatientId = sessionStorage.getItem("patientId") || "unknown";
+
+  // Refs for header and skip button for dynamic placement
+  const headerRef = useRef<HTMLDivElement | null>(null);
+  const skipBtnRef = useRef<HTMLButtonElement | null>(null);
+
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      stopRecording();
-      if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => { });
-      }
+      cleanupRecordingResources();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const cleanupRecordingResources = useCallback(() => {
+    // clear timers
+    if (elapsedTimerRef.current) {
+      clearInterval(elapsedTimerRef.current);
+      elapsedTimerRef.current = null;
+    }
+    if (maxDurationTimerRef.current) {
+      clearTimeout(maxDurationTimerRef.current);
+      maxDurationTimerRef.current = null;
+    }
+
+    // stop processor
+    if (processorRef.current) {
+      try {
+        processorRef.current.onaudioprocess = null;
+        processorRef.current.disconnect();
+      } catch (e) {
+        // ignore
+      }
+      processorRef.current = null;
+    }
+
+    // stop audio context
+    if (audioCtxRef.current) {
+      try {
+        audioCtxRef.current.close();
+      } catch (e) {
+        // ignore
+      }
+      audioCtxRef.current = null;
+    }
+
+    // stop media tracks
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+      mediaStreamRef.current = null;
+    }
+
+    // leave chunks in memory until processed
   }, []);
 
   const handleBack = () => navigate(-1);
@@ -131,61 +181,104 @@ const CoughRecordScreen: React.FC = () => {
   };
 
   /* ----------------- Start Recording (lossless) ----------------- */
-  const startRecording = async () => {
+  const startRecording = useCallback(async () => {
+    if (isRecording) return;
+
     try {
+      setError(null);
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+
       const ctx = new AudioContext({ sampleRate: 44100 });
+      audioCtxRef.current = ctx;
+
       const source = ctx.createMediaStreamSource(stream);
+
+      // ScriptProcessorNode is deprecated but still widely supported. If desired, replace with AudioWorklet in future.
       const processor = ctx.createScriptProcessor(4096, 1, 1);
+      processorRef.current = processor;
 
       chunksRef.current = [];
+
+      processor.onaudioprocess = (e) => {
+        try {
+          const input = e.inputBuffer.getChannelData(0);
+          // copy the buffer so it survives post-processing
+          chunksRef.current.push(new Float32Array(input));
+        } catch (err) {
+          // ignore audio process errors
+        }
+      };
+
       source.connect(processor);
       processor.connect(ctx.destination);
 
-      processor.onaudioprocess = (e) => {
-        const input = e.inputBuffer.getChannelData(0);
-        chunksRef.current.push(new Float32Array(input));
-      };
-
-      audioCtxRef.current = ctx;
-      processorRef.current = processor;
-
       setIsRecording(true);
       setRecordingTime(0);
-      setError(null);
       setAudioData(null);
 
       // timer
       startTimeRef.current = Date.now();
-      timerRef.current = window.setInterval(() => {
+      elapsedTimerRef.current = window.setInterval(() => {
         if (startTimeRef.current != null) {
           const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
           setRecordingTime(elapsed);
         }
       }, 1000);
 
-      // auto stop
-      setTimeout(() => stopRecording(), 30000);
+      // auto stop at max duration
+      maxDurationTimerRef.current = window.setTimeout(() => {
+        stopRecording();
+      }, 30_000);
     } catch (err) {
       console.error("Microphone access error:", err);
       setError(t("recordCough.microphoneAccessError") || "Microphone access denied.");
       setIsRecording(false);
+      cleanupRecordingResources();
     }
-  };
+  }, [isRecording, t, cleanupRecordingResources]);
 
   /* ----------------- Stop Recording ----------------- */
   const stopRecording = useCallback(() => {
-    if (!isRecording) return;
+    if (!isRecording && chunksRef.current.length === 0) return;
 
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
+    // stop timers & resources
+    if (elapsedTimerRef.current) {
+      clearInterval(elapsedTimerRef.current);
+      elapsedTimerRef.current = null;
+    }
+    if (maxDurationTimerRef.current) {
+      clearTimeout(maxDurationTimerRef.current);
+      maxDurationTimerRef.current = null;
     }
 
-    const ctx = audioCtxRef.current;
-    const processor = processorRef.current;
-    if (processor) processor.disconnect();
-    if (ctx) ctx.close().catch(() => { });
+    // disconnect processor safely
+    if (processorRef.current) {
+      try {
+        processorRef.current.onaudioprocess = null;
+        processorRef.current.disconnect();
+      } catch (e) {
+        // ignore
+      }
+      processorRef.current = null;
+    }
+
+    // close audio context
+    if (audioCtxRef.current) {
+      try {
+        audioCtxRef.current.close();
+      } catch (e) {
+        // ignore
+      }
+      audioCtxRef.current = null;
+    }
+
+    // stop media tracks
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+      mediaStreamRef.current = null;
+    }
 
     const flat = chunksRef.current.length
       ? new Float32Array(chunksRef.current.reduce((acc, cur) => acc + cur.length, 0))
@@ -198,11 +291,14 @@ const CoughRecordScreen: React.FC = () => {
         offset += chunk.length;
       }
 
+      // clear raw chunks to release memory
+      chunksRef.current = [];
+
       const wavBlob = encodeWav(flat, 44100);
       const wavUrl = URL.createObjectURL(wavBlob);
       const filename = `${storedPatientId}_cough-${new Date().toISOString().replace(/\.\d+Z$/, "").replace(/:/g, "-")}.wav`;
 
-      if (recordingTime < 3) {
+      if ((startTimeRef.current && Math.floor((Date.now() - startTimeRef.current) / 1000) < 3) || recordingTime < 3) {
         setShowTooShortModal(true);
         setAudioData(null);
       } else {
@@ -211,31 +307,32 @@ const CoughRecordScreen: React.FC = () => {
     }
 
     setIsRecording(false);
+    startTimeRef.current = null;
   }, [isRecording, recordingTime, storedPatientId]);
-
-  useEffect(() => {
-    const autoStop = setTimeout(() => stopRecording(), 30000);
-    return () => clearTimeout(autoStop);
-  }, [stopRecording]);
 
   /* ----------------- Continue / Upload ----------------- */
   const handleContinue = () => {
     if (audioData) {
       setError(null);
-      navigate("/upload-complete", {
-        state: { ...audioData, nextPage: "/record-speech" },
-      });
-    } else {
-      const file = fileInputRef.current?.files?.[0];
-      if (!file) {
-        setError(t("recordCough.error") || "Please record or upload an audio file first.");
-      } else {
-        const audioUrl = URL.createObjectURL(file);
+      try {
         navigate("/upload-complete", {
-          state: { audioFileUrl: audioUrl, filename: file.name, nextPage: "/record-speech" },
+          state: { ...audioData, nextPage: "/record-speech" },
         });
+      } catch (e) {
+        setError(t("recordCough.error") || "Navigation failed.");
       }
+      return;
     }
+
+    const file = fileInputRef.current?.files?.[0];
+    if (!file) {
+      setError(t("recordCough.error") || "Please record or upload an audio file first.");
+      return;
+    }
+    const audioUrl = URL.createObjectURL(file);
+    navigate("/upload-complete", {
+      state: { audioFileUrl: audioUrl, filename: file.name, nextPage: "/record-speech" },
+    });
   };
 
   const triggerFileInput = () => fileInputRef.current?.click();
@@ -249,13 +346,79 @@ const CoughRecordScreen: React.FC = () => {
     });
   };
 
+  /* ----------------- Place Skip Button dynamically (RTL-aware) ----------------- */
+  useEffect(() => {
+    const placeSkipButton = () => {
+      const headerEl = headerRef.current;
+      const skipEl = skipBtnRef.current;
+      if (!skipEl) return;
+
+      // default fallback header heights (in px)
+      const isMobile = window.matchMedia("(max-width: 767px)").matches;
+      const defaultHeaderHeight = isMobile ? 56 : 64;
+      const gap = isMobile ? 6 : 12;
+
+      let headerBottom = defaultHeaderHeight;
+
+      if (headerEl) {
+        const rect = headerEl.getBoundingClientRect();
+        // rect.bottom is relative to viewport; if header is visible, use it
+        if (rect && typeof rect.bottom === "number" && rect.bottom > 0) {
+          headerBottom = rect.bottom;
+        } else {
+          // fallback: use offsetHeight if header is positioned normally
+          headerBottom = headerEl.offsetHeight || defaultHeaderHeight;
+        }
+      } else {
+        // as a last resort check if there's a global header element
+        const globalHeader = document.querySelector("header");
+        if (globalHeader) {
+          const rect = globalHeader.getBoundingClientRect();
+          if (rect && typeof rect.bottom === "number" && rect.bottom > 0) {
+            headerBottom = rect.bottom;
+          }
+        }
+      }
+
+      const top = Math.max(8, Math.round(headerBottom + gap));
+      skipEl.style.position = "fixed";
+      skipEl.style.top = `${top}px`;
+      skipEl.style.zIndex = "2000";
+
+      // RTL-aware horizontal placement: left for Arabic, right otherwise.
+      if (isArabic) {
+        // set left and remove right to avoid CSS conflicts
+        skipEl.style.left = "20px";
+        skipEl.style.removeProperty("right");
+      } else {
+        // set right and remove left
+        skipEl.style.right = "20px";
+        skipEl.style.removeProperty("left");
+      }
+
+      // Optional subtle visual tweak for RTL: align text direction inside the button
+      skipEl.style.direction = isArabic ? "rtl" : "ltr";
+    };
+
+    // place initially, and on resize/orientation; also re-run if language (isArabic) changes
+    placeSkipButton();
+    window.addEventListener("resize", placeSkipButton);
+    window.addEventListener("orientationchange", placeSkipButton);
+
+    return () => {
+      window.removeEventListener("resize", placeSkipButton);
+      window.removeEventListener("orientationchange", placeSkipButton);
+    };
+  }, [isArabic]); // re-run when isArabic changes
+
   return (
- <>
-      < AppHeader maxWidth={450} locale={isArabic ? "ar" : "en"}/>
+    <>
+      <AppHeader maxWidth={450} locale={isArabic ? "ar" : "en"} />
 
       <Container>
         <Content>
-          <Header>
+          {/* attach headerRef to the local Header wrapper so we can calculate position */}
+          <Header ref={headerRef}>
             <BackButton onClick={handleBack} aria-label={t("recordCough.goBackAria")} isArabic={isArabic}>
               <img src={BackIcon} alt={t("recordCough.goBackAlt")} width={24} height={24} style={{ transform: isArabic ? "rotate(180deg)" : "none" }} />
             </BackButton>
@@ -327,25 +490,27 @@ const CoughRecordScreen: React.FC = () => {
             </div>
           </ButtonRow>
 
-          {/* <CheckboxRow>
-          <Label htmlFor="involuntary" style={{ userSelect: "none" }}>{t("recordCough.checkboxLabel")}</Label>
-          <Checkbox id="involuntary" type="checkbox" checked={involuntary} onChange={() => setInvoluntary(!involuntary)} style={{ cursor: "pointer" }} />
-        </CheckboxRow> */}
+          <CheckboxRow>
+            <Label htmlFor="involuntary" style={{ userSelect: "none" }}>{t("recordCough.checkboxLabel")}</Label>
+            <Checkbox id="involuntary" type="checkbox" checked={involuntary} onChange={() => setInvoluntary(!involuntary)} style={{ cursor: "pointer" }} />
+          </CheckboxRow>
 
           {error && (<p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>{error}</p>)}
 
+          {/* Skip button moved to fixed, computed top (below local Header) */}
           <button
+            ref={skipBtnRef}
             type="button"
             onClick={() => navigate("/record-speech", { state: { skipped: true } })}
+            aria-label={t("recordCough.skipButton")}
             style={{
-              position: "absolute",
-              top: "20px",
-              right: "20px",
               backgroundColor: "#f0f0f0",
               border: "1px solid #ccc",
               padding: "8px 16px",
-              borderRadius: "4px",
-              cursor: "pointer"
+              borderRadius: 4,
+              cursor: "pointer",
+              pointerEvents: "auto",
+              // horizontal & top positioning are handled dynamically in useEffect
             }}
           >
             {t("recordCough.skipButton")}
@@ -378,8 +543,8 @@ const CoughRecordScreen: React.FC = () => {
           </FooterLink>
         </Content>
       </Container>
-</>
-      );
+    </>
+  );
 };
 
-      export default CoughRecordScreen;
+export default CoughRecordScreen;

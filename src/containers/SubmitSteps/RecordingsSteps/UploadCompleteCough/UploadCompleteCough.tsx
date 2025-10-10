@@ -517,12 +517,12 @@ const UploadCompleteCough: React.FC = () => {
           <RetakeButton onClick={handleRetake} disabled={isUploading}>
             {t("uploadComplete.retake")}
           </RetakeButton>
-          {finalRecordingType === "cough" && (
+          {/* {finalRecordingType === "cough" && (
             <CheckboxRow>
               <Label htmlFor="involuntary" style={{ userSelect: "none" }}>{t("recordCough.checkboxLabel")}</Label>
               <Checkbox id="involuntary" type="checkbox" checked={involuntary} onChange={() => setInvoluntary(!involuntary)} style={{ cursor: "pointer" }} />
             </CheckboxRow>
-          )}
+          )} */}
           <SubmitButton onClick={handleSubmit} disabled={isUploading}>
             {isUploading ? t("uploadComplete.submitting", "Submitting...") : t("uploadComplete.submit")}
           </SubmitButton>
