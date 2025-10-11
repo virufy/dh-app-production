@@ -13,6 +13,9 @@ import UploadIcon from "../../../../assets/icons/upload.svg";
 import i18n from "../../../../i18n";
 import AppHeader from "../../../../components/AppHeader";
 
+import { useMicRecorder } from "../../../../components/MicRecorder/useMicRecorder";
+import { formatTime } from "../../../../components/MicRecorder/wavEncoder";
+
 // Styled comps
 import {
   ActionButtons,
@@ -43,39 +46,7 @@ const MinimumDurationModal: React.FC<{ onClose: () => void }> = ({ onClose }) =>
   </ModalOverlay>
 );
 
-/* ----------------- Encode Float32 → PCM WAV (same as cough) ----------------- */
-function encodeWav(samples: Float32Array, sampleRate = 44100): Blob {
-  const buffer = new ArrayBuffer(44 + samples.length * 2);
-  const view = new DataView(buffer);
 
-  const writeStr = (off: number, str: string) => {
-    for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i));
-  };
-
-  // WAV header
-  writeStr(0, "RIFF");
-  view.setUint32(4, 36 + samples.length * 2, true);
-  writeStr(8, "WAVE");
-  writeStr(12, "fmt ");
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true); // PCM
-  view.setUint16(22, 1, true); // mono
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true); // byte rate (sr * channels * bytes/sample)
-  view.setUint16(32, 2, true); // block align (channels * bytes/sample)
-  view.setUint16(34, 16, true); // bits per sample
-  writeStr(36, "data");
-  view.setUint32(40, samples.length * 2, true);
-
-  // PCM samples
-  let offset = 44;
-  for (let i = 0; i < samples.length; i++, offset += 2) {
-    const s = Math.max(-1, Math.min(1, samples[i]));
-    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-  }
-
-  return new Blob([view], { type: "audio/wav" });
-}
 
 const SpeechRecordScreen: React.FC = () => {
   const { t } = useTranslation();
@@ -83,144 +54,51 @@ const SpeechRecordScreen: React.FC = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // EXACT same scheme as cough: AudioContext + ScriptProcessor + Float32 chunks
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const processorRef = useRef<ScriptProcessorNode | null>(null);
-  const chunksRef = useRef<Float32Array[]>([]);
+
 
   const [showTooShortModal, setShowTooShortModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
-  const [audioData, setAudioData] = useState<{ audioFileUrl: string; filename: string } | null>(null);
 
-  const timerRef = useRef<number | null>(null);
-  const startTimeRef = useRef<number | null>(null);
-
-  // patientId in sessionStorage is now CNM_PatientID (e.g., BHC_12345 or NAH_12345)
-  const storedPatientId = sessionStorage.getItem("patientId") || "unknown";
-
-  useEffect(() => {
-    return () => {
-      stopRecording();
-      if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => {});
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleBack = () => navigate(-1);
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60).toString();
-    const secs = (seconds % 60).toString().padStart(2, "0");
-    return `${mins}:${secs}`;
-  };
+  const {
+    isRecording,
+    recordingTime,
+    recordingResult,
+    startRecording,
+    stopRecording,
+    resetRecording,
+  } = useMicRecorder();  
 
-  /* ----------------- Start Recording (lossless, like cough) ----------------- */
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const ctx = new AudioContext({ sampleRate: 44100 });
-      const source = ctx.createMediaStreamSource(stream);
-      const processor = ctx.createScriptProcessor(4096, 1, 1);
-
-      chunksRef.current = [];
-      source.connect(processor);
-      processor.connect(ctx.destination);
-
-      processor.onaudioprocess = (e) => {
-        const input = e.inputBuffer.getChannelData(0);
-        // copy the buffer so we don't keep references to the same underlying array
-        chunksRef.current.push(new Float32Array(input));
-      };
-
-      audioCtxRef.current = ctx;
-      processorRef.current = processor;
-
-      setIsRecording(true);
-      setRecordingTime(0);
-      setError(null);
-      setAudioData(null);
-
-      startTimeRef.current = Date.now();
-      timerRef.current = window.setInterval(() => {
-        if (startTimeRef.current != null) {
-          const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-          setRecordingTime(elapsed);
-        }
-      }, 1000);
-
-      // auto stop after 30s
-      setTimeout(() => stopRecording(), 30000);
-    } catch (err) {
-      console.error("Microphone access error:", err);
-      setError(t("recordSpeech.microphoneAccessError") || "Microphone access denied.");
-      setIsRecording(false);
-    }
-  };
 
   /* ----------------- Stop Recording (same flow as cough) ----------------- */
-  const stopRecording = () => {
-    if (!isRecording) return;
-
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-
-    const ctx = audioCtxRef.current;
-    const processor = processorRef.current;
-    if (processor) {
-      try { processor.disconnect(); } catch {}
-    }
-    if (ctx) {
-      try { ctx.close(); } catch {}
-    }
-
-    // flatten chunks → single Float32Array
-    const flat = chunksRef.current.length
-      ? new Float32Array(chunksRef.current.reduce((acc, cur) => acc + cur.length, 0))
-      : null;
-
-    if (flat) {
-      let offset = 0;
-      for (const chunk of chunksRef.current) {
-        flat.set(chunk, offset);
-        offset += chunk.length;
-      }
-
-      const wavBlob = encodeWav(flat, 44100);
-      const wavUrl = URL.createObjectURL(wavBlob);
-      const filename = `${storedPatientId}_speech-${new Date().toISOString().replace(/\.\d+Z$/, "").replace(/:/g, "-")}.wav`;
-
+  const handleStopRecording = () => {
+    stopRecording("speech");
+    setTimeout(() => {
       if (recordingTime < 3) {
         setShowTooShortModal(true);
-        setAudioData(null);
-      } else {
-        setAudioData({ audioFileUrl: wavUrl, filename });
+        resetRecording();
       }
-    }
-
-    setIsRecording(false);
+    }, 200);
   };
 
   /* ----------------- Continue / Upload / Skip ----------------- */
   const handleContinue = () => {
-    if (audioData) {
+    const { audioUrl, filename } = recordingResult;
+    if (audioUrl && filename) {
       setError(null);
       navigate("/upload-complete", {
-        state: { ...audioData, nextPage: "/record-breath" }
+        state: { audioFileUrl: audioUrl, filename, nextPage: "/record-breath" },
       });
     } else {
       const file = fileInputRef.current?.files?.[0];
       if (!file) {
         setError(t("recordSpeech.error") || "Please record or upload an audio file first.");
       } else {
-        const audioUrl = URL.createObjectURL(file);
+        const audioUrlObj = URL.createObjectURL(file);
         navigate("/upload-complete", {
-          state: { audioFileUrl: audioUrl, filename: file.name, nextPage: "/record-breath" },
+          state: { audioFileUrl: audioUrlObj, filename: file.name, nextPage: "/record-breath" },
         });
       }
     }
@@ -315,7 +193,7 @@ const SpeechRecordScreen: React.FC = () => {
             <CircleButton
               bg={isRecording ? "#dde9ff" : "#3578de"}
               aria-label={t("recordSpeech.recordButton")}
-              onClick={startRecording}
+              onClick={() => startRecording("speech")}
               disabled={isRecording}
               style={{
                 opacity: isRecording ? 0.6 : 1,
@@ -332,7 +210,7 @@ const SpeechRecordScreen: React.FC = () => {
             <CircleButton
               bg={isRecording ? "#3578de" : "#DDE9FF"}
               aria-label={t("recordSpeech.stopButton")}
-              onClick={stopRecording}
+              onClick={handleStopRecording}
               disabled={!isRecording}
               style={{
                 opacity: !isRecording ? 0.6 : 1,
@@ -391,7 +269,7 @@ const SpeechRecordScreen: React.FC = () => {
           <MinimumDurationModal
             onClose={() => {
               setShowTooShortModal(false);
-              setRecordingTime(0);
+              resetRecording();
             }}
           />
         )}

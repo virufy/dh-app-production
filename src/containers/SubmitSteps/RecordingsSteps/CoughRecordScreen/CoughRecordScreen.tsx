@@ -13,6 +13,9 @@ import StopIcon from "../../../../assets/icons/stop.svg";
 import i18n from "../../../../i18n";
 import AppHeader from "../../../../components/AppHeader";
 
+import { useMicRecorder } from "../../../../components/MicRecorder/useMicRecorder";
+import { formatTime } from "../../../../components/MicRecorder/wavEncoder";
+
 import {
   Container,
   Content,
@@ -55,184 +58,63 @@ const MinimumDurationModal: React.FC<{ onClose: () => void }> = ({ onClose }) =>
   </ModalOverlay>
 );
 
-/* ----------------- Encode Float32 → PCM WAV ----------------- */
-function encodeWav(samples: Float32Array, sampleRate = 44100): Blob {
-  const buffer = new ArrayBuffer(44 + samples.length * 2);
-  const view = new DataView(buffer);
 
-  const writeStr = (off: number, str: string) => {
-    for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i));
-  };
-
-  // WAV header
-  writeStr(0, "RIFF");
-  view.setUint32(4, 36 + samples.length * 2, true);
-  writeStr(8, "WAVE");
-  writeStr(12, "fmt ");
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true); // PCM
-  view.setUint16(22, 1, true); // mono
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true); // byte rate
-  view.setUint16(32, 2, true); // block align
-  view.setUint16(34, 16, true); // bits per sample
-  writeStr(36, "data");
-  view.setUint32(40, samples.length * 2, true);
-
-  // PCM samples
-  let offset = 44;
-  for (let i = 0; i < samples.length; i++, offset += 2) {
-    const s = Math.max(-1, Math.min(1, samples[i]));
-    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-  }
-
-  return new Blob([view], { type: "audio/wav" });
-}
 
 const CoughRecordScreen: React.FC = () => {
   const { t } = useTranslation();
   const isArabic = i18n.language === "ar";
   const navigate = useNavigate();
 
+  const {
+    isRecording,
+    recordingTime,
+    recordingResult,
+    startRecording,
+    stopRecording,
+    resetRecording,
+  } = useMicRecorder();  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Audio context + buffers
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const processorRef = useRef<ScriptProcessorNode | null>(null);
-  const chunksRef = useRef<Float32Array[]>([]);
 
   const [showTooShortModal, setShowTooShortModal] = useState(false);
   // const [involuntary, setInvoluntary] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
-  const [audioData, setAudioData] = useState<{ audioFileUrl: string; filename: string } | null>(null);
 
-  const timerRef = useRef<number | null>(null);
-  const startTimeRef = useRef<number | null>(null);
-
-  // patientId in sessionStorage is now CNM_PatientID (e.g., BHC_12345 or NAH_12345)
-  const storedPatientId = sessionStorage.getItem("patientId") || "unknown";
-  useEffect(() => {
-    return () => {
-      stopRecording();
-      if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => { });
-      }
-    };
-  }, []);
 
   const handleBack = () => navigate(-1);
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60).toString();
-    const secs = (seconds % 60).toString().padStart(2, "0");
-    return `${mins}:${secs}`;
-  };
 
-  /* ----------------- Start Recording (lossless) ----------------- */
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const ctx = new AudioContext({ sampleRate: 44100 });
-      const source = ctx.createMediaStreamSource(stream);
-      const processor = ctx.createScriptProcessor(4096, 1, 1);
 
-      chunksRef.current = [];
-      source.connect(processor);
-      processor.connect(ctx.destination);
-
-      processor.onaudioprocess = (e) => {
-        const input = e.inputBuffer.getChannelData(0);
-        chunksRef.current.push(new Float32Array(input));
-      };
-
-      audioCtxRef.current = ctx;
-      processorRef.current = processor;
-
-      setIsRecording(true);
-      setRecordingTime(0);
-      setError(null);
-      setAudioData(null);
-
-      // timer
-      startTimeRef.current = Date.now();
-      timerRef.current = window.setInterval(() => {
-        if (startTimeRef.current != null) {
-          const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-          setRecordingTime(elapsed);
-        }
-      }, 1000);
-
-      // auto stop
-      setTimeout(() => stopRecording(), 30000);
-    } catch (err) {
-      console.error("Microphone access error:", err);
-      setError(t("recordCough.microphoneAccessError") || "Microphone access denied.");
-      setIsRecording(false);
-    }
-  };
 
   /* ----------------- Stop Recording ----------------- */
-  const stopRecording = useCallback(() => {
-    if (!isRecording) return;
-
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-
-    const ctx = audioCtxRef.current;
-    const processor = processorRef.current;
-    if (processor) processor.disconnect();
-    if (ctx) ctx.close().catch(() => { });
-
-    const flat = chunksRef.current.length
-      ? new Float32Array(chunksRef.current.reduce((acc, cur) => acc + cur.length, 0))
-      : null;
-
-    if (flat) {
-      let offset = 0;
-      for (const chunk of chunksRef.current) {
-        flat.set(chunk, offset);
-        offset += chunk.length;
-      }
-
-      const wavBlob = encodeWav(flat, 44100);
-      const wavUrl = URL.createObjectURL(wavBlob);
-      const filename = `${storedPatientId}_cough-${new Date().toISOString().replace(/\.\d+Z$/, "").replace(/:/g, "-")}.wav`;
-
+  const handleStopRecording = () => {
+    stopRecording("cough");
+    // small delay so recordingTime is final
+    setTimeout(() => {
       if (recordingTime < 3) {
         setShowTooShortModal(true);
-        setAudioData(null);
-      } else {
-        setAudioData({ audioFileUrl: wavUrl, filename });
+        resetRecording();
       }
-    }
-
-    setIsRecording(false);
-  }, [isRecording, recordingTime, storedPatientId]);
-
-  useEffect(() => {
-    const autoStop = setTimeout(() => stopRecording(), 30000);
-    return () => clearTimeout(autoStop);
-  }, [stopRecording]);
+    }, 200);
+  };
 
   /* ----------------- Continue / Upload ----------------- */
   const handleContinue = () => {
-    if (audioData) {
+    const { audioUrl, filename } = recordingResult;
+    if (audioUrl && filename) {
       setError(null);
       navigate("/upload-complete", {
-        state: { ...audioData, nextPage: "/record-speech" },
+        state: { audioFileUrl: audioUrl, filename, nextPage: "/record-speech" },
       });
     } else {
       const file = fileInputRef.current?.files?.[0];
       if (!file) {
         setError(t("recordCough.error") || "Please record or upload an audio file first.");
       } else {
-        const audioUrl = URL.createObjectURL(file);
+        const audioUrlObj = URL.createObjectURL(file);
         navigate("/upload-complete", {
-          state: { audioFileUrl: audioUrl, filename: file.name, nextPage: "/record-speech" },
+          state: { audioFileUrl: audioUrlObj, filename: file.name, nextPage: "/record-speech" },
         });
       }
     }
@@ -305,7 +187,7 @@ const CoughRecordScreen: React.FC = () => {
               <CircleButton
                 bg={isRecording ? "#dde9ff" : "#3578de"}
                 aria-label={t("recordCough.recordButton")}
-                onClick={startRecording}
+                onClick={() => startRecording("cough")}
                 disabled={isRecording}
                 style={{ opacity: isRecording ? 0.6 : 1, cursor: isRecording ? "not-allowed" : "pointer", width: "56px", height: "56px" }}
               >
@@ -317,7 +199,7 @@ const CoughRecordScreen: React.FC = () => {
               <CircleButton
                 bg={isRecording ? "#3578de" : "#DDE9FF"}
                 aria-label={t("recordCough.stopButton")}
-                onClick={stopRecording}
+                onClick={handleStopRecording}
                 disabled={!isRecording}
                 style={{ opacity: !isRecording ? 0.6 : 1, cursor: !isRecording ? "not-allowed" : "pointer", width: "56px", height: "56px" }}
               >
@@ -364,7 +246,7 @@ const CoughRecordScreen: React.FC = () => {
             <MinimumDurationModal
               onClose={() => {
                 setShowTooShortModal(false);
-                setRecordingTime(0);
+                resetRecording();
               }}
             />
           )}
