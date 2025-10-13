@@ -32,6 +32,8 @@ import i18n from "../../../../i18n";
 import { generateSignature } from "../../../../utils/signature";
 import AppHeader from "../../../../components/AppHeader";
 
+const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+
 const API_BASE =
   process.env.REACT_APP_API_BASE ??
   "https://tg3he2qa23.execute-api.me-central-1.amazonaws.com/prod";
@@ -203,15 +205,21 @@ const UploadCompleteCough: React.FC = () => {
   const { t } = useTranslation();
 
   const [involuntary, setInvoluntary] = useState(false);
-  const { audioFileUrl, filename = t("uploadComplete.filename"), nextPage, patientId, recordingType, skipped } =
-    (location.state as {
-      audioFileUrl?: string;
-      filename?: string;
-      nextPage?: string;
-      patientId?: string;
-      recordingType?: RecType;
-      skipped?: boolean;
-    }) || {};
+  const {
+    audioFileUrl,
+    filename = t("uploadComplete.filename"),
+    nextPage,
+    patientId,
+    recordingType,
+    skipped
+  } = (location.state as {
+    audioFileUrl?: string;
+    filename?: string;
+    nextPage?: string;
+    patientId?: string;
+    recordingType?: RecType;
+    skipped?: boolean;
+  }) || {};
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -223,16 +231,12 @@ const UploadCompleteCough: React.FC = () => {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const storedPatientId = patientId || sessionStorage.getItem("patientId") || "";
-  const path = location.pathname?.toLowerCase() || "";
-  const routeType: RecType =
-    path.includes("speech") ? "speech" :
-      path.includes("breath") ? "breath" :
-        path.includes("cough") ? "cough" : "unknown";
-
+  
+  // Use recordingType from state if available, fallback to filename inference, then route
   let finalRecordingType: RecType =
-    recordingType && recordingType !== "unknown" ? recordingType :
-      routeType !== "unknown" ? routeType :
-        ((): RecType => {
+    recordingType && recordingType !== "unknown"
+      ? recordingType
+      : (() => {
           const lower = String(filename || "").toLowerCase();
           if (lower.includes("speech")) return "speech";
           if (lower.includes("breath")) return "breath";
@@ -240,7 +244,13 @@ const UploadCompleteCough: React.FC = () => {
           return "unknown";
         })();
 
-  if (finalRecordingType === "unknown") finalRecordingType = "cough";
+  if (finalRecordingType === "unknown") {
+    const path = location.pathname?.toLowerCase() || "";
+    if (path.includes("speech")) finalRecordingType = "speech";
+    else if (path.includes("breath")) finalRecordingType = "breath";
+    else if (path.includes("cough")) finalRecordingType = "cough";
+    else finalRecordingType = "cough";
+  }
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -357,11 +367,16 @@ const UploadCompleteCough: React.FC = () => {
     try {
       const { base64 } = await blobUrlToBase64(audioFileUrl);
       const timestamp = new Date().toISOString();
-      const generatedFilename = `${storedPatientId}/${finalRecordingType}-${timestamp}.flac`;
+      // Use filename from state if it matches expected format, else generate new
+      const generatedFilename = filename && filename.includes(finalRecordingType)
+        ? filename
+        : `${storedPatientId}-${capitalize(finalRecordingType)}-${timestamp.replace(/\..*Z$/, "").replace(/:/g, "-")}.wav`;
 
       if (process.env.NODE_ENV !== 'production') {
         console.log('[DeviceDebug] resolved deviceName:', deviceName);
         console.log('[DeviceDebug] generated userAgent:', userAgent);
+        console.log('[DeviceDebug] audioType:', finalRecordingType);
+        console.log('[DeviceDebug] filename:', generatedFilename);
       }
 
       const signature = await generateSignature();
