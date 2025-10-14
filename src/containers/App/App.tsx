@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import BreathRecordScreen from "../SubmitSteps/RecordingsSteps/BreathRecord";
@@ -8,7 +8,7 @@ import SpeechRecordScreen from "../SubmitSteps/RecordingsSteps/SpeechRecording";
 import CoughRecordScreen from "../SubmitSteps/RecordingsSteps/CoughRecordScreen";
 import UploadCompleteCough from "../SubmitSteps/RecordingsSteps/UploadCompleteCough";
 import ConsentScreen from "./ConsentPage";
-import Clinical_Login from "./Clinical_Login";
+import ClinicalLogin from "./Clinical_Login";
 
 //import ProtectedRoute from "../../components/ProtectedRoute";
 
@@ -35,14 +35,16 @@ const App: React.FC = () => {
     <>
       <Routes>
         {/* Each route's element is now wrapped with <ProtectedRoute> */}
-        <Route path="/" element={<Clinical_Login />} />
+  <Route path="/" element={<ClinicalLogin />} />
         <Route path="/consent" element={<ConsentScreen />} />
         <Route path="/record-breath" element={<BreathRecordScreen />} />
         <Route path="/confirmation" element={<ConfirmationScreen />} />
         <Route path="/record-speech" element={<SpeechRecordScreen />} />
         <Route path="/record-coughs" element={<CoughRecordScreen />} />
-        <Route path="/clinical-login" element={<Clinical_Login />} />
+        <Route path="/clinical-login" element={<ClinicalLogin />} />
         <Route path="/upload-complete" element={<UploadCompleteCough />} />
+        {/* Catch all invalid routes and redirect to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );

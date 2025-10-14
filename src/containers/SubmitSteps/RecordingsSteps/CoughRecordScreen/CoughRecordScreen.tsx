@@ -12,7 +12,10 @@ import i18n from "../../../../i18n";
 import AppHeader from "../../../../components/AppHeader";
 import SkipButton from "../../../../components/RecordingControls/SkipButton";
 import { useAudioRecorder } from "../../../../components/RecordingControls/useAudioRecorder";
-
+import SharedBackButton from "../../../../components/RecordingControls/BackButton";
+import TimerDisplay from "../../../../components/RecordingControls/TimerDisplay";
+import FileUploadButton from "../../../../components/RecordingControls/FileUploadButton";
+import MinimumDurationModal from "../../../../components/RecordingControls/MinimumDurationModal";
 import {
   Container,
   Content,
@@ -23,7 +26,6 @@ import {
   StepWrapper,
   InstructionText,
   Image,
-  Timer,
   TimerBox,
   ButtonRow,
   CircleButton,
@@ -32,33 +34,21 @@ import {
   Label,
   Checkbox,
   ActionButtons,
-  UploadButton,
-  UploadText,
-  HiddenFileInput,
+  // UploadButton,
+  // UploadText,
+  // HiddenFileInput,
   FooterLink,
-  ModalOverlay,
-  ModalContainer,
-  ModalTitle,
-  ModalText,
-  ModalButton
+  // ModalOverlay,
+  // ModalContainer,
+  // ModalTitle,
+  // ModalText,
+  // ModalButton
 } from "./styles";
 
 /* ----------------- Minimum Duration Modal ----------------- */
-const MinimumDurationModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
-  <ModalOverlay>
-    <ModalContainer>
-      <ModalTitle>{tStatic("recordCough.minimum_duration_title")}</ModalTitle>
-      <ModalText>{tStatic("recordCough.minimum_duration_text")}</ModalText>
-      <ModalButton onClick={onClose}>{tStatic("recordCough.minimum_duration_retry")}</ModalButton>
-    </ModalContainer>
-  </ModalOverlay>
-);
 
 /* ----------------- helper: t without importing i18next directly ----------------- */
-function tStatic(key: string) {
-  // use i18n directly for static contexts outside components
-  return i18n.t ? (i18n.t(key) as string) : key;
-}
+// ...existing code...
 
 const CoughRecordScreen: React.FC = () => {
   const { t } = useTranslation();
@@ -80,17 +70,7 @@ const CoughRecordScreen: React.FC = () => {
     };
   }, []);
 
-  const handleBack = () => navigate(-1);
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60).toString();
-    const secs = (seconds % 60).toString().padStart(2, "0");
-    return `${mins}:${secs}`;
-  };
-
-  // startRecording provided by hook
-
-  // stopRecording provided by hook
+  
 
   /* ----------------- Continue / Upload ----------------- */
   const handleContinue = () => {
@@ -139,9 +119,9 @@ const CoughRecordScreen: React.FC = () => {
         <Content>
           {/* attach headerRef to the local Header wrapper so we can calculate position */}
           <Header ref={headerRef}>
-            <BackButton onClick={handleBack} aria-label={t("recordCough.goBackAria")} isArabic={isArabic}>
+            <SharedBackButton component={BackButton} ariaLabel={t("recordCough.goBackAria")} isArabic={isArabic}>
               <img src={BackIcon} alt={t("recordCough.goBackAlt")} width={24} height={24} style={{ transform: isArabic ? "rotate(180deg)" : "none" }} />
-            </BackButton>
+            </SharedBackButton>
             <HeaderText>{t("recordCough.title")}</HeaderText>
           </Header>
 
@@ -179,9 +159,16 @@ const CoughRecordScreen: React.FC = () => {
             </InstructionText>
           </StepWrapper>
 
-          <Timer>
-            <TimerBox>{formatTime(recordingTime)}</TimerBox>
-          </Timer>
+          {/* Timer display replaced with shared component, color white if time is 0 */}
+          <TimerDisplay
+            seconds={recordingTime}
+            formatTime={(s) => {
+              const mins = Math.floor(s / 60).toString();
+              const secs = (s % 60).toString().padStart(2, "0");
+              return `${mins}:${secs}`;
+            }}
+            color={recordingTime === 0 ? '#fff' : '#3578de'}
+          />
 
           <ButtonRow>
             <div style={{ textAlign: "center" }}>
@@ -221,15 +208,21 @@ const CoughRecordScreen: React.FC = () => {
 
           <ActionButtons>
             <button onClick={handleContinue}>{t("recordCough.continueButton")}</button>
-            <UploadButton onClick={triggerFileInput} aria-label={t("recordCough.uploadFile")}>
-              <img src={UploadIcon} alt={t("recordCough.uploadFile")} width={22} height={22} style={{ marginBottom: "0.3rem", marginRight: "0.5rem" }} />
-              <UploadText>{t("recordCough.uploadFile")}</UploadText>
-            </UploadButton>
-            <HiddenFileInput type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} />
+            <FileUploadButton
+              label={t("recordCough.uploadFile")}
+              iconSrc={UploadIcon}
+              onClick={triggerFileInput}
+              inputRef={fileInputRef as React.RefObject<HTMLInputElement>}
+              onFileChange={handleFileChange}
+              accept="audio/*"
+            />
           </ActionButtons>
 
           {tooShort && (
             <MinimumDurationModal
+              title={t("recordCough.minimum_duration_title")}
+              text={t("recordCough.minimum_duration_text")}
+              retryLabel={t("recordCough.minimum_duration_retry")}
               onClose={() => {
                 resetTooShort();
               }}

@@ -1,5 +1,5 @@
 // BreathRecordScreen.tsx (refactored & RTL-aware skip button)
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -14,6 +14,11 @@ import i18n from "../../../../i18n";
 import AppHeader from "../../../../components/AppHeader";
 import SkipButton from "../../../../components/RecordingControls/SkipButton";
 import { useAudioRecorder } from "../../../../components/RecordingControls/useAudioRecorder";
+import MinimumDurationModal from "../../../../components/RecordingControls/MinimumDurationModal";
+import InstructionStep from "../../../../components/RecordingControls/InstructionStep";
+import SharedBackButton from "../../../../components/RecordingControls/BackButton";
+import TimerDisplay from "../../../../components/RecordingControls/TimerDisplay";
+import FileUploadButton from "../../../../components/RecordingControls/FileUploadButton";
 
 import {
   ActionButtons,
@@ -26,37 +31,10 @@ import {
   FooterLink,
   Header,
   HeaderText,
-  HiddenFileInput,
   Image,
-  InstructionText,
-  StepCircle,
-  StepWrapper,
-  Timer,
-  TimerBox,
-  UploadButton,
-  UploadText,
-  ModalOverlay,
-  ModalContainer,
-  ModalTitle,
-  ModalText,
-  ModalButton,
 } from "./styles";
 
-/* ----------------- helper: t for static contexts ----------------- */
-function tStatic(key: string) {
-  return i18n.t ? (i18n.t(key) as string) : key;
-}
-
 /* ----------------- Minimum Duration Modal ----------------- */
-const MinimumDurationModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
-  <ModalOverlay>
-    <ModalContainer>
-      <ModalTitle>{tStatic("recordBreath.minimum_duration_title")}</ModalTitle>
-      <ModalText>{tStatic("recordBreath.minimum_duration_text")}</ModalText>
-      <ModalButton onClick={onClose}>{tStatic("recordBreath.minimum_duration_retry")}</ModalButton>
-    </ModalContainer>
-  </ModalOverlay>
-);
 
 const BreathRecordScreen: React.FC = () => {
   const { t } = useTranslation();
@@ -76,17 +54,6 @@ const BreathRecordScreen: React.FC = () => {
     };
   }, []);
 
-  const handleBack = () => navigate(-1);
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60).toString();
-    const secs = (seconds % 60).toString().padStart(2, "0");
-    return `${mins}:${secs}`;
-  };
-
-  // startRecording provided by hook
-
-  // stopRecording provided by hook
 
   /* ----------------- Continue / Upload / File handling ----------------- */
   const handleContinue = () => {
@@ -144,7 +111,7 @@ const BreathRecordScreen: React.FC = () => {
       <Container>
         <Content>
           <Header ref={headerRef}>
-            <BackButton onClick={handleBack} aria-label={t("recordBreath.goBackAria")} isArabic={isArabic}>
+            <SharedBackButton component={BackButton} ariaLabel={t("recordBreath.goBackAria")} isArabic={isArabic}>
               <img
                 src={BackIcon}
                 alt={t("recordBreath.goBackAlt")}
@@ -152,7 +119,7 @@ const BreathRecordScreen: React.FC = () => {
                 height={24}
                 style={{ transform: isArabic ? "rotate(180deg)" : "none" }}
               />
-            </BackButton>
+            </SharedBackButton>
             <HeaderText dir="auto" style={{ textAlign: "center" }}>
               {t("recordBreath.title")}
             </HeaderText>
@@ -162,39 +129,37 @@ const BreathRecordScreen: React.FC = () => {
             {t("recordBreath.instructionsTitle")}
           </h3>
 
-          <StepWrapper>
-            <StepCircle>{isArabic ? "١" : "1"}</StepCircle>
-            <InstructionText>
-              {t("recordBreath.instruction1_part1")} <strong>{t("recordBreath.instruction1_bold1")}</strong>
-              {t("recordBreath.instruction1_part2")} <strong>{t("recordBreath.instruction1_bold2")}</strong>
-              {t("recordBreath.instruction1_part3")}
-            </InstructionText>
-          </StepWrapper>
-          <Image src={keepDistance} alt={t("recordBreath.keepDistanceAlt")} />
+          <InstructionStep step={isArabic ? "١" : "1"}>
+            {t("recordBreath.instruction1_part1")} <strong>{t("recordBreath.instruction1_bold1")}</strong>
+            {t("recordBreath.instruction1_part2")} <strong>{t("recordBreath.instruction1_bold2")}</strong>
+            {t("recordBreath.instruction1_part3")}
+          </InstructionStep>
+          <Image src={keepDistance} alt={t("recordBreath.keepDistanceAlt")}/>
 
-          <StepWrapper>
-            <StepCircle>{isArabic ? "٢" : "2"}</StepCircle>
-            <InstructionText>
-              {t("recordBreath.instruction2_part1")}
-              <strong>{t("recordBreath.instruction2_bold")}</strong>
-              {t("recordBreath.instruction2_part2")}
-            </InstructionText>
-          </StepWrapper>
-          <Image src={mouthBreathDistance} alt={t("recordBreath.mouthBreathDistanceAlt")} />
+          <InstructionStep step={isArabic ? "٢" : "2"}>
+            {t("recordBreath.instruction2_part1")}
+            <strong>{t("recordBreath.instruction2_bold")}</strong>
+            {t("recordBreath.instruction2_part2")}
+          </InstructionStep>
+          <Image src={mouthBreathDistance} alt={t("recordBreath.mouthBreathDistanceAlt")}/>
 
-          <StepWrapper>
-            <StepCircle>{isArabic ? "٣" : "3"}</StepCircle>
-            <InstructionText>
-              {t("recordBreath.instruction3_part1")} <strong>{t("recordBreath.instruction3_bold1")}</strong>
-              {t("recordBreath.instruction3_part2")}
-              <strong>{t("recordBreath.instruction3_bold2")}</strong>
-              {t("recordBreath.instruction3_part3")}
-            </InstructionText>
-          </StepWrapper>
+          <InstructionStep step={isArabic ? "٣" : "3"}>
+            {t("recordBreath.instruction3_part1")} <strong>{t("recordBreath.instruction3_bold1")}</strong>
+            {t("recordBreath.instruction3_part2")}
+            <strong>{t("recordBreath.instruction3_bold2")}</strong>
+            {t("recordBreath.instruction3_part3")}
+          </InstructionStep>
 
-          <Timer>
-            <TimerBox>{formatTime(recordingTime)}</TimerBox>
-          </Timer>
+          {/* Timer display replaced with shared component */}
+          <TimerDisplay
+            seconds={recordingTime}
+            formatTime={(s) => {
+              const mins = Math.floor(s / 60).toString();
+              const secs = (s % 60).toString().padStart(2, "0");
+              return `${mins}:${secs}`;
+            }}
+            color={recordingTime === 0 ? '#fff' : '#3578de'}
+          />
 
           <ButtonRow>
             <div style={{ textAlign: "center" }}>
@@ -235,21 +200,21 @@ const BreathRecordScreen: React.FC = () => {
             <button onClick={handleContinue}>
               {t("recordBreath.continueButton")}
             </button>
-            <UploadButton onClick={triggerFileInput} aria-label={t("recordBreath.uploadFile")}>
-              <img
-                src={UploadIcon}
-                alt={t("recordBreath.uploadFile")}
-                width={22}
-                height={22}
-                style={{ marginBottom: "0.3rem", marginRight: "0.5rem" }}
-              />
-              <UploadText>{t("recordBreath.uploadFile")}</UploadText>
-            </UploadButton>
-            <HiddenFileInput type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} />
+            <FileUploadButton
+              label={t("recordBreath.uploadFile")}
+              iconSrc={UploadIcon}
+              onClick={triggerFileInput}
+              inputRef={fileInputRef as React.RefObject<HTMLInputElement>}
+              onFileChange={handleFileChange}
+              accept="audio/*"
+            />
           </ActionButtons>
 
           {tooShort && (
             <MinimumDurationModal
+              title={t("recordBreath.minimum_duration_title")}
+              text={t("recordBreath.minimum_duration_text")}
+              retryLabel={t("recordBreath.minimum_duration_retry")}
               onClose={() => {
                 resetTooShort();
               }}

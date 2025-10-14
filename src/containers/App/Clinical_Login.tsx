@@ -207,7 +207,6 @@ import {
   pageContainer,
   title,
   fieldLabel,
-  fieldInput,
   dropdown,
   buttonCircle,
   buttonContainer,
@@ -223,8 +222,10 @@ const Clinical_Login: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [backendPatientFull, setBackendPatientFull] = useState<string>('');
   const [displayPatientFull, setDisplayPatientFull] = useState<string>('');
-  const [hospitalCode, setHospitalCode] = useState<string>('AB');
-  const [error, setError] = useState('');
+  const [hospitalCode, setHospitalCode] = useState<string>(() => {
+    // Get hospital from local storage or default to AB (Al Barsha)
+    return localStorage.getItem('selectedHospital') || 'AB';
+  });
   const [checking, setChecking] = useState(false);
   const navigate = useNavigate();
   const isArabic = (i18n.resolvedLanguage || i18n.language || '').startsWith('ar');
@@ -320,7 +321,7 @@ const Clinical_Login: React.FC = () => {
 
   const proceedWithId = () => {
     if (!backendPatientFull) {
-      setError('No patient ID available.');
+      console.error('No patient ID available.');
       return;
     }
 
@@ -332,9 +333,8 @@ const Clinical_Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     if (!backendPatientFull) {
-      setError('Unable to generate patient ID. Please try again.');
+      console.error('Unable to generate patient ID. Please try again.');
       return;
     }
     setChecking(true);
@@ -344,6 +344,12 @@ const Clinical_Login: React.FC = () => {
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     i18n.changeLanguage(e.target.value);
+  };
+
+  const handleHospitalChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newHospital = e.target.value;
+    setHospitalCode(newHospital);
+    localStorage.setItem('selectedHospital', newHospital);
   };
 
   const hospitalOptions = [
@@ -373,7 +379,7 @@ const Clinical_Login: React.FC = () => {
         <select
           style={dropdown}
           value={hospitalCode}
-          onChange={(e) => setHospitalCode(e.target.value)}
+          onChange={handleHospitalChange}
         >
           {hospitalOptions.map((h) => (
             <option key={h.value} value={h.value}>

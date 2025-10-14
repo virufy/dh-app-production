@@ -2,6 +2,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import MinimumDurationModal from "../../../../components/RecordingControls/MinimumDurationModal";
 
 // Assets
 import keepDistance from "../../../../assets/images/keepDistance.png";
@@ -13,7 +14,10 @@ import UploadIcon from "../../../../assets/icons/upload.svg";
 import i18n from "../../../../i18n";
 import SkipButton from "../../../../components/RecordingControls/SkipButton";
 import { useAudioRecorder } from "../../../../components/RecordingControls/useAudioRecorder";
+import SharedBackButton from "../../../../components/RecordingControls/BackButton";
 import AppHeader from "../../../../components/AppHeader";
+import TimerDisplay from "../../../../components/RecordingControls/TimerDisplay";
+import FileUploadButton from "../../../../components/RecordingControls/FileUploadButton";
 
 // Styled comps
 import {
@@ -27,37 +31,17 @@ import {
   FooterLink,
   Header,
   HeaderText,
-  HiddenFileInput,
   Image,
   InstructionText,
   StepCircle,
   StepWrapper,
-  Timer,
-  TimerBox,
-  UploadButton,
-  UploadText,
-  ModalOverlay,
-  ModalContainer,
-  ModalTitle,
-  ModalText,
-  ModalButton,
+    // ...existing code...
 } from "./styles";
 
 /* ----------------- helper: t for static contexts ----------------- */
 function tStatic(key: string) {
   return i18n.t ? (i18n.t(key) as string) : key;
 }
-
-/* ----------------- Minimum Duration Modal ----------------- */
-const MinimumDurationModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
-  <ModalOverlay>
-    <ModalContainer>
-      <ModalTitle>{tStatic("recordSpeech.minimum_duration_title")}</ModalTitle>
-      <ModalText>{tStatic("recordSpeech.minimum_duration_text")}</ModalText>
-      <ModalButton onClick={onClose}>{tStatic("recordSpeech.minimum_duration_retry")}</ModalButton>
-    </ModalContainer>
-  </ModalOverlay>
-);
 
 const SpeechRecordScreen: React.FC = () => {
   const { t } = useTranslation();
@@ -132,7 +116,7 @@ const SpeechRecordScreen: React.FC = () => {
       <Container>
         <Content>
           <Header ref={headerRef}>
-            <BackButton onClick={handleBack} aria-label={t("recordSpeech.goBackAria")} isArabic={isArabic}>
+            <SharedBackButton component={BackButton} ariaLabel={t("recordSpeech.goBackAria")} isArabic={isArabic}>
               <img
                 src={BackIcon}
                 alt={t("recordSpeech.goBackAlt")}
@@ -140,7 +124,7 @@ const SpeechRecordScreen: React.FC = () => {
                 height={24}
                 style={{ transform: isArabic ? "rotate(180deg)" : "none" }}
               />
-            </BackButton>
+            </SharedBackButton>
             <HeaderText>{t("recordSpeech.title")}</HeaderText>
           </Header>
 
@@ -178,9 +162,16 @@ const SpeechRecordScreen: React.FC = () => {
             </InstructionText>
           </StepWrapper>
 
-          <Timer>
-            <TimerBox>{formatTime(recordingTime)}</TimerBox>
-          </Timer>
+          {/* Timer display replaced with shared component, color white if time is 0 */}
+          <TimerDisplay
+            seconds={recordingTime}
+            formatTime={(s) => {
+              const mins = Math.floor(s / 60).toString();
+              const secs = (s % 60).toString().padStart(2, "0");
+              return `${mins}:${secs}`;
+            }}
+            color={recordingTime === 0 ? '#fff' : '#3578de'}
+          />
 
           <ButtonRow>
             <div style={{ textAlign: "center" }}>
@@ -215,19 +206,23 @@ const SpeechRecordScreen: React.FC = () => {
 
           <ActionButtons>
             <button onClick={handleContinue}>{t("recordSpeech.continueButton")}</button>
-            <UploadButton onClick={triggerFileInput} aria-label={t("recordSpeech.uploadFile")}>
-              <img src={UploadIcon} alt={t("recordSpeech.uploadFile")} width={22} height={22} style={{ marginBottom: "0.3rem", marginRight: "0.5rem" }} />
-              <UploadText>{t("recordSpeech.uploadFile")}</UploadText>
-            </UploadButton>
-            <HiddenFileInput type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileChange} />
+            <FileUploadButton
+              label={t("recordSpeech.uploadFile")}
+              iconSrc={UploadIcon}
+              onClick={triggerFileInput}
+              inputRef={fileInputRef as React.RefObject<HTMLInputElement>}
+              onFileChange={handleFileChange}
+              accept="audio/*"
+            />
           </ActionButtons>
 
           {tooShort && (
             <MinimumDurationModal
+              title={t("recordSpeech.minimum_duration_title")}
+              text={t("recordSpeech.minimum_duration_text")}
+              retryLabel={t("recordSpeech.minimum_duration_retry")}
               onClose={() => {
                 resetTooShort();
-                // reset recording time via hook helper
-                // (local show flag also cleared)
               }}
             />
           )}

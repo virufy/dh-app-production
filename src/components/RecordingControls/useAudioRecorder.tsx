@@ -134,8 +134,12 @@ export function useAudioRecorder(sampleRate = 44100, recordingType: RecType = "u
       const filename = `${storedPatientId}-${capitalize(recordingType)}-${timestamp}.wav`;
 
       const elapsedSeconds = startTimeRef.current != null ? Math.floor((Date.now() - startTimeRef.current) / 1000) : recordingTime;
-      if (elapsedSeconds < 3 || recordingTime < 3) {
+      if (elapsedSeconds < 3) {
         setTooShort(true);
+        setAudioData(null);
+      } else if (elapsedSeconds > 15) {
+        // Truncate if somehow went over 15 seconds
+        setError("Recording exceeded maximum duration of 15 seconds");
         setAudioData(null);
       } else {
         setAudioData({ audioFileUrl: wavUrl, filename, recordingType });
@@ -144,12 +148,16 @@ export function useAudioRecorder(sampleRate = 44100, recordingType: RecType = "u
 
     setIsRecording(false);
     startTimeRef.current = null;
-  }, [encodeWav, isRecording, recordingTime, sampleRate]);
+  }, [encodeWav, isRecording, recordingTime, sampleRate, recordingType]);
 
   const startRecording = useCallback(async () => {
     if (isRecording) return;
     try {
       setError(null);
+      // Reset recording time at start
+      setRecordingTime(0);
+      startTimeRef.current = null;
+      
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
       const ctx = new AudioContext({ sampleRate });
@@ -174,9 +182,14 @@ export function useAudioRecorder(sampleRate = 44100, recordingType: RecType = "u
       setAudioData(null);
       startTimeRef.current = Date.now();
       elapsedTimerRef.current = window.setInterval(() => {
-        if (startTimeRef.current != null) setRecordingTime(Math.floor((Date.now() - startTimeRef.current) / 1000));
+        if (startTimeRef.current != null) {
+          const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+          setRecordingTime(elapsed);
+          // Auto-stop at 15 seconds
+          if (elapsed >= 15) stopRecording();
+        }
       }, 1000);
-      maxDurationTimerRef.current = window.setTimeout(() => stopRecording(), 30_000);
+      maxDurationTimerRef.current = window.setTimeout(() => stopRecording(), 15_000);
     } catch (err) {
       console.error("Microphone access error:", err);
       setError("Microphone access denied.");
@@ -186,11 +199,17 @@ export function useAudioRecorder(sampleRate = 44100, recordingType: RecType = "u
   }, [isRecording, sampleRate, stopRecording, cleanup]);
 
   const triggerFile = useCallback((file: File, nextPage?: string) => {
-  const audioUrl = URL.createObjectURL(file);
-  setAudioData({ audioFileUrl: audioUrl, filename: file.name, recordingType });
-  }, []);
+    const audioUrl = URL.createObjectURL(file);
+    setAudioData({ audioFileUrl: audioUrl, filename: file.name, recordingType });
+  }, [recordingType]);
 
-  const resetTooShort = useCallback(() => setTooShort(false), []);
+  const resetTooShort = useCallback(() => {
+    setTooShort(false);
+    // Also reset recording time when resetting too-short state
+    setRecordingTime(0);
+    startTimeRef.current = null;
+  }, []);
+  
   const resetRecordingTime = useCallback(() => {
     setRecordingTime(0);
     startTimeRef.current = null;
