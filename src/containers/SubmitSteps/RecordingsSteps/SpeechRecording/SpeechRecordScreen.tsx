@@ -17,6 +17,7 @@ import { useAudioRecorder } from "../../../../components/RecordingControls/useAu
 import SharedBackButton from "../../../../components/RecordingControls/BackButton";
 import AppHeader from "../../../../components/AppHeader";
 import TimerDisplay from "../../../../components/RecordingControls/TimerDisplay";
+import formatTime from "../../../../utils/formatTime";
 import FileUploadButton from "../../../../components/RecordingControls/FileUploadButton";
 
 // Styled comps
@@ -163,15 +164,7 @@ const SpeechRecordScreen: React.FC = () => {
           </StepWrapper>
 
           {/* Timer display replaced with shared component, color white if time is 0 */}
-          <TimerDisplay
-            seconds={recordingTime}
-            formatTime={(s) => {
-              const mins = Math.floor(s / 60).toString();
-              const secs = (s % 60).toString().padStart(2, "0");
-              return `${mins}:${secs}`;
-            }}
-            color={recordingTime === 0 ? '#fff' : '#3578de'}
-          />
+          <TimerDisplay seconds={recordingTime} formatTime={formatTime} color={recordingTime === 0 ? '#fff' : '#3578de'} />
 
           <ButtonRow>
             <div style={{ textAlign: "center" }}>

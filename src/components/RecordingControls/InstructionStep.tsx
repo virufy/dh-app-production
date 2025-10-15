@@ -7,7 +7,24 @@ interface Props {
 
 const InstructionStep: React.FC<Props> = ({ step, children }) => (
   <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
-    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#3578de", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 18, marginRight: 12 }}>{step}</div>
+    <div
+      style={{
+        width: 28,
+        height: 28,
+        borderRadius: "50%",
+        background: "#DDE9FF",
+        color: "#3578de",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontWeight: 700,
+        fontSize: 14,
+        marginInlineEnd: 12,
+        flexShrink: 0,
+      }}
+    >
+      {step}
+    </div>
     <div style={{ flex: 1 }}>{children}</div>
   </div>
 );

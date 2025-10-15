@@ -16,6 +16,7 @@ import SharedBackButton from "../../../../components/RecordingControls/BackButto
 import TimerDisplay from "../../../../components/RecordingControls/TimerDisplay";
 import FileUploadButton from "../../../../components/RecordingControls/FileUploadButton";
 import MinimumDurationModal from "../../../../components/RecordingControls/MinimumDurationModal";
+import formatTime from "../../../../utils/formatTime";
 import {
   Container,
   Content,
@@ -26,7 +27,6 @@ import {
   StepWrapper,
   InstructionText,
   Image,
-  TimerBox,
   ButtonRow,
   CircleButton,
   ButtonLabel,
@@ -34,15 +34,7 @@ import {
   Label,
   Checkbox,
   ActionButtons,
-  // UploadButton,
-  // UploadText,
-  // HiddenFileInput,
   FooterLink,
-  // ModalOverlay,
-  // ModalContainer,
-  // ModalTitle,
-  // ModalText,
-  // ModalButton
 } from "./styles";
 
 /* ----------------- Minimum Duration Modal ----------------- */
@@ -162,11 +154,7 @@ const CoughRecordScreen: React.FC = () => {
           {/* Timer display replaced with shared component, color white if time is 0 */}
           <TimerDisplay
             seconds={recordingTime}
-            formatTime={(s) => {
-              const mins = Math.floor(s / 60).toString();
-              const secs = (s % 60).toString().padStart(2, "0");
-              return `${mins}:${secs}`;
-            }}
+            formatTime={formatTime}
             color={recordingTime === 0 ? '#fff' : '#3578de'}
           />
 

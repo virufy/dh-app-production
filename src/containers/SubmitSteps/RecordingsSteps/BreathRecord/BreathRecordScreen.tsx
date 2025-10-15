@@ -18,6 +18,7 @@ import MinimumDurationModal from "../../../../components/RecordingControls/Minim
 import InstructionStep from "../../../../components/RecordingControls/InstructionStep";
 import SharedBackButton from "../../../../components/RecordingControls/BackButton";
 import TimerDisplay from "../../../../components/RecordingControls/TimerDisplay";
+import formatTime from "../../../../utils/formatTime";
 import FileUploadButton from "../../../../components/RecordingControls/FileUploadButton";
 
 import {
@@ -151,15 +152,7 @@ const BreathRecordScreen: React.FC = () => {
           </InstructionStep>
 
           {/* Timer display replaced with shared component */}
-          <TimerDisplay
-            seconds={recordingTime}
-            formatTime={(s) => {
-              const mins = Math.floor(s / 60).toString();
-              const secs = (s % 60).toString().padStart(2, "0");
-              return `${mins}:${secs}`;
-            }}
-            color={recordingTime === 0 ? '#fff' : '#3578de'}
-          />
+          <TimerDisplay seconds={recordingTime} formatTime={formatTime} color={recordingTime === 0 ? '#fff' : '#3578de'} />
 
           <ButtonRow>
             <div style={{ textAlign: "center" }}>
