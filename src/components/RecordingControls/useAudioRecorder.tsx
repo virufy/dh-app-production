@@ -200,16 +200,8 @@ export function useAudioRecorder(targetSampleRate = TARGET_SAMPLE_RATE, recordin
       const filename = `${storedPatientId}-${capitalize(recordingType)}-${timestamp}.wav`;
 
       const elapsedSeconds = startTimeRef.current != null ? Math.floor((Date.now() - startTimeRef.current) / 1000) : recordingTime;
-<<<<<<< HEAD
-      if (elapsedSeconds < 3) {
-=======
       if (elapsedSeconds < 3 || recordingTime < 3) { // Check both for robustness
->>>>>>> 5bbfa20 (Updated audio recording code with removed filters and encoding modifications using resample linear)
         setTooShort(true);
-        setAudioData(null);
-      } else if (elapsedSeconds > 15) {
-        // Truncate if somehow went over 15 seconds
-        setError("Recording exceeded maximum duration of 15 seconds");
         setAudioData(null);
       } else {
         setAudioData({ audioFileUrl: wavUrl, filename, recordingType });
@@ -221,24 +213,13 @@ export function useAudioRecorder(targetSampleRate = TARGET_SAMPLE_RATE, recordin
 
     setIsRecording(false);
     startTimeRef.current = null;
-<<<<<<< HEAD
-  }, [encodeWav, isRecording, recordingTime, sampleRate, recordingType]);
-=======
     setRecordingTime(0); // Reset recording time on stop
   }, [isRecording, recordingType, targetSampleRate, recordingTime]); // Add recordingTime to dependencies
->>>>>>> 5bbfa20 (Updated audio recording code with removed filters and encoding modifications using resample linear)
 
   const startRecording = useCallback(async () => {
     if (isRecording) return;
     try {
       setError(null);
-<<<<<<< HEAD
-      // Reset recording time at start
-      setRecordingTime(0);
-      startTimeRef.current = null;
-      
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-=======
       setTooShort(false); // Reset tooShort status
 
       // IMPORTANT: Disable all audio processing for raw data collection
@@ -253,7 +234,6 @@ export function useAudioRecorder(targetSampleRate = TARGET_SAMPLE_RATE, recordin
       };
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
->>>>>>> 5bbfa20 (Updated audio recording code with removed filters and encoding modifications using resample linear)
       mediaStreamRef.current = stream;
 
       const AC: typeof AudioContext = (window as any).AudioContext || (window as any).webkitAudioContext;
@@ -295,18 +275,9 @@ export function useAudioRecorder(targetSampleRate = TARGET_SAMPLE_RATE, recordin
 
       startTimeRef.current = Date.now();
       elapsedTimerRef.current = window.setInterval(() => {
-        if (startTimeRef.current != null) {
-          const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-          setRecordingTime(elapsed);
-          // Auto-stop at 15 seconds
-          if (elapsed >= 15) stopRecording();
-        }
+        if (startTimeRef.current != null) setRecordingTime(Math.floor((Date.now() - startTimeRef.current) / 1000));
       }, 1000);
-<<<<<<< HEAD
-      maxDurationTimerRef.current = window.setTimeout(() => stopRecording(), 15_000);
-=======
       maxDurationTimerRef.current = window.setTimeout(() => stopRecording(), 30_000); // Auto-stop after 30 seconds
->>>>>>> 5bbfa20 (Updated audio recording code with removed filters and encoding modifications using resample linear)
     } catch (err) {
       console.error("Microphone access error:", err);
       setError("Microphone access denied.");
@@ -315,25 +286,12 @@ export function useAudioRecorder(targetSampleRate = TARGET_SAMPLE_RATE, recordin
     }
   }, [isRecording, targetSampleRate, stopRecording, cleanup]);
 
-<<<<<<< HEAD
-  const triggerFile = useCallback((file: File, nextPage?: string) => {
-    const audioUrl = URL.createObjectURL(file);
-    setAudioData({ audioFileUrl: audioUrl, filename: file.name, recordingType });
-  }, [recordingType]);
-=======
   const triggerFile = useCallback((file: File) => { // Removed nextPage as it's not used in this hook's scope
     const audioUrl = URL.createObjectURL(file);
     setAudioData({ audioFileUrl: audioUrl, filename: file.name, recordingType });
   }, [recordingType]); // Added recordingType to dependencies
->>>>>>> 5bbfa20 (Updated audio recording code with removed filters and encoding modifications using resample linear)
 
-  const resetTooShort = useCallback(() => {
-    setTooShort(false);
-    // Also reset recording time when resetting too-short state
-    setRecordingTime(0);
-    startTimeRef.current = null;
-  }, []);
-  
+  const resetTooShort = useCallback(() => setTooShort(false), []);
   const resetRecordingTime = useCallback(() => {
     setRecordingTime(0);
     startTimeRef.current = null;
