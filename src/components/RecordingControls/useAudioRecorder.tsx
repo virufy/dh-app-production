@@ -1,5 +1,81 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+// Save recording to IndexedDB for persistence
+async function saveRecordingToIDB(blob: Blob, recordingType: string) {
+  try {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('recordings', 1);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+      request.onupgradeneeded = (e) => {
+        const db = (e.target as IDBOpenDBRequest).result;
+        if (!db.objectStoreNames.contains('blobs')) {
+          db.createObjectStore('blobs');
+        }
+      };
+    });
+
+    return new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(['blobs'], 'readwrite');
+      const store = transaction.objectStore('blobs');
+      const request = store.put(blob, recordingType);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  } catch (e) {
+    console.error('Failed to save recording:', e);
+  }
+}
+
+// Load recording from IndexedDB
+async function loadRecordingFromIDB(recordingType: string): Promise<Blob | null> {
+  try {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('recordings', 1);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+      request.onupgradeneeded = (e) => {
+        const db = (e.target as IDBOpenDBRequest).result;
+        if (!db.objectStoreNames.contains('blobs')) {
+          db.createObjectStore('blobs');
+        }
+      };
+    });
+
+    return new Promise<Blob | null>((resolve, reject) => {
+      const transaction = db.transaction(['blobs'], 'readonly');
+      const store = transaction.objectStore('blobs');
+      const request = store.get(recordingType);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result || null);
+    });
+  } catch (e) {
+    console.error('Failed to load recording:', e);
+    return null;
+  }
+}
+
+// Delete recording from IndexedDB
+async function deleteRecordingFromIDB(recordingType: string) {
+  try {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('recordings', 1);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+    });
+
+    return new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(['blobs'], 'readwrite');
+      const store = transaction.objectStore('blobs');
+      const request = store.delete(recordingType);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  } catch (e) {
+    console.error('Failed to delete recording:', e);
+  }
+}
+
 type RecType = "speech" | "cough" | "breath" | "unknown";
 type AudioData = { audioFileUrl: string; filename: string; recordingType: RecType } | null;
 
@@ -90,8 +166,34 @@ export function useAudioRecorder(targetSampleRate = TARGET_SAMPLE_RATE, recordin
   const startTimeRef = useRef<number | null>(null);
 
   const [isRecording, setIsRecording] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
-  const [audioData, setAudioData] = useState<AudioData>(null);
+  const [audioData, setAudioData] = useState<AudioData>(() => {
+    try {
+      const key = `audioData_${recordingType}`;
+      const data = sessionStorage.getItem(key);
+      if (data) {
+        const parsed = JSON.parse(data);
+        loadRecordingFromIDB(recordingType).then(blob => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            setAudioData({ ...parsed, audioFileUrl: url });
+          }
+        });
+        return parsed;
+      }
+    } catch (e) {}
+    return null;
+  });
+
+  // Restore recording time from sessionStorage
+  const [recordingTime, setRecordingTime] = useState(() => {
+    try {
+      const key = `recordingTime_${recordingType}`;
+      const saved = sessionStorage.getItem(key);
+      return saved ? parseInt(saved, 10) : 0;
+    } catch (e) {
+      return 0;
+    }
+  });
   const [error, setError] = useState<string | null>(null);
   const [tooShort, setTooShort] = useState(false);
 
@@ -133,7 +235,7 @@ export function useAudioRecorder(targetSampleRate = TARGET_SAMPLE_RATE, recordin
     return () => cleanup();
   }, [cleanup]);
 
-  const stopRecording = useCallback(() => {
+  const stopRecording = useCallback(async () => {
     if (!isRecording && chunksRef.current.length === 0) return;
 
     // --- Cleanup timers and audio graph resources immediately ---
@@ -203,17 +305,26 @@ export function useAudioRecorder(targetSampleRate = TARGET_SAMPLE_RATE, recordin
       if (elapsedSeconds < 3 || recordingTime < 3) { // Check both for robustness
         setTooShort(true);
         setAudioData(null);
+        sessionStorage.removeItem(`audioData_${recordingType}`);
+        sessionStorage.removeItem(`recordingTime_${recordingType}`);
+        await deleteRecordingFromIDB(recordingType);
+        setRecordingTime(0); // Only reset timer if recording is too short
       } else {
-        setAudioData({ audioFileUrl: wavUrl, filename, recordingType });
+        const data = { audioFileUrl: wavUrl, filename, recordingType };
+        setAudioData(data);
+        sessionStorage.setItem(`audioData_${recordingType}`, JSON.stringify(data));
+        sessionStorage.setItem(`recordingTime_${recordingType}`, recordingTime.toString());
+        await saveRecordingToIDB(wavBlob, recordingType);
       }
     } else {
       // If no chunks were collected (e.g., recording stopped immediately)
-      setAudioData(null);
+  setAudioData(null);
+  sessionStorage.removeItem(`audioData_${recordingType}`);
+  setRecordingTime(0); // Only reset timer if no audio was recorded
     }
 
     setIsRecording(false);
     startTimeRef.current = null;
-    setRecordingTime(0); // Reset recording time on stop
   }, [isRecording, recordingType, targetSampleRate, recordingTime]); // Add recordingTime to dependencies
 
   const startRecording = useCallback(async () => {
@@ -286,16 +397,21 @@ export function useAudioRecorder(targetSampleRate = TARGET_SAMPLE_RATE, recordin
     }
   }, [isRecording, targetSampleRate, stopRecording, cleanup]);
 
-  const triggerFile = useCallback((file: File) => { // Removed nextPage as it's not used in this hook's scope
+  const triggerFile = useCallback((file: File) => {
     const audioUrl = URL.createObjectURL(file);
-    setAudioData({ audioFileUrl: audioUrl, filename: file.name, recordingType });
-  }, [recordingType]); // Added recordingType to dependencies
+    const data = { audioFileUrl: audioUrl, filename: file.name, recordingType };
+    setAudioData(data);
+    sessionStorage.setItem(`audioData_${recordingType}`, JSON.stringify(data));
+  }, [recordingType]);
 
   const resetTooShort = useCallback(() => setTooShort(false), []);
-  const resetRecordingTime = useCallback(() => {
+  const resetRecordingTime = useCallback(async () => {
     setRecordingTime(0);
     startTimeRef.current = null;
-  }, []);
+    sessionStorage.removeItem(`audioData_${recordingType}`);
+    sessionStorage.removeItem(`recordingTime_${recordingType}`);
+    await deleteRecordingFromIDB(recordingType).catch(console.error);
+  }, [recordingType]);
 
   // Helper to capitalize type for filename
   function capitalize(type: string) {

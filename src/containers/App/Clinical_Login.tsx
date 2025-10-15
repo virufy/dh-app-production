@@ -230,9 +230,12 @@ const Clinical_Login: React.FC = () => {
   const navigate = useNavigate();
   const isArabic = (i18n.resolvedLanguage || i18n.language || '').startsWith('ar');
 
-  // Force English on login
+  // Respect persisted language; if none is set, keep i18n default
   useEffect(() => {
-    i18n.changeLanguage('en');
+    const stored = localStorage.getItem('i18nextLng');
+    if (stored && stored !== i18n.language) {
+      i18n.changeLanguage(stored).catch(() => {});
+    }
   }, [i18n]);
 
   // Initialize app signature once

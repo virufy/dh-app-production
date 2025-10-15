@@ -8,15 +8,28 @@ i18n
   .use(initReactI18next)
   .init({
     resources: { en: { translation: en }, ar: { translation: ar } },
-    lng: 'en',            // start in English
+    lng: localStorage.getItem('i18nextLng') || 'en', // restore last selected language
     fallbackLng: 'en',
     interpolation: { escapeValue: false },
   });
 
+// Persist the language selection so the app restores the last used language on next load
 i18n.on('languageChanged', (lng) => {
+  try {
+    if (lng) localStorage.setItem('i18nextLng', lng);
+  } catch (e) {
+    // ignore storage errors (e.g. private mode)
+  }
   const isAr = (lng || '').startsWith('ar');
   document.documentElement.dir = isAr ? 'rtl' : 'ltr';
   document.documentElement.lang = lng || 'en';
 });
+
+// Ensure direction is correct on initial load
+{
+  const initial = i18n.language || localStorage.getItem('i18nextLng') || 'en';
+  document.documentElement.dir = initial.startsWith('ar') ? 'rtl' : 'ltr';
+  document.documentElement.lang = initial;
+}
 
 export default i18n;
