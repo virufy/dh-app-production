@@ -98,18 +98,23 @@ export const Subtitle = styled.p`
 
 export const FileRow = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   font-size: 1rem;
   margin-bottom: 0.8rem;
   width: 100%;
+  max-width: 450px;
+  margin-left: auto;
+  margin-right: auto;
 `;
 
 export const Slider = styled.input`
   width: 100%;
+  max-width: 450px;
   margin: 0.5rem auto;
   height: 6px;
   appearance: none;
+  display: block;
   background-color: #dde9ff;
   border-radius: 4px;
   outline: none;
@@ -131,6 +136,9 @@ export const TimeRow = styled.div`
   color: #888;
   margin-bottom: 2rem;
   width: 100%;
+  max-width: 450px;
+  margin-left: auto;
+  margin-right: auto;
 `;
 
 export const PlayButton = styled.button`

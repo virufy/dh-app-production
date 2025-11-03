@@ -6,7 +6,6 @@ import BreathRecordScreen from "../SubmitSteps/RecordingsSteps/BreathRecord";
 import ConfirmationScreen from "../ConfirmationScreen";
 import SpeechRecordScreen from "../SubmitSteps/RecordingsSteps/SpeechRecording";
 import CoughRecordScreen from "../SubmitSteps/RecordingsSteps/CoughRecordScreen";
-import UploadCompleteCough from "../SubmitSteps/RecordingsSteps/UploadCompleteCough";
 import ConsentScreen from "./ConsentPage";
 import ClinicalLogin from "./Clinical_Login";
 
@@ -42,7 +41,7 @@ const App: React.FC = () => {
         <Route path="/record-speech" element={<SpeechRecordScreen />} />
         <Route path="/record-coughs" element={<CoughRecordScreen />} />
         <Route path="/clinical-login" element={<ClinicalLogin />} />
-        <Route path="/upload-complete" element={<UploadCompleteCough />} />
+        {/* Upload-complete page removed; submission happens inline on recording screens */}
         {/* Catch all invalid routes and redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

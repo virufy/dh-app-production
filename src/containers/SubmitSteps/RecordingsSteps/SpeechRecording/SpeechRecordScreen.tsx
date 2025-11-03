@@ -1,5 +1,5 @@
 // SpeechRecordScreen.tsx (refactored & RTL-aware skip button)
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import MinimumDurationModal from "../../../../components/RecordingControls/MinimumDurationModal";
@@ -10,15 +10,18 @@ import mouthSpeechDistance from "../../../../assets/images/mouthSpeechDistance.p
 import BackIcon from "../../../../assets/icons/arrowLeft.svg";
 import StartIcon from "../../../../assets/icons/start.svg";
 import StopIcon from "../../../../assets/icons/stop.svg";
-import UploadIcon from "../../../../assets/icons/upload.svg";
 import i18n from "../../../../i18n";
+import PlayIcon from "../../../../assets/icons/play.svg";
+import PauseIcon from "../../../../assets/icons/pause.svg";
 import SkipButton from "../../../../components/RecordingControls/SkipButton";
 import { useAudioRecorder } from "../../../../components/RecordingControls/useAudioRecorder";
 import SharedBackButton from "../../../../components/RecordingControls/BackButton";
 import AppHeader from "../../../../components/AppHeader";
 import TimerDisplay from "../../../../components/RecordingControls/TimerDisplay";
 import formatTime from "../../../../utils/formatTime";
-import FileUploadButton from "../../../../components/RecordingControls/FileUploadButton";
+import { Slider, TimeRow, FileRow } from "../UploadCompleteCough/styles";
+import { addUploadTask } from "../../../../services/backgroundUploadService";
+import { getDeviceName, generateUserAgent } from "../../../../utils/deviceUtils";
 
 // Styled comps
 import {
@@ -44,9 +47,12 @@ const SpeechRecordScreen: React.FC = () => {
   const { t } = useTranslation();
   const isArabic = i18n.language === "ar";
   const navigate = useNavigate();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
 
-  const { isRecording, recordingTime, audioData, error, tooShort, startRecording, stopRecording, setError, resetTooShort } =
+  const { isRecording, recordingTime, audioData, error, tooShort, startRecording, stopRecording, setError, resetTooShort, resetRecordingTime } =
     useAudioRecorder(44100, "speech");
 
   // refs for any local header measurements (kept for layout consistency)
@@ -67,36 +73,68 @@ const SpeechRecordScreen: React.FC = () => {
   /* ----------------- Start Recording ----------------- */
   // startRecording is provided by hook
 
-  /* ----------------- Continue / Upload / Skip ----------------- */
-  const handleContinue = () => {
-    if (audioData) {
-      setError(null);
-      navigate("/upload-complete", {
-        state: { ...audioData, nextPage: "/record-breath" },
-      });
+  /* ----------------- Submit (background upload) ----------------- */
+  const handleSubmit = async () => {
+    if (!audioData) {
+      setError(t("recordSpeech.error") || "Please record first.");
       return;
     }
-
-    const file = fileInputRef.current?.files?.[0];
-    if (!file) {
-      setError(t("recordSpeech.error") || "Please record or upload an audio file first.");
-      return;
-    }
-
-    const audioUrl = URL.createObjectURL(file);
-    navigate("/upload-complete", {
-      state: { audioFileUrl: audioUrl, filename: file.name, recordingType: "speech", nextPage: "/record-breath" },
+    const patientId = sessionStorage.getItem("patientId") || "";
+    const timestamp = new Date().toISOString();
+    addUploadTask({
+      patientId,
+      filename: audioData.filename,
+      timestamp,
+      audioType: "speech",
+      audioFileUrl: audioData.audioFileUrl,
+      deviceName: await getDeviceName(),
+      userAgent: await generateUserAgent(),
     });
+    navigate("/record-breath");
   };
 
-  const triggerFileInput = () => fileInputRef.current?.click();
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const audioUrl = URL.createObjectURL(file);
-    navigate("/upload-complete", {
-      state: { audioFileUrl: audioUrl, filename: file.name, recordingType: "speech", nextPage: "/record-breath" },
-    });
+  const togglePlay = () => {
+    const el = audioRef.current;
+    if (!el || !audioData?.audioFileUrl) return;
+    if (isPlaying) {
+      el.pause();
+      setIsPlaying(false);
+    } else {
+      el.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+    }
+  };
+
+  useEffect(() => {
+    const el = audioRef.current;
+    if (!el) return;
+    const onTime = () => setCurrentTime(el.currentTime || 0);
+    const onMeta = () => setDuration(el.duration || 0);
+    const onEnded = () => setIsPlaying(false);
+    el.addEventListener("timeupdate", onTime);
+    el.addEventListener("loadedmetadata", onMeta);
+    el.addEventListener("ended", onEnded);
+    return () => {
+      el.removeEventListener("timeupdate", onTime);
+      el.removeEventListener("loadedmetadata", onMeta);
+      el.removeEventListener("ended", onEnded);
+    };
+  }, []);
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const el = audioRef.current;
+    if (!el) return;
+    const t = parseFloat(e.target.value);
+    el.currentTime = isNaN(t) ? 0 : t;
+    setCurrentTime(el.currentTime);
+  };
+
+  /* ----------------- Retake ----------------- */
+  const handleRetake = async () => {
+    setIsPlaying(false);
+    if (audioRef.current) {
+      try { audioRef.current.pause(); } catch {}
+    }
+    await resetRecordingTime();
   };
 
   // Skip button is handled by shared component
@@ -153,7 +191,6 @@ const SpeechRecordScreen: React.FC = () => {
             </InstructionText>
           </StepWrapper>
 
-          {/* Timer display replaced with shared component, color white if time is 0 */}
           <TimerDisplay seconds={recordingTime} formatTime={formatTime} color={recordingTime === 0 ? '#fff' : '#3578de'} />
 
           <ButtonRow>
@@ -163,40 +200,62 @@ const SpeechRecordScreen: React.FC = () => {
                 aria-label={t("recordSpeech.recordButton")}
                 onClick={startRecording}
                 disabled={isRecording}
-                style={{ opacity: isRecording ? 0.6 : 1, cursor: isRecording ? "not-allowed" : "pointer", width: "56px", height: "56px" }}
+                style={{ opacity: isRecording ? 0.6 : 1, width: "56px", height: "56px" }}
               >
-                <img src={StartIcon} alt={t("recordSpeech.recordButton")} width={28} height={28} />
+                <img src={StartIcon} alt="record" width={24} height={24} />
               </CircleButton>
               <ButtonLabel>{t("recordSpeech.recordButton")}</ButtonLabel>
             </div>
             <div style={{ textAlign: "center" }}>
               <CircleButton
-                bg={isRecording ? "#3578de" : "#DDE9FF"}
+                bg={isRecording ? "#3578de" : "#BFD3F9"}
                 aria-label={t("recordSpeech.stopButton")}
                 onClick={stopRecording}
                 disabled={!isRecording}
-                style={{ opacity: !isRecording ? 0.6 : 1, cursor: !isRecording ? "not-allowed" : "pointer", width: "56px", height: "56px" }}
+                style={{ opacity: !isRecording ? 0.6 : 1, width: "56px", height: "56px" }}
               >
-                <img src={StopIcon} alt={t("recordSpeech.stopButton")} width={20} height={20} />
+                <img src={StopIcon} alt="stop" width={20} height={20} />
               </CircleButton>
               <ButtonLabel>{t("recordSpeech.stopButton")}</ButtonLabel>
             </div>
+            <div style={{ textAlign: "center" }}>
+              <CircleButton
+                bg={audioData ? "#3578de" : "#DDE9FF"}
+                aria-label={t("uploadComplete.play")}
+                onClick={togglePlay}
+                disabled={!audioData}
+                style={{ opacity: !audioData ? 0.6 : 1, width: "56px", height: "56px" }}
+              >
+                <img src={isPlaying ? PauseIcon : PlayIcon} alt="play" width={24} height={24} />
+              </CircleButton>
+              <ButtonLabel>{t("uploadComplete.play")}</ButtonLabel>
+            </div>
           </ButtonRow>
+
+          <FileRow>
+            <span>{audioData?.filename || t("recordSpeech.defaultFilename")}</span>
+          </FileRow>
+          <Slider
+            type="range"
+            min="0"
+            max={duration || 0}
+            value={currentTime}
+            step="0.1"
+            onChange={handleSeek}
+            aria-label={t("uploadComplete.sliderAria")}
+            disabled={!audioData}
+          />
+          <TimeRow>
+            <span>{formatTime(currentTime)}</span>
+            <span>- {formatTime(Math.max((duration || 0) - currentTime, 0))}</span>
+          </TimeRow>
 
           {error && <p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>{error}</p>}
 
           <SkipButton to="/record-breath" label={t("recordSpeech.skipButton")} ariaLabel={t("recordSpeech.skipButton")} />
 
           <ActionButtons>
-            <button onClick={handleContinue}>{t("recordSpeech.continueButton")}</button>
-            <FileUploadButton
-              label={t("recordSpeech.uploadFile")}
-              iconSrc={UploadIcon}
-              onClick={triggerFileInput}
-              inputRef={fileInputRef as React.RefObject<HTMLInputElement>}
-              onFileChange={handleFileChange}
-              accept="audio/*"
-            />
+            <button onClick={handleSubmit}>{t("uploadComplete.submit")}</button>
           </ActionButtons>
 
           {tooShort && (
@@ -215,6 +274,7 @@ const SpeechRecordScreen: React.FC = () => {
           </FooterLink>
         </Content>
       </Container>
+      <audio ref={audioRef} src={audioData?.audioFileUrl || ""} preload="auto" />
     </>
   );
 };

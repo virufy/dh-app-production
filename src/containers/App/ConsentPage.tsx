@@ -37,7 +37,7 @@ const sessionPatientId = typeof window !== 'undefined' ? sessionStorage.getItem(
             <div
               style={{
                 minHeight: '100vh',
-                paddingBottom: '100px',
+                paddingBottom: '18px',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'flex-start',
