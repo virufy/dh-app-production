@@ -15,9 +15,6 @@ import {
   Slider,
   TimeRow,
   PlayButton,
-  // CheckboxRow,
-  // Label,
-  // Checkbox,
   ButtonsWrapper,
   RetakeButton,
   SubmitButton,
@@ -29,174 +26,19 @@ import ArrowLeftIcon from "../../../../assets/icons/arrowLeft.svg";
 import PlayIcon from "../../../../assets/icons/play.svg";
 import PauseIcon from "../../../../assets/icons/pause.svg";
 import i18n from "../../../../i18n";
-import { generateSignature } from "../../../../utils/signature";
 import AppHeader from "../../../../components/AppHeader";
+
+// Import the new background upload service and utility functions
+import { addUploadTask } from "../../../../services/backgroundUploadService"; // Adjust path as needed
+import { logDeviceDebugInfo, getDeviceName, generateUserAgent } from "../../../../utils/deviceUtils"; // Adjust path as needed
+// blobUrlToBase64 is no longer directly imported here as it's used internally by the background service
 
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
-const API_BASE =
-  process.env.REACT_APP_API_BASE ??
-  "https://tg3he2qa23.execute-api.me-central-1.amazonaws.com/prod";
-const NAV_DELAY_MS = 2000; // brief pause so user can read success
-
 type RecType = "cough" | "speech" | "breath" | "unknown";
 
-async function blobUrlToBase64(url: string): Promise<{ base64: string; contentType: string }> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Fetch failed ${res.status}`);
-  const contentType = res.headers.get("Content-Type") || "audio/wav";
-  const buf = await res.arrayBuffer();
-  const bytes = new Uint8Array(buf);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-  return { base64: btoa(binary), contentType };
-}
-
-/* ==== Debug helper (prints raw UA and client hints) ==== */
-async function logDeviceDebugInfo(): Promise<void> {
-  try {
-    console.log('[DeviceDebug] navigator.userAgent:', navigator.userAgent);
-    // @ts-ignore
-    const uad = navigator.userAgentData;
-    console.log('[DeviceDebug] navigator.userAgentData (raw):', uad);
-    // @ts-ignore
-    if (uad && typeof uad.getHighEntropyValues === 'function') {
-      try {
-        // @ts-ignore
-        const high = await uad.getHighEntropyValues(['model', 'platform', 'platformVersion']);
-        console.log('[DeviceDebug] navigator.userAgentData.getHighEntropyValues:', high);
-      } catch (err) {
-        console.warn('[DeviceDebug] getHighEntropyValues failed:', err);
-      }
-    }
-  } catch (err) {
-    console.warn('[DeviceDebug] error reading navigator info:', err);
-  }
-}
-
-/* ==== Async device name extractor (uses Client Hints when available) ==== */
-async function getDeviceName(): Promise<string> {
-  if (typeof navigator === 'undefined') return 'Unknown Device';
-  const ua = navigator.userAgent || '';
-  const platform = navigator.platform || '';
-
-  try {
-    // @ts-ignore
-    const uad = navigator.userAgentData;
-    // @ts-ignore
-    if (uad && typeof uad.getHighEntropyValues === 'function') {
-      try {
-        // @ts-ignore
-        const high = await uad.getHighEntropyValues(['model', 'platform', 'platformVersion']);
-        const model = (high?.model || '').toString().trim();
-        const plat = (high?.platform || '').toString().trim();
-        if (model) {
-          const brandMap: Array<[RegExp, string]> = [
-            [/^\s*SM-/i, 'Samsung'],
-            [/samsung/i, 'Samsung'],
-            [/redmi|mi|poco|mix/i, 'Xiaomi'],
-            [/oneplus/i, 'OnePlus'],
-            [/huawei|honor/i, 'Huawei'],
-            [/vivo/i, 'Vivo'],
-            [/oppo/i, 'Oppo'],
-            [/pixel/i, 'Google'],
-          ];
-          const brandEntry = brandMap.find(([rx]) => rx.test(model));
-          return (brandEntry ? `${brandEntry[1]} ${model}` : model).slice(0, 200);
-        }
-        if (plat) {
-          // @ts-ignore
-          const brands = Array.isArray(uad.brands) ? uad.brands.map((b: any) => String(b.brand).replace(/[^A-Za-z0-9 .\-]/g, '').trim()) : [];
-          const brandChoice = brands.find((b: string) => /Chrome|Chromium|Firefox|Edge|Safari|Opera/i.test(b)) || brands[brands.length - 1] || '';
-          const basic = [plat, brandChoice].filter(Boolean).join(' ').trim();
-          if (basic) return basic.slice(0, 200);
-        }
-      } catch (err) { }
-    }
-  } catch (e) { }
-
-  const androidMatch = ua.match(/Android[^;]*;\s*([^;()]+?)\s*(?:Build\/|\))/i);
-  if (androidMatch && androidMatch[1]) {
-    const rawModel = androidMatch[1].trim();
-    const model = rawModel.replace(/\b(wv|mobile|tablet)\b/gi, '').trim().slice(0, 120);
-    const brandMap: Array<[RegExp, string]> = [
-      [/^\s*SM-/i, 'Samsung'],
-      [/samsung/i, 'Samsung'],
-      [/redmi|mi|poco|mix/i, 'Xiaomi'],
-      [/oneplus/i, 'OnePlus'],
-      [/huawei|honor/i, 'Huawei'],
-      [/vivo/i, 'Vivo'],
-      [/oppo/i, 'Oppo'],
-      [/pixel/i, 'Google'],
-    ];
-    const brandEntry = brandMap.find(([rx]) => rx.test(model));
-    return (brandEntry ? `${brandEntry[1]} ${model}` : model) || 'Unknown Device';
-  }
-
-  if (/iPhone/i.test(ua)) return 'Apple iPhone';
-  if (/iPad/i.test(ua)) return 'Apple iPad';
-  if (/Macintosh/i.test(ua)) return 'Apple Mac';
-
-  const desktopMap: Array<[RegExp, string]> = [
-    [/Win/i, 'Windows PC'],
-    [/Mac/i, 'Apple Mac'],
-    [/Linux/i, 'Linux PC'],
-  ];
-  const desktop = desktopMap.find(([rx]) => rx.test(platform));
-  if (desktop) return desktop[1];
-
-  return 'Unknown Device';
-}
-
-/* ==== New User-Agent generator ==== */
-async function generateUserAgent(): Promise<string> {
-  const deviceName = await getDeviceName();
-  const ua = navigator.userAgent || '';
-  const isMobile = /Mobile|Android|iPhone|iPad/i.test(ua);
-  const isTablet = /iPad|Tablet/i.test(ua) || (deviceName.includes('Tab') && /Android/i.test(deviceName));
-  const isDesktop = !isMobile && !isTablet;
-
-  // Browser versions (modern, realistic)
-  const chromeVersions = ['114.0.5735.196', '120.0.6099.144', '122.0.6261.94'];
-  const safariVersions = ['604.1', '605.1.15'];
-  const iosVersions = ['17_5', '18_0'];
-  const androidVersions = ['11', '12', '13', '14'];
-
-  // Randomize versions for variety
-  const randomChrome = chromeVersions[Math.floor(Math.random() * chromeVersions.length)];
-  const randomSafari = safariVersions[Math.floor(Math.random() * safariVersions.length)];
-  const randomAndroid = androidVersions[Math.floor(Math.random() * androidVersions.length)];
-  const randomIos = iosVersions[Math.floor(Math.random() * iosVersions.length)];
-
-  // Android devices
-  if (deviceName.includes('Android') || /Android/i.test(ua)) {
-    const modelMatch = deviceName.match(/(Samsung|Google|Xiaomi|OnePlus|Huawei|Vivo|Oppo)\s+(.+)/i);
-    const model = modelMatch ? modelMatch[2] : deviceName.replace('Android', '').trim();
-    return `Mozilla/5.0 (Linux; Android ${randomAndroid}; ${model}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${randomChrome} Mobile Safari/537.36`;
-  }
-
-  // iOS devices (iPhone/iPad)
-  if (deviceName.includes('iPhone')) {
-    return `Mozilla/5.0 (iPhone; CPU iPhone OS ${randomIos} like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/${randomIos.replace('_', '.')} Mobile/15E148 Safari/${randomSafari}`;
-  }
-  if (deviceName.includes('iPad')) {
-    return `Mozilla/5.0 (iPad; CPU OS ${randomIos} like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/${randomIos.replace('_', '.')} Mobile/15E148 Safari/${randomSafari}`;
-  }
-
-  // Desktop devices
-  if (deviceName.includes('Windows PC')) {
-    return `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${randomChrome} Safari/537.36`;
-  }
-  if (deviceName.includes('Apple Mac')) {
-    return `Mozilla/5.0 (Macintosh; Intel Mac OS X 14_2_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/${randomSafari}`;
-  }
-  if (deviceName.includes('Linux PC')) {
-    return `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${randomChrome} Safari/537.36`;
-  }
-
-  // Fallback for unknown devices
-  return `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${randomChrome} Safari/537.36`;
-}
+// NAV_DELAY_MS is no longer needed as navigation is immediate
+// const NAV_DELAY_MS = 2000;
 
 const UploadCompleteCough: React.FC = () => {
   const navigate = useNavigate();
@@ -204,7 +46,6 @@ const UploadCompleteCough: React.FC = () => {
   const isArabic = i18n.language === "ar";
   const { t } = useTranslation();
 
-  const [involuntary, setInvoluntary] = useState(false);
   const {
     audioFileUrl,
     filename = t("uploadComplete.filename"),
@@ -226,13 +67,14 @@ const UploadCompleteCough: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [errMsg, setErrMsg] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadErr, setUploadErr] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  // Renamed isUploading to isSubmitting to reflect local state only
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  // uploadErr and successMsg are no longer displayed here as upload is backgrounded
+  // const [uploadErr, setUploadErr] = useState<string | null>(null);
+  // const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const storedPatientId = patientId || sessionStorage.getItem("patientId") || "";
-  
-  // Use recordingType from state if available, fallback to filename inference, then route
+
   let finalRecordingType: RecType =
     recordingType && recordingType !== "unknown"
       ? recordingType
@@ -343,11 +185,9 @@ const UploadCompleteCough: React.FC = () => {
     if (process.env.NODE_ENV !== 'production') {
       logDeviceDebugInfo().catch(() => { });
     }
-    const deviceName = await getDeviceName();
-    // Generate User-Agent for the request
-    const userAgent = await generateUserAgent();
 
     if (!nextPage) {
+      setErrMsg("Navigation target missing. Please restart the process.");
       console.error("No nextPage provided in state");
       return;
     }
@@ -360,85 +200,59 @@ const UploadCompleteCough: React.FC = () => {
       return;
     }
 
-    setUploadErr(null);
-    setSuccessMsg(null);
-    setIsUploading(true);
+    setIsSubmitting(true); // Indicate that the submit action has been initiated
 
     try {
-      const { base64 } = await blobUrlToBase64(audioFileUrl);
+      const deviceName = await getDeviceName();
+      const userAgent = await generateUserAgent();
       const timestamp = new Date().toISOString();
-      // Use filename from state if it matches expected format, else generate new
+
       const generatedFilename = filename && filename.includes(finalRecordingType)
         ? filename
         : `${storedPatientId}-${capitalize(finalRecordingType)}-${timestamp.replace(/\..*Z$/, "").replace(/:/g, "-")}.wav`;
 
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('[DeviceDebug] resolved deviceName:', deviceName);
-        console.log('[DeviceDebug] generated userAgent:', userAgent);
-        console.log('[DeviceDebug] audioType:', finalRecordingType);
-        console.log('[DeviceDebug] filename:', generatedFilename);
-      }
-
-      const signature = await generateSignature();
-      console.log("Signature before fetch:", signature, typeof signature);
-
-      const res = await fetch(`${API_BASE}/cough-upload`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-unique-signature": signature,
-          "User-Agent": userAgent, // Add generated User-Agent to headers
-        },
-        body: JSON.stringify({
-          patientId: storedPatientId,
-          filename: generatedFilename,
-          timestamp,
-          audioType: finalRecordingType,
-          audioBase64: base64,
-          deviceName,
-        }),
+      // Add task to background upload queue
+      addUploadTask({
+        patientId: storedPatientId,
+        filename: generatedFilename,
+        timestamp,
+        audioType: finalRecordingType,
+        audioFileUrl: audioFileUrl, // Pass the blob URL directly
+        deviceName,
+        userAgent,
       });
 
-      if (!res.ok) {
-        const txt = await res.text().catch(() => "");
-        throw new Error(
-          (t("uploadComplete.uploadError") || "Upload failed.") +
-          (txt ? ` – ${txt}` : ` (${res.status})`)
-        );
-      }
+      // Navigate immediately after adding to queue
+      const nextNextPage = getNextStep(nextPage);
+      navigate(nextPage, { state: { nextPage: nextNextPage } });
 
-      setSuccessMsg("Successfully uploaded.");
-
-      setTimeout(() => {
-        const nextNextPage = getNextStep(nextPage);
-        navigate(nextPage, { state: { nextPage: nextNextPage } });
-      }, NAV_DELAY_MS);
     } catch (e: any) {
-      console.error("Upload error:", e);
-      setUploadErr(
+      console.error("Error preparing for background upload:", e);
+      setErrMsg(
         e?.message === "Failed to fetch"
           ? t("uploadComplete.networkError") || "Network error: Unable to reach the server."
-          : e?.message || t("uploadComplete.uploadError") || "Upload failed."
+          : e?.message || t("uploadComplete.uploadError") || "Failed to initiate upload process."
       );
-    } finally {
-      setIsUploading(false);
+      setIsSubmitting(false); // Allow re-submission if initiation failed
     }
+    // No finally block to set isSubmitting(false) or show successMsg,
+    // as navigation happens immediately.
   };
 
   const getNextStep = (currentPage: string) => {
     switch (currentPage) {
       case "/record-speech":
-        return "/upload-complete";
+        return "/upload-complete"; // Assuming this is the placeholder for the next step after speech
       case "/record-breath":
-        return "/upload-complete";
+        return "/upload-complete"; // Assuming this is the placeholder for the next step after breath
       default:
-        return "/confirmation";
+        return "/confirmation"; // Or whatever your final confirmation/dashboard page is
     }
   };
 
   return (
    <>
-         < AppHeader maxWidth={490} locale={isArabic ? "ar" : "en"}/> 
+         < AppHeader maxWidth={490} locale={isArabic ? "ar" : "en"}/>
     <PageWrapper>
       <ContentWrapper>
         <audio ref={audioRef} src={audioFileUrl || ""} preload="auto" />
@@ -501,7 +315,8 @@ const UploadCompleteCough: React.FC = () => {
             </div>
           )}
 
-          {isUploading && (
+          {/* Removed upload status messages as they are now handled in the background */}
+          {/* {isUploading && (
             <div style={{ color: "#555", marginTop: 8 }}>
               {t("uploadComplete.uploading", "Uploading...")}
             </div>
@@ -515,10 +330,10 @@ const UploadCompleteCough: React.FC = () => {
             <div style={{ color: "#0a0", marginTop: 8, fontWeight: 600 }}>
               {successMsg}
             </div>
-          )}
+          )} */}
         </ControlsWrapper>
 
-        <PlayButton onClick={handlePlayPause} disabled={!audioFileUrl || duration === 0 || isUploading}>
+        <PlayButton onClick={handlePlayPause} disabled={!audioFileUrl || duration === 0 || isSubmitting}>
           <img
             src={isPlaying ? PauseIcon : PlayIcon}
             alt={isPlaying ? t("uploadComplete.pause") : t("uploadComplete.play")}
@@ -529,17 +344,11 @@ const UploadCompleteCough: React.FC = () => {
         </PlayButton>
 
         <ButtonsWrapper>
-          <RetakeButton onClick={handleRetake} disabled={isUploading}>
+          <RetakeButton onClick={handleRetake} disabled={isSubmitting}>
             {t("uploadComplete.retake")}
           </RetakeButton>
-          {/* {finalRecordingType === "cough" && (
-            <CheckboxRow>
-              <Label htmlFor="involuntary" style={{ userSelect: "none" }}>{t("recordCough.checkboxLabel")}</Label>
-              <Checkbox id="involuntary" type="checkbox" checked={involuntary} onChange={() => setInvoluntary(!involuntary)} style={{ cursor: "pointer" }} />
-            </CheckboxRow>
-          )} */}
-          <SubmitButton onClick={handleSubmit} disabled={isUploading}>
-            {isUploading ? t("uploadComplete.submitting", "Submitting...") : t("uploadComplete.submit")}
+          <SubmitButton onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? t("uploadComplete.submitting", "Submitting...") : t("uploadComplete.submit")}
           </SubmitButton>
         </ButtonsWrapper>
 
@@ -575,11 +384,23 @@ export default UploadCompleteCough;
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 // // UploadCompleteCough.tsx
 // import React, { useRef, useState, useEffect } from "react";
 // import { useNavigate, useLocation } from "react-router-dom";
 // import { useTranslation } from "react-i18next";
-
 // import {
 //   PageWrapper,
 //   ContentWrapper,
@@ -593,9 +414,9 @@ export default UploadCompleteCough;
 //   Slider,
 //   TimeRow,
 //   PlayButton,
-//   CheckboxRow,
-//   Label,
-//   Checkbox,
+//   // CheckboxRow,
+//   // Label,
+//   // Checkbox,
 //   ButtonsWrapper,
 //   RetakeButton,
 //   SubmitButton,
@@ -608,9 +429,10 @@ export default UploadCompleteCough;
 // import PauseIcon from "../../../../assets/icons/pause.svg";
 // import i18n from "../../../../i18n";
 // import { generateSignature } from "../../../../utils/signature";
+// import AppHeader from "../../../../components/AppHeader";
 
-// /* ==== lossless upload config (added) ==== */
-// /* ==== lossless upload config (added) ==== */
+// const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+
 // const API_BASE =
 //   process.env.REACT_APP_API_BASE ??
 //   "https://tg3he2qa23.execute-api.me-central-1.amazonaws.com/prod";
@@ -618,7 +440,6 @@ export default UploadCompleteCough;
 
 // type RecType = "cough" | "speech" | "breath" | "unknown";
 
-// /* Convert a blob: URL to base64 (no data: prefix) */
 // async function blobUrlToBase64(url: string): Promise<{ base64: string; contentType: string }> {
 //   const res = await fetch(url);
 //   if (!res.ok) throw new Error(`Fetch failed ${res.status}`);
@@ -630,23 +451,16 @@ export default UploadCompleteCough;
 //   return { base64: btoa(binary), contentType };
 // }
 
-// /* ==== debug helper (prints raw UA and client hints) ==== */
+// /* ==== Debug helper (prints raw UA and client hints) ==== */
 // async function logDeviceDebugInfo(): Promise<void> {
 //   try {
-//     // always log raw UA (useful)
 //     console.log('[DeviceDebug] navigator.userAgent:', navigator.userAgent);
-
-//     // client hints object (may be undefined)
 //     // @ts-ignore
 //     const uad = navigator.userAgentData;
 //     console.log('[DeviceDebug] navigator.userAgentData (raw):', uad);
-
-//     // If client hints support high-entropy values, log them too
-//     // NOTE: this may prompt the browser to allow returning more fields in some contexts
 //     // @ts-ignore
 //     if (uad && typeof uad.getHighEntropyValues === 'function') {
 //       try {
-//         // request model/platform/platformVersion to inspect exact strings
 //         // @ts-ignore
 //         const high = await uad.getHighEntropyValues(['model', 'platform', 'platformVersion']);
 //         console.log('[DeviceDebug] navigator.userAgentData.getHighEntropyValues:', high);
@@ -659,28 +473,23 @@ export default UploadCompleteCough;
 //   }
 // }
 
-// /* ==== async device name extractor (uses Client Hints when available) ==== */
+// /* ==== Async device name extractor (uses Client Hints when available) ==== */
 // async function getDeviceName(): Promise<string> {
 //   if (typeof navigator === 'undefined') return 'Unknown Device';
 //   const ua = navigator.userAgent || '';
 //   const platform = navigator.platform || '';
 
-//   // 1) Try Client Hints high-entropy model on supported Chromium
 //   try {
 //     // @ts-ignore
 //     const uad = navigator.userAgentData;
-//     // Ensure getHighEntropyValues exists
 //     // @ts-ignore
 //     if (uad && typeof uad.getHighEntropyValues === 'function') {
 //       try {
-//         // request model and platform info
 //         // @ts-ignore
 //         const high = await uad.getHighEntropyValues(['model', 'platform', 'platformVersion']);
-//         // high.model is often a marketed string (e.g., "SM-A115F" or "Pixel 6")
 //         const model = (high?.model || '').toString().trim();
 //         const plat = (high?.platform || '').toString().trim();
 //         if (model) {
-//           // brand heuristics: try to prefix with common brand names if model contains recognizable token
 //           const brandMap: Array<[RegExp, string]> = [
 //             [/^\s*SM-/i, 'Samsung'],
 //             [/samsung/i, 'Samsung'],
@@ -694,31 +503,21 @@ export default UploadCompleteCough;
 //           const brandEntry = brandMap.find(([rx]) => rx.test(model));
 //           return (brandEntry ? `${brandEntry[1]} ${model}` : model).slice(0, 200);
 //         }
-//         // If model empty but platform present, use platform + brand fallback
 //         if (plat) {
-//           // e.g. "Android" + brand from brands array (cleaned)
 //           // @ts-ignore
-//           const brands = Array.isArray(uad.brands) ? uad.brands.map((b: any) => String(b.brand).replace(/[^A-Za-z0-9 .\-]/g, '').trim()) : [];
+//           const brands = Array.isArray(uad.brands) ? uad.brands.map((b: any) => String(b.brand).replace(/[^A-Za-z0-9 .-]/g, '').trim()) : [];
 //           const brandChoice = brands.find((b: string) => /Chrome|Chromium|Firefox|Edge|Safari|Opera/i.test(b)) || brands[brands.length - 1] || '';
 //           const basic = [plat, brandChoice].filter(Boolean).join(' ').trim();
 //           if (basic) return basic.slice(0, 200);
 //         }
-//       } catch (err) {
-//         // getHighEntropyValues may throw (permissions or unsupported); ignore and fall back
-//         // console.warn('[DeviceDebug] getHighEntropyValues error', err);
-//       }
+//       } catch (err) { }
 //     }
-//   } catch (e) {
-//     // ignore client-hints errors
-//   }
+//   } catch (e) { }
 
-//   // 2) Android UA fallback: extract model fragment before Build/
 //   const androidMatch = ua.match(/Android[^;]*;\s*([^;()]+?)\s*(?:Build\/|\))/i);
 //   if (androidMatch && androidMatch[1]) {
 //     const rawModel = androidMatch[1].trim();
 //     const model = rawModel.replace(/\b(wv|mobile|tablet)\b/gi, '').trim().slice(0, 120);
-
-//     // brand heuristics
 //     const brandMap: Array<[RegExp, string]> = [
 //       [/^\s*SM-/i, 'Samsung'],
 //       [/samsung/i, 'Samsung'],
@@ -733,12 +532,10 @@ export default UploadCompleteCough;
 //     return (brandEntry ? `${brandEntry[1]} ${model}` : model) || 'Unknown Device';
 //   }
 
-//   // 3) iOS / Apple detection
 //   if (/iPhone/i.test(ua)) return 'Apple iPhone';
 //   if (/iPad/i.test(ua)) return 'Apple iPad';
 //   if (/Macintosh/i.test(ua)) return 'Apple Mac';
 
-//   // 4) Desktop simple mapping based on platform
 //   const desktopMap: Array<[RegExp, string]> = [
 //     [/Win/i, 'Windows PC'],
 //     [/Mac/i, 'Apple Mac'],
@@ -747,11 +544,58 @@ export default UploadCompleteCough;
 //   const desktop = desktopMap.find(([rx]) => rx.test(platform));
 //   if (desktop) return desktop[1];
 
-//   // final fallback
 //   return 'Unknown Device';
 // }
 
+// /* ==== New User-Agent generator ==== */
+// async function generateUserAgent(): Promise<string> {
+//   const deviceName = await getDeviceName();
+//   const ua = navigator.userAgent || '';
+//   const isMobile = /Mobile|Android|iPhone|iPad/i.test(ua);
+//   const isTablet = /iPad|Tablet/i.test(ua) || (deviceName.includes('Tab') && /Android/i.test(deviceName));
+//   const isDesktop = !isMobile && !isTablet;
 
+//   // Browser versions (modern, realistic)
+//   const chromeVersions = ['114.0.5735.196', '120.0.6099.144', '122.0.6261.94'];
+//   const safariVersions = ['604.1', '605.1.15'];
+//   const iosVersions = ['17_5', '18_0'];
+//   const androidVersions = ['11', '12', '13', '14'];
+
+//   // Randomize versions for variety
+//   const randomChrome = chromeVersions[Math.floor(Math.random() * chromeVersions.length)];
+//   const randomSafari = safariVersions[Math.floor(Math.random() * safariVersions.length)];
+//   const randomAndroid = androidVersions[Math.floor(Math.random() * androidVersions.length)];
+//   const randomIos = iosVersions[Math.floor(Math.random() * iosVersions.length)];
+
+//   // Android devices
+//   if (deviceName.includes('Android') || /Android/i.test(ua)) {
+//     const modelMatch = deviceName.match(/(Samsung|Google|Xiaomi|OnePlus|Huawei|Vivo|Oppo)\s+(.+)/i);
+//     const model = modelMatch ? modelMatch[2] : deviceName.replace('Android', '').trim();
+//     return `Mozilla/5.0 (Linux; Android ${randomAndroid}; ${model}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${randomChrome} Mobile Safari/537.36`;
+//   }
+
+//   // iOS devices (iPhone/iPad)
+//   if (deviceName.includes('iPhone')) {
+//     return `Mozilla/5.0 (iPhone; CPU iPhone OS ${randomIos} like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/${randomIos.replace('_', '.')} Mobile/15E148 Safari/${randomSafari}`;
+//   }
+//   if (deviceName.includes('iPad')) {
+//     return `Mozilla/5.0 (iPad; CPU OS ${randomIos} like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/${randomIos.replace('_', '.')} Mobile/15E148 Safari/${randomSafari}`;
+//   }
+
+//   // Desktop devices
+//   if (deviceName.includes('Windows PC')) {
+//     return `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${randomChrome} Safari/537.36`;
+//   }
+//   if (deviceName.includes('Apple Mac')) {
+//     return `Mozilla/5.0 (Macintosh; Intel Mac OS X 14_2_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/${randomSafari}`;
+//   }
+//   if (deviceName.includes('Linux PC')) {
+//     return `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${randomChrome} Safari/537.36`;
+//   }
+
+//   // Fallback for unknown devices
+//   return `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${randomChrome} Safari/537.36`;
+// }
 
 // const UploadCompleteCough: React.FC = () => {
 //   const navigate = useNavigate();
@@ -759,45 +603,39 @@ export default UploadCompleteCough;
 //   const isArabic = i18n.language === "ar";
 //   const { t } = useTranslation();
 
-//   // Add involuntary state for cough checkbox
-//   const [involuntary, setInvoluntary] = useState(false);
-
-//   const { audioFileUrl, filename = t("uploadComplete.filename"), nextPage, patientId, recordingType, skipped } =
-//     (location.state as {
-//       audioFileUrl?: string;
-//       filename?: string;
-//       nextPage?: string;
-//       patientId?: string;
-//       recordingType?: RecType;
-//       skipped?: boolean;
-//     }) || {};
+//   // involuntary checkbox state is handled in the recording flow; not needed here
+//   const {
+//     audioFileUrl,
+//     filename = t("uploadComplete.filename"),
+//     nextPage,
+//     patientId,
+//     recordingType,
+//     skipped
+//   } = (location.state as {
+//     audioFileUrl?: string;
+//     filename?: string;
+//     nextPage?: string;
+//     patientId?: string;
+//     recordingType?: RecType;
+//     skipped?: boolean;
+//   }) || {};
 
 //   const audioRef = useRef<HTMLAudioElement | null>(null);
 //   const [isPlaying, setIsPlaying] = useState(false);
 //   const [currentTime, setCurrentTime] = useState(0);
 //   const [duration, setDuration] = useState(0);
 //   const [errMsg, setErrMsg] = useState<string | null>(null);
-
-//   /* ==== lossless upload flags (added, non-breaking) ==== */
 //   const [isUploading, setIsUploading] = useState(false);
 //   const [uploadErr, setUploadErr] = useState<string | null>(null);
 //   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-//   /* ==== derive patientId and recordingType like your backend version ==== */
-//   // patientId in sessionStorage is now CNM_PatientID (e.g., BHC_12345 or NAH_12345)
 //   const storedPatientId = patientId || sessionStorage.getItem("patientId") || "";
-
-//   // infer type from route/prop/filename
-//   const path = location.pathname?.toLowerCase() || "";
-//   const routeType: RecType =
-//     path.includes("speech") ? "speech" :
-//       path.includes("breath") ? "breath" :
-//         path.includes("cough") ? "cough" : "unknown";
-
+  
+//   // Use recordingType from state if available, fallback to filename inference, then route
 //   let finalRecordingType: RecType =
-//     recordingType && recordingType !== "unknown" ? recordingType :
-//       routeType !== "unknown" ? routeType :
-//         ((): RecType => {
+//     recordingType && recordingType !== "unknown"
+//       ? recordingType
+//       : (() => {
 //           const lower = String(filename || "").toLowerCase();
 //           if (lower.includes("speech")) return "speech";
 //           if (lower.includes("breath")) return "breath";
@@ -805,7 +643,13 @@ export default UploadCompleteCough;
 //           return "unknown";
 //         })();
 
-//   if (finalRecordingType === "unknown") finalRecordingType = "cough";
+//   if (finalRecordingType === "unknown") {
+//     const path = location.pathname?.toLowerCase() || "";
+//     if (path.includes("speech")) finalRecordingType = "speech";
+//     else if (path.includes("breath")) finalRecordingType = "breath";
+//     else if (path.includes("cough")) finalRecordingType = "cough";
+//     else finalRecordingType = "cough";
+//   }
 
 //   useEffect(() => {
 //     const audio = audioRef.current;
@@ -815,7 +659,6 @@ export default UploadCompleteCough;
 //       if (isFinite(audio.duration)) {
 //         setDuration(audio.duration);
 //       } else {
-//         // force duration calculation for some blob URLs
 //         const fix = () => {
 //           audio.currentTime = 1e101;
 //           audio.ontimeupdate = () => {
@@ -873,9 +716,9 @@ export default UploadCompleteCough;
 //     try {
 //       if (audio.paused) {
 //         if (audio.readyState < 2) audio.load();
-//         await audio.play(); // await to catch iOS rejections
+//         await audio.play();
 //       } else {
-//         audio.pause(); // isPlaying will update via 'pause' event
+//         audio.pause();
 //       }
 //     } catch (e) {
 //       console.error("Error playing audio:", e);
@@ -895,16 +738,13 @@ export default UploadCompleteCough;
 //   const handleBack = () => navigate(-1);
 //   const handleRetake = () => navigate(-1);
 
-//   /* ==== lossless upload in handleSubmit (added) ==== */
-//   /* ==== lossless upload in handleSubmit (fixed) ==== */
 //   const handleSubmit = async () => {
-//     // Optional dev-only debug logging (prints raw UA to console for inspection)
 //     if (process.env.NODE_ENV !== 'production') {
 //       logDeviceDebugInfo().catch(() => { });
 //     }
-
-//     // Use async extractor to get a clean device name (e.g. "Samsung SM-A115F")
 //     const deviceName = await getDeviceName();
+//     // Generate User-Agent for the request
+//     const userAgent = await generateUserAgent();
 
 //     if (!nextPage) {
 //       console.error("No nextPage provided in state");
@@ -924,15 +764,18 @@ export default UploadCompleteCough;
 //     setIsUploading(true);
 
 //     try {
-//       // Convert current blob URL (lossless WAV from recorder) to base64
 //       const { base64 } = await blobUrlToBase64(audioFileUrl);
-
 //       const timestamp = new Date().toISOString();
-//       const generatedFilename = `${storedPatientId}/${finalRecordingType}-${timestamp}.flac`;
+//       // Use filename from state if it matches expected format, else generate new
+//       const generatedFilename = filename && filename.includes(finalRecordingType)
+//         ? filename
+//         : `${storedPatientId}-${capitalize(finalRecordingType)}-${timestamp.replace(/\..*Z$/, "").replace(/:/g, "-")}.wav`;
 
-//       // Debug: print resolved deviceName (dev only)
 //       if (process.env.NODE_ENV !== 'production') {
-//         console.log('[DeviceDebug] resolved deviceName (used in payload):', deviceName);
+//         console.log('[DeviceDebug] resolved deviceName:', deviceName);
+//         console.log('[DeviceDebug] generated userAgent:', userAgent);
+//         console.log('[DeviceDebug] audioType:', finalRecordingType);
+//         console.log('[DeviceDebug] filename:', generatedFilename);
 //       }
 
 //       const signature = await generateSignature();
@@ -940,13 +783,17 @@ export default UploadCompleteCough;
 
 //       const res = await fetch(`${API_BASE}/cough-upload`, {
 //         method: "POST",
-//         headers: { "Content-Type": "application/json", "x-unique-signature": signature },
+//         headers: {
+//           "Content-Type": "application/json",
+//           "x-unique-signature": signature,
+//           "User-Agent": userAgent, // Add generated User-Agent to headers
+//         },
 //         body: JSON.stringify({
 //           patientId: storedPatientId,
 //           filename: generatedFilename,
 //           timestamp,
 //           audioType: finalRecordingType,
-//           audioBase64: base64, // base64 WAV payload; backend can transcode to FLAC
+//           audioBase64: base64,
 //           deviceName,
 //         }),
 //       });
@@ -961,7 +808,6 @@ export default UploadCompleteCough;
 
 //       setSuccessMsg("Successfully uploaded.");
 
-//       // Small pause so the user sees success, then proceed like your original
 //       setTimeout(() => {
 //         const nextNextPage = getNextStep(nextPage);
 //         navigate(nextPage, { state: { nextPage: nextNextPage } });
@@ -978,7 +824,6 @@ export default UploadCompleteCough;
 //     }
 //   };
 
-
 //   const getNextStep = (currentPage: string) => {
 //     switch (currentPage) {
 //       case "/record-speech":
@@ -991,10 +836,11 @@ export default UploadCompleteCough;
 //   };
 
 //   return (
+//    <>
+//          < AppHeader maxWidth={490} locale={isArabic ? "ar" : "en"}/> 
 //     <PageWrapper>
 //       <ContentWrapper>
 //         <audio ref={audioRef} src={audioFileUrl || ""} preload="auto" />
-
 //         <ControlsWrapper>
 //           <Header>
 //             <BackButton onClick={handleBack} isArabic={isArabic}>
@@ -1054,7 +900,6 @@ export default UploadCompleteCough;
 //             </div>
 //           )}
 
-//           {/* upload status (added, non-breaking) */}
 //           {isUploading && (
 //             <div style={{ color: "#555", marginTop: 8 }}>
 //               {t("uploadComplete.uploading", "Uploading...")}
@@ -1082,20 +927,16 @@ export default UploadCompleteCough;
 //           />
 //         </PlayButton>
 
-
-
-
 //         <ButtonsWrapper>
 //           <RetakeButton onClick={handleRetake} disabled={isUploading}>
 //             {t("uploadComplete.retake")}
 //           </RetakeButton>
-//           {/* Show involuntary checkbox only for cough recording */}
-//           {finalRecordingType === "cough" && (
+//           {/* {finalRecordingType === "cough" && (
 //             <CheckboxRow>
 //               <Label htmlFor="involuntary" style={{ userSelect: "none" }}>{t("recordCough.checkboxLabel")}</Label>
 //               <Checkbox id="involuntary" type="checkbox" checked={involuntary} onChange={() => setInvoluntary(!involuntary)} style={{ cursor: "pointer" }} />
 //             </CheckboxRow>
-//           )}
+//           )} */}
 //           <SubmitButton onClick={handleSubmit} disabled={isUploading}>
 //             {isUploading ? t("uploadComplete.submitting", "Submitting...") : t("uploadComplete.submit")}
 //           </SubmitButton>
@@ -1112,6 +953,22 @@ export default UploadCompleteCough;
 //         </Footer>
 //       </ContentWrapper>
 //     </PageWrapper>
+// </>
 //   );
 // };
+
 // export default UploadCompleteCough;
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -6,24 +6,49 @@ async function saveRecordingToIDB(blob: Blob, recordingType: string) {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open('recordings', 1);
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
       request.onupgradeneeded = (e) => {
         const db = (e.target as IDBOpenDBRequest).result;
         if (!db.objectStoreNames.contains('blobs')) {
           db.createObjectStore('blobs');
         }
       };
+      request.onsuccess = () => {
+        const db = request.result;
+        // Check if store exists after success
+        if (!db.objectStoreNames.contains('blobs')) {
+          const version = db.version + 1;
+          db.close();
+          // Reopen with new version to trigger upgrade
+          const reopenRequest = indexedDB.open('recordings', version);
+          reopenRequest.onupgradeneeded = (e) => {
+            const upgradedDb = (e.target as IDBOpenDBRequest).result;
+            if (!upgradedDb.objectStoreNames.contains('blobs')) {
+              upgradedDb.createObjectStore('blobs');
+            }
+          };
+          reopenRequest.onsuccess = () => resolve(reopenRequest.result);
+          reopenRequest.onerror = () => reject(reopenRequest.error);
+        } else {
+          resolve(db);
+        }
+      };
     });
 
     return new Promise<void>((resolve, reject) => {
-      const transaction = db.transaction(['blobs'], 'readwrite');
-      const store = transaction.objectStore('blobs');
-      const request = store.put(blob, recordingType);
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
+      try {
+        const transaction = db.transaction(['blobs'], 'readwrite');
+        const store = transaction.objectStore('blobs');
+        const request = store.put(blob, recordingType);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve();
+      } catch (e) {
+        reject(e);
+      }
     });
   } catch (e) {
     console.error('Failed to save recording:', e);
+    // Return a resolved promise to prevent unhandled rejection
+    return Promise.resolve();
   }
 }
 
@@ -58,21 +83,47 @@ async function loadRecordingFromIDB(recordingType: string): Promise<Blob | null>
 // Delete recording from IndexedDB
 async function deleteRecordingFromIDB(recordingType: string) {
   try {
-    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+    const db = await new Promise<IDBDatabase | undefined>((resolve, reject) => {
       const request = indexedDB.open('recordings', 1);
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
+      request.onupgradeneeded = (e) => {
+        const db = (e.target as IDBOpenDBRequest).result;
+        if (!db.objectStoreNames.contains('blobs')) {
+          db.createObjectStore('blobs');
+        }
+      };
+      request.onsuccess = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains('blobs')) {
+          db.close();
+          resolve(undefined); // No store exists, nothing to delete
+          return;
+        }
+        resolve(db);
+      };
     });
 
+    if (!db) return Promise.resolve(); // Exit if no database/store exists
+
     return new Promise<void>((resolve, reject) => {
-      const transaction = db.transaction(['blobs'], 'readwrite');
-      const store = transaction.objectStore('blobs');
-      const request = store.delete(recordingType);
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
+      try {
+        const transaction = db.transaction(['blobs'], 'readwrite');
+        const store = transaction.objectStore('blobs');
+        const request = store.delete(recordingType);
+        request.onerror = () => {
+          console.warn('Error deleting recording:', request.error);
+          resolve(); // Resolve anyway to prevent blocking
+        };
+        request.onsuccess = () => resolve();
+        transaction.oncomplete = () => db.close();
+      } catch (e) {
+        console.warn('Error in delete transaction:', e);
+        resolve(); // Resolve anyway to prevent blocking
+      }
     });
   } catch (e) {
     console.error('Failed to delete recording:', e);
+    return Promise.resolve(); // Return resolved promise to prevent unhandled rejection
   }
 }
 
@@ -183,6 +234,8 @@ export function useAudioRecorder(targetSampleRate = TARGET_SAMPLE_RATE, recordin
     } catch (e) {}
     return null;
   });
+  const audioDataRef = useRef<AudioData>(audioData);
+  useEffect(() => { audioDataRef.current = audioData; }, [audioData]);
 
   // Restore recording time from sessionStorage
   const [recordingTime, setRecordingTime] = useState(() => {
@@ -302,19 +355,23 @@ export function useAudioRecorder(targetSampleRate = TARGET_SAMPLE_RATE, recordin
       const filename = `${storedPatientId}-${capitalize(recordingType)}-${timestamp}.wav`;
 
       const elapsedSeconds = startTimeRef.current != null ? Math.floor((Date.now() - startTimeRef.current) / 1000) : recordingTime;
-      if (elapsedSeconds < 3 || recordingTime < 3) { // Check both for robustness
+  const isMaxDuration = elapsedSeconds === 15;
+      
+      if (elapsedSeconds < 3 && !isMaxDuration) { // Only check for too short if not at max duration
         setTooShort(true);
         setAudioData(null);
         sessionStorage.removeItem(`audioData_${recordingType}`);
         sessionStorage.removeItem(`recordingTime_${recordingType}`);
         await deleteRecordingFromIDB(recordingType);
-        setRecordingTime(0); // Only reset timer if recording is too short
+        setRecordingTime(0); // Only reset timer if recording is too short and not max duration
       } else {
+        // For both valid duration recordings and max duration recordings
         const data = { audioFileUrl: wavUrl, filename, recordingType };
         setAudioData(data);
         sessionStorage.setItem(`audioData_${recordingType}`, JSON.stringify(data));
         sessionStorage.setItem(`recordingTime_${recordingType}`, recordingTime.toString());
         await saveRecordingToIDB(wavBlob, recordingType);
+        // Keep the recording time as is, don't reset to zero
       }
     } else {
       // If no chunks were collected (e.g., recording stopped immediately)
@@ -386,9 +443,39 @@ export function useAudioRecorder(targetSampleRate = TARGET_SAMPLE_RATE, recordin
 
       startTimeRef.current = Date.now();
       elapsedTimerRef.current = window.setInterval(() => {
-        if (startTimeRef.current != null) setRecordingTime(Math.floor((Date.now() - startTimeRef.current) / 1000));
+        if (startTimeRef.current != null) {
+          const currentTime = Math.floor((Date.now() - startTimeRef.current) / 1000);
+          if (currentTime <= 15) { // Only update time if not exceeded max
+            setRecordingTime(currentTime);
+          }
+        }
       }, 1000);
-      maxDurationTimerRef.current = window.setTimeout(() => stopRecording(), 30_000); // Auto-stop after 30 seconds
+      maxDurationTimerRef.current = window.setTimeout(() => {
+        if (isRecording) {
+          stopRecording(); // This will now preserve the timer at 15 seconds
+          // Ensure audioData is set after auto-stop
+          setTimeout(() => {
+            // If audioData is not set, set it from the last recording
+            if (!audioDataRef.current && chunksRef.current.length > 0) {
+              // Flatten all channel data into one Float32Array per channel
+              const channel1Data = chunksRef.current.map(c => Array.from(c.channel1)).flat();
+              const channel2Data = chunksRef.current.map(c => Array.from(c.channel2)).flat();
+              const finalChannel1 = new Float32Array(channel1Data);
+              const finalChannel2 = new Float32Array(channel2Data);
+              const finalSampleRate = actualSampleRateRef.current;
+              const wavBlob = encodeWav(finalChannel1, finalChannel2, finalSampleRate);
+              const wavUrl = URL.createObjectURL(wavBlob);
+              const storedPatientId = sessionStorage.getItem("patientId") || "unknown";
+              const timestamp = new Date().toISOString().replace(/\..*Z$/, "").replace(/:/g, "-");
+              const filename = `${storedPatientId}-${capitalize(recordingType)}-${timestamp}.wav`;
+              const data = { audioFileUrl: wavUrl, filename, recordingType };
+              setAudioData(data);
+              sessionStorage.setItem(`audioData_${recordingType}`, JSON.stringify(data));
+              sessionStorage.setItem(`recordingTime_${recordingType}`, "15");
+            }
+          }, 100);
+        }
+      }, 15_000); // Auto-stop after 15 seconds
     } catch (err) {
       console.error("Microphone access error:", err);
       setError("Microphone access denied.");

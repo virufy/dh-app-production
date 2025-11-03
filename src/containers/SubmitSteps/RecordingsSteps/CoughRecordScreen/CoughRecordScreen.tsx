@@ -68,6 +68,19 @@ const CoughRecordScreen: React.FC = () => {
   const handleContinue = () => {
     if (audioData) {
       setError(null);
+      // // If audioData is not set yet due to async auto-stop, wait briefly
+      // if (!audioData.audioFileUrl) {
+      //   setTimeout(() => {
+      //     if (audioData && audioData.audioFileUrl) {
+      //       navigate("/upload-complete", {
+      //         state: { ...audioData, nextPage: "/record-speech" },
+      //       });
+      //     } else {
+      //       setError(t("recordCough.error") || "Please record or upload an audio file first.");
+      //     }
+      //   }, 200);
+      //   return;
+      // }
       try {
         navigate("/upload-complete", {
           state: { ...audioData, nextPage: "/record-speech" },

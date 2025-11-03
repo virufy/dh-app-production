@@ -1,5 +1,5 @@
 // SpeechRecordScreen.tsx (refactored & RTL-aware skip button)
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import MinimumDurationModal from "../../../../components/RecordingControls/MinimumDurationModal";
@@ -39,10 +39,6 @@ import {
     // ...existing code...
 } from "./styles";
 
-/* ----------------- helper: t for static contexts ----------------- */
-function tStatic(key: string) {
-  return i18n.t ? (i18n.t(key) as string) : key;
-}
 
 const SpeechRecordScreen: React.FC = () => {
   const { t } = useTranslation();
@@ -63,13 +59,7 @@ const SpeechRecordScreen: React.FC = () => {
     };
   }, []);
 
-  const handleBack = () => navigate(-1);
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60).toString();
-    const secs = (seconds % 60).toString().padStart(2, "0");
-    return `${mins}:${secs}`;
-  };
+  // use navigate directly for back when needed
 
   /* ----------------- Stop Recording ----------------- */
   // stopRecording is provided by hook
