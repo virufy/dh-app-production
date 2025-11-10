@@ -37,7 +37,7 @@ const sessionPatientId = typeof window !== 'undefined' ? sessionStorage.getItem(
             <div
               style={{
                 minHeight: '100vh',
-                paddingBottom: '18px',
+                paddingBottom: '60px',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'flex-start',
@@ -45,12 +45,12 @@ const sessionPatientId = typeof window !== 'undefined' ? sessionStorage.getItem(
                 fontSize: baseFontSize,
                 fontWeight: 400,
                 letterSpacing: '0.02em',
-                lineHeight: 1.5,
+                lineHeight: 1.4,
               }}
             >
               <div
                 style={{
-                  padding: '1.7rem',
+                  padding: '1rem',
                   width: '100%',
                   maxWidth: '900px', // limit width for desktop view
                   margin: '0 auto',
@@ -191,15 +191,17 @@ const sessionPatientId = typeof window !== 'undefined' ? sessionStorage.getItem(
           justifyContent: 'center',
           background: 'transparent',
           zIndex: 100,
+          marginBottom: 0,
+          boxShadow: '0 -4px 6px -2px rgba(0, 0, 0, 0.05)',
         }}
       >
         <div
           style={{
             width: '100%',
-            maxWidth: '530px', // match page width
+            maxWidth: '530px',
             margin: '0 auto',
-            backgroundColor: '#3578de',  //#3578de
-            padding: '1rem',
+            backgroundColor: '#3578de',
+            padding: '0.75rem',
             borderTopLeftRadius: '12px',
             borderTopRightRadius: '12px',
             boxShadow: '0 -2px 8px rgba(0,0,0,0.1)',

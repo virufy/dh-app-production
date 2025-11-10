@@ -86,6 +86,10 @@ const CoughRecordScreen: React.FC = () => {
       audioFileUrl: audioData.audioFileUrl,
       deviceName: await getDeviceName(),
       userAgent: await generateUserAgent(),
+      involuntaryCough: involuntary, // Adding involuntary cough state
+      metadata: {
+        involuntaryCough: involuntary, // Including in metadata for future extensibility
+      }
     });
     navigate("/record-speech");
   };

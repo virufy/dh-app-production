@@ -16,6 +16,11 @@ interface UploadTask {
   audioFileUrl: string; // Blob URL
   deviceName: string;
   userAgent: string;
+  involuntaryCough?: boolean; // Optional field for cough recordings
+  metadata?: {
+    involuntaryCough?: boolean;
+    [key: string]: any;
+  };
 }
 
 const uploadQueue: UploadTask[] = [];
@@ -42,6 +47,7 @@ async function processUploadTask(task: UploadTask): Promise<void> {
         audioType: task.audioType,
         audioBase64: base64,
         deviceName: task.deviceName,
+        involuntaryCough: task.involuntaryCough || task.metadata?.involuntaryCough, // Include involuntary cough state in upload
       }),
     });
 

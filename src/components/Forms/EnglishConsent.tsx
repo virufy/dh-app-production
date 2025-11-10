@@ -5,17 +5,18 @@ const EnglishConsent: React.FC = () => {
     return (
         <div
             style={{
-                maxHeight: '300px',
+                height: '300px',
                 overflowY: 'auto',
                 border: '1px solid black',
-                padding: '1rem',
+                padding: '0.75rem',
                 backgroundColor: '#f9f9f9',
                 borderRadius: '8px',
                 fontSize: '12px',
-                lineHeight: 1.5,
+                lineHeight: 1.4,
                 whiteSpace: 'pre-line',
                 color: '#000',
-                fontWeight: 'normal'
+                fontWeight: 'normal',
+                marginBottom: '1rem'
             }}
         >
             <p style={{ textAlign: 'center' }}><b>Institutional Review Board (MBRU-IRB)
