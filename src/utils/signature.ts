@@ -28,11 +28,13 @@ async function getDeviceId() {
 export async function generateSignature() {
   const deviceId = await getDeviceId();
   const userUUID = getOrCreateUUID();
+  const deviceLabel = (localStorage.getItem("device_label") || "").toString() || null;
 
   // Payload without geolocation
   const payload = {
     uuid: userUUID,
     deviceId,
+    deviceLabel,
     timestamp: Date.now(),
   };
 

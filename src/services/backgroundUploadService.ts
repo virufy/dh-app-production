@@ -38,6 +38,7 @@ async function processUploadTask(task: UploadTask): Promise<void> {
       headers: {
         "Content-Type": "application/json",
         "x-unique-signature": signature,
+			"x-device-label": (localStorage.getItem("device_label") || "").toString(),
         "User-Agent": task.userAgent,
       },
       body: JSON.stringify({

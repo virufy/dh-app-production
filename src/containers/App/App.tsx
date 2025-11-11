@@ -8,6 +8,7 @@ import SpeechRecordScreen from "../SubmitSteps/RecordingsSteps/SpeechRecording";
 import CoughRecordScreen from "../SubmitSteps/RecordingsSteps/CoughRecordScreen";
 import ConsentScreen from "./ConsentPage";
 import ClinicalLogin from "./Clinical_Login";
+import SetupPage from "./SetupPage";
 
 //import ProtectedRoute from "../../components/ProtectedRoute";
 
@@ -35,6 +36,7 @@ const App: React.FC = () => {
       <Routes>
         {/* Each route's element is now wrapped with <ProtectedRoute> */}
   <Route path="/" element={<ClinicalLogin />} />
+        <Route path="/setup" element={<SetupPage />} />
         <Route path="/consent" element={<ConsentScreen />} />
         <Route path="/record-breath" element={<BreathRecordScreen />} />
         <Route path="/confirmation" element={<ConfirmationScreen />} />
