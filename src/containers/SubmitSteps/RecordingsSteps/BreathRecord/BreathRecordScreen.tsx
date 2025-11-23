@@ -49,7 +49,7 @@ const BreathRecordScreen: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const { isRecording, recordingTime, audioData, error, tooShort, startRecording, stopRecording, setError, resetTooShort, resetRecordingTime } =
+  const { isRecording, recordingTime, audioData, error, tooShort, startRecording, stopRecording, setError, resetTooShort} =
     useAudioRecorder(44100, "breath");
 
   // refs for dynamic header
@@ -117,17 +117,7 @@ const BreathRecordScreen: React.FC = () => {
     setCurrentTime(el.currentTime);
   };
 
-  /* ----------------- Retake ----------------- */
-  const handleRetake = async () => {
-    setIsPlaying(false);
-    if (audioRef.current) {
-      try { audioRef.current.pause(); } catch {}
-    }
-    await resetRecordingTime();
-  };
-
-  /* ----------------- Place Skip Button dynamically (RTL-aware) ----------------- */
-  // SkipButton component handles placement and RTL
+ 
 
   return (
     <>
@@ -175,6 +165,7 @@ const BreathRecordScreen: React.FC = () => {
             {t("recordBreath.instruction3_part3")}
           </InstructionStep>
 
+          {/* Use local strict formatTime */}
           <TimerDisplay seconds={recordingTime} formatTime={formatTime} color={recordingTime === 0 ? '#fff' : '#3578de'} />
 
           <ButtonRow>
@@ -210,7 +201,17 @@ const BreathRecordScreen: React.FC = () => {
                 disabled={!audioData}
                 style={{ opacity: !audioData ? 0.6 : 1, width: "56px", height: "56px" }}
               >
-                <img src={isPlaying ? PauseIcon : PlayIcon} alt="play" width={24} height={24} />
+                <img 
+                  src={isPlaying ? PauseIcon : PlayIcon} 
+                  alt="play" 
+                  width={24} 
+                  height={24} 
+                  style={{
+                    // IF BUTTON IS BLUE (audioData exists), TURN ICON WHITE.
+                    filter: audioData ? "brightness(0) invert(1)" : "none",
+                    marginLeft: isPlaying ? 0 : "3px"
+                  }}
+                />
               </CircleButton>
               <ButtonLabel>{t("uploadComplete.play")}</ButtonLabel>
             </div>

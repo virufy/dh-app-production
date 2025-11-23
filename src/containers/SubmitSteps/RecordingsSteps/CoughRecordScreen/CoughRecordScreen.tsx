@@ -54,7 +54,7 @@ const CoughRecordScreen: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const { isRecording, recordingTime, audioData, error, tooShort, startRecording, stopRecording, setError, resetTooShort, resetRecordingTime } =
+  const { isRecording, recordingTime, audioData, error, tooShort, startRecording, stopRecording, setError, resetTooShort} =
     useAudioRecorder(44100, "cough");
 
   const [involuntary, setInvoluntary] = useState(false);
@@ -70,7 +70,6 @@ const CoughRecordScreen: React.FC = () => {
 
   
 
-  /* ----------------- Submit (background upload) ----------------- */
   const handleSubmit = async () => {
     if (!audioData) {
       setError(t("recordCough.error") || "Please record first.");
@@ -86,9 +85,9 @@ const CoughRecordScreen: React.FC = () => {
       audioFileUrl: audioData.audioFileUrl,
       deviceName: await getDeviceName(),
       userAgent: await generateUserAgent(),
-      involuntaryCough: involuntary, // Adding involuntary cough state
+      involuntaryCough: involuntary, 
       metadata: {
-        involuntaryCough: involuntary, // Including in metadata for future extensibility
+        involuntaryCough: involuntary, 
       }
     });
     navigate("/record-speech");
@@ -130,16 +129,7 @@ const CoughRecordScreen: React.FC = () => {
     }
   };
 
-  /* ----------------- Retake ----------------- */
-  const handleRetake = async () => {
-    if (audioRef.current) {
-      try { audioRef.current.pause(); } catch {}
-    }
-    await resetRecordingTime();
-  };
 
-  /* ----------------- Place Skip Button dynamically (RTL-aware) ----------------- */
-  // SkipButton component handles placement and RTL
 
   return (
     <>
@@ -147,7 +137,6 @@ const CoughRecordScreen: React.FC = () => {
 
       <Container>
         <Content>
-          {/* attach headerRef to the local Header wrapper so we can calculate position */}
           <Header ref={headerRef}>
             <SharedBackButton component={BackButton} ariaLabel={t("recordCough.goBackAria")} isArabic={isArabic}>
               <img src={BackIcon} alt={t("recordCough.goBackAlt")} width={24} height={24} style={{ transform: isArabic ? "rotate(180deg)" : "none" }} />
@@ -191,8 +180,8 @@ const CoughRecordScreen: React.FC = () => {
 
           <TimerDisplay seconds={recordingTime} formatTime={formatTime} color={recordingTime === 0 ? '#fff' : '#3578de'} />
 
-          {/* Single three-button row: Record, Stop, Play */}
           <ButtonRow>
+            {/* RECORD BUTTON */}
             <div style={{ textAlign: "center" }}>
               <CircleButton
                 bg={isRecording ? "#dde9ff" : "#3578de"}
@@ -205,6 +194,8 @@ const CoughRecordScreen: React.FC = () => {
               </CircleButton>
               <ButtonLabel>{t("recordCough.recordButton")}</ButtonLabel>
             </div>
+
+            {/* STOP BUTTON */}
             <div style={{ textAlign: "center" }}>
               <CircleButton
                 bg={isRecording ? "#3578de" : "#BFD3F9"}
@@ -217,6 +208,8 @@ const CoughRecordScreen: React.FC = () => {
               </CircleButton>
               <ButtonLabel>{t("recordCough.stopButton")}</ButtonLabel>
             </div>
+
+            {/* PLAY BUTTON (FIXED ICON COLOR) */}
             <div style={{ textAlign: "center" }}>
               <CircleButton
                 bg={audioData ? "#3578de" : "#DDE9FF"}
@@ -225,16 +218,27 @@ const CoughRecordScreen: React.FC = () => {
                 disabled={!audioData}
                 style={{ opacity: !audioData ? 0.6 : 1, width: "56px", height: "56px" }}
               >
-                <img src={isPlaying ? PauseIcon : PlayIcon} alt="play" width={24} height={24} />
+                <img 
+                  src={isPlaying ? PauseIcon : PlayIcon} 
+                  alt="play" 
+                  width={24} 
+                  height={24} 
+                  style={{
+                    // IF BUTTON IS BLUE (audioData exists), TURN ICON WHITE.
+                    filter: audioData ? "brightness(0) invert(1)" : "none",
+                    // Center the play triangle slightly
+                    marginLeft: isPlaying ? 0 : "3px"
+                  }}
+                />
               </CircleButton>
               <ButtonLabel>{t("uploadComplete.play")}</ButtonLabel>
             </div>
           </ButtonRow>
 
-          {/* Filename and seek bar below buttons */}
           <FileRow>
             <span>{audioData?.filename || t("recordCough.defaultFilename")}</span>
           </FileRow>
+          
           <Slider
             type="range"
             min="0"
@@ -245,12 +249,12 @@ const CoughRecordScreen: React.FC = () => {
             aria-label={t("uploadComplete.sliderAria")}
             disabled={!audioData}
           />
+          
+          {/* Time Row using local formatTime */}
           <TimeRow>
             <span>{formatTime(currentTime)}</span>
             <span>- {formatTime(Math.max((duration || 0) - currentTime, 0))}</span>
           </TimeRow>
-
-          
 
           <CheckboxRow>
             <Label htmlFor="involuntary" style={{ userSelect: "none" }}>{t("recordCough.checkboxLabel")}</Label>
