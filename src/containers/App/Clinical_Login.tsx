@@ -216,7 +216,8 @@ import {
 
 const API_BASE =
   process.env.REACT_APP_API_BASE ??
-  'https://x0ia47e70k.execute-api.me-central-1.amazonaws.com/prod';
+  'https://fc8eht392h.execute-api.me-central-1.amazonaws.com/test';
+
 
 const Clinical_Login: React.FC = () => {
   const { t, i18n } = useTranslation();

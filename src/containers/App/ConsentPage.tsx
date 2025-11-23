@@ -121,7 +121,7 @@ const sessionPatientId = typeof window !== 'undefined' ? sessionStorage.getItem(
                     {t('consent.dubaiHealthDesc')}
                   </span>
                   <Spacer height="0.5rem" />
-                  <a
+                  {/* <a
                     href={
                       i18n.language === 'ar'
                         ? 'https://drive.google.com/file/d/1YdHC4Wu0zs8dWwBWdYpEyfYTjsJpYOTi/view'
@@ -132,7 +132,7 @@ const sessionPatientId = typeof window !== 'undefined' ? sessionStorage.getItem(
                     style={{ color: '#007bff' }}
                   >
                     {t('consent.readFull')}
-                  </a>
+                  </a> */}
                   <Spacer height="1rem" />
                   {i18n.language === 'ar' ? <ArabicConsent /> : <EnglishConsent />}
                 </div>

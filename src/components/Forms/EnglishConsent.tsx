@@ -45,7 +45,7 @@ const EnglishConsent: React.FC = () => {
 
 
             <p><b> Phone: </b> <span style={{ color: 'blue' }}> +971527689649</span></p>
-            <p><b>Sites where the study will be conducted: </b> Al Barsha Health Centre, Nadd Al
+            <p><b>Sites where the study will be conducted: </b> Al Barsha Health Center, Nadd Al
                 Hammar Health Center</p>
             <p>
                 <b>You are invited to participate in this research study conducted at Dubai

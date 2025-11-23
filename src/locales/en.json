@@ -10,8 +10,8 @@
     },
     "hospital_label": "Hospital Name",
     "hospital_options": {
-      "barsha": "Al Barsha Health Centre",
-      "nadd": "Nadd Al Hammar Health Centre"
+      "barsha": "Al Barsha Health Center",
+      "nadd": "Nadd Al Hammar Health Center"
     },
     "submit_button": "Next",
     "patient_exists_title": "Duplicate Patient ID",

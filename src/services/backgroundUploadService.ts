@@ -4,9 +4,11 @@ import { generateSignature } from "../utils/signature";
 import { blobUrlToBase64 } from "../utils/audioUtils"; // You'll create this or move existing
 import { getDeviceName, generateUserAgent } from "../utils/deviceUtils"; // You'll create this or move existing
 
+//test api base
 const API_BASE =
   process.env.REACT_APP_API_BASE ??
-  "https://tg3he2qa23.execute-api.me-central-1.amazonaws.com/prod";
+  "https://tvw8a1lqyd.execute-api.me-central-1.amazonaws.com/test";
+
 
 interface UploadTask {
   patientId: string;
