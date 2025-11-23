@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
- export const CheckboxRow = styled.div`
+export const CheckboxRow = styled.div`
   display: flex;
   align-items: center;
   margin: 1rem 0;
@@ -141,17 +141,47 @@ export const TimeRow = styled.div`
   margin-right: auto;
 `;
 
-export const PlayButton = styled.button`
+// --- UPDATED PLAY BUTTON WITH FIX ---
+export const PlayButton = styled.button<{ isPlaying?: boolean }>`
   width: 7.5rem;
   height: 7.5rem;
   border-radius: 50%;
-  background-color: #dde9ff;
   border: none;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   margin: 1.5rem auto 3rem;
+  transition: all 0.2s ease;
+
+  /* 1. Background Logic - Blue background when stopped (like Record button), stays blue when playing */
+  background-color: #3578de;
+
+  /* 2. Icon Color Logic - Using direct child selector (& > img) */
+  & > img {
+    transition: filter 0.2s ease;
+    display: block;
+    width: 45px;
+    height: 45px;
+    object-fit: contain;
+    
+    /* 
+       This filter turns the icon WHITE both when playing and when stopped.
+       When stopped: white play icon on blue background (like Record button)
+       When playing: white pause icon on blue background
+       brightness(0) -> Turns icon Black
+       invert(1)     -> Turns Black to White
+       saturate(0)   -> Removes color
+    */
+    filter: brightness(0) saturate(0) invert(1);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 `;
 
 export const ButtonsWrapper = styled.div`

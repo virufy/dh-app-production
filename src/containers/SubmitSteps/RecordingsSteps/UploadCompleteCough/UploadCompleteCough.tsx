@@ -26,19 +26,59 @@ import ArrowLeftIcon from "../../../../assets/icons/arrowLeft.svg";
 import PlayIcon from "../../../../assets/icons/play.svg";
 import PauseIcon from "../../../../assets/icons/pause.svg";
 import i18n from "../../../../i18n";
+import { generateSignature } from "../../../../utils/signature";
 import AppHeader from "../../../../components/AppHeader";
-
-// Import the new background upload service and utility functions
-import { addUploadTask } from "../../../../services/backgroundUploadService"; // Adjust path as needed
-import { logDeviceDebugInfo, getDeviceName, generateUserAgent } from "../../../../utils/deviceUtils"; // Adjust path as needed
-// blobUrlToBase64 is no longer directly imported here as it's used internally by the background service
 
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
+const API_BASE =
+  process.env.REACT_APP_API_BASE ??
+  "https://tg3he2qa23.execute-api.me-central-1.amazonaws.com/prod";
+const NAV_DELAY_MS = 2000;
+
 type RecType = "cough" | "speech" | "breath" | "unknown";
 
-// NAV_DELAY_MS is no longer needed as navigation is immediate
-// const NAV_DELAY_MS = 2000;
+async function blobUrlToBase64(url: string): Promise<{ base64: string; contentType: string }> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Fetch failed ${res.status}`);
+  const contentType = res.headers.get("Content-Type") || "audio/wav";
+  const buf = await res.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return { base64: btoa(binary), contentType };
+}
+
+/* ==== Debug helpers ==== */
+async function logDeviceDebugInfo(): Promise<void> {
+  try {
+    // @ts-ignore
+    const uad = navigator.userAgentData;
+    // @ts-ignore
+    if (uad && typeof uad.getHighEntropyValues === 'function') {
+      // @ts-ignore
+      await uad.getHighEntropyValues(['model', 'platform', 'platformVersion']);
+    }
+  } catch (err) {
+    // ignore
+  }
+}
+
+async function getDeviceName(): Promise<string> {
+  if (typeof navigator === 'undefined') return 'Unknown Device';
+  const ua = navigator.userAgent || '';
+  
+  if (/Android/i.test(ua)) return 'Android Device';
+  if (/iPhone|iPad/i.test(ua)) return 'iOS Device';
+  if (/Windows/i.test(ua)) return 'Windows PC';
+  if (/Macintosh/i.test(ua)) return 'Mac';
+  
+  return 'Unknown Device';
+}
+
+async function generateUserAgent(): Promise<string> {
+  return navigator.userAgent;
+}
 
 const UploadCompleteCough: React.FC = () => {
   const navigate = useNavigate();
@@ -67,14 +107,12 @@ const UploadCompleteCough: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [errMsg, setErrMsg] = useState<string | null>(null);
-  // Renamed isUploading to isSubmitting to reflect local state only
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  // uploadErr and successMsg are no longer displayed here as upload is backgrounded
-  // const [uploadErr, setUploadErr] = useState<string | null>(null);
-  // const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadErr, setUploadErr] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const storedPatientId = patientId || sessionStorage.getItem("patientId") || "";
-
+  
   let finalRecordingType: RecType =
     recordingType && recordingType !== "unknown"
       ? recordingType
@@ -143,11 +181,21 @@ const UploadCompleteCough: React.FC = () => {
     };
   }, [audioFileUrl]);
 
+  // ---- STRICT TIME FORMATTER (INTEGER ONLY) ----
   const formatTime = (seconds: number) => {
-    if (!isFinite(seconds) || isNaN(seconds) || seconds < 0) return "0:00";
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+    if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
+
+    // Math.trunc() removes any fractional digits. 
+    // e.g. 3.999 becomes 3. 
+    const totalSeconds = Math.trunc(seconds);
+
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+
+    // Ensure seconds are zero-padded (e.g. "5" -> "05")
+    const paddedSecs = secs < 10 ? `0${secs}` : `${secs}`;
+
+    return `${mins}:${paddedSecs}`;
   };
 
   const handlePlayPause = async () => {
@@ -185,10 +233,10 @@ const UploadCompleteCough: React.FC = () => {
     if (process.env.NODE_ENV !== 'production') {
       logDeviceDebugInfo().catch(() => { });
     }
+    const deviceName = await getDeviceName();
+    const userAgent = await generateUserAgent();
 
     if (!nextPage) {
-      setErrMsg("Navigation target missing. Please restart the process.");
-      console.error("No nextPage provided in state");
       return;
     }
     if (!audioFileUrl) {
@@ -196,63 +244,71 @@ const UploadCompleteCough: React.FC = () => {
       return;
     }
     if (!storedPatientId) {
-      setErrMsg("Patient ID missing from earlier step. Please go back and enter the ID.");
+      setErrMsg("Patient ID missing.");
       return;
     }
 
-    setIsSubmitting(true); // Indicate that the submit action has been initiated
+    setUploadErr(null);
+    setSuccessMsg(null);
+    setIsUploading(true);
 
     try {
-      const deviceName = await getDeviceName();
-      const userAgent = await generateUserAgent();
+      const { base64 } = await blobUrlToBase64(audioFileUrl);
       const timestamp = new Date().toISOString();
+      
+      // Always generate filename with patient ID at the start: {patientId}-{type}-{timestamp}.wav
+      // Format matches S3: AB-1064-cough-2025-11-23T09:17:39.558Z.wav
+      const typeLower = finalRecordingType.toLowerCase();
+      const generatedFilename = `${storedPatientId}-${typeLower}-${timestamp}.wav`;
 
-      const generatedFilename = filename && filename.includes(finalRecordingType)
-        ? filename
-        : `${storedPatientId}-${capitalize(finalRecordingType)}-${timestamp.replace(/\..*Z$/, "").replace(/:/g, "-")}.wav`;
+      const signature = await generateSignature();
 
-      // Add task to background upload queue
-      addUploadTask({
-        patientId: storedPatientId,
-        filename: generatedFilename,
-        timestamp,
-        audioType: finalRecordingType,
-        audioFileUrl: audioFileUrl, // Pass the blob URL directly
-        deviceName,
-        userAgent,
+      const res = await fetch(`${API_BASE}/cough-upload`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-unique-signature": signature,
+          "User-Agent": userAgent,
+        },
+        body: JSON.stringify({
+          patientId: storedPatientId,
+          filename: generatedFilename,
+          timestamp,
+          audioType: finalRecordingType,
+          audioBase64: base64,
+          deviceName,
+        }),
       });
 
-      // Navigate immediately after adding to queue
-      const nextNextPage = getNextStep(nextPage);
-      navigate(nextPage, { state: { nextPage: nextNextPage } });
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        throw new Error(t("uploadComplete.uploadError") || "Upload failed.");
+      }
 
+      setSuccessMsg("Successfully uploaded.");
+
+      setTimeout(() => {
+        const nextNextPage = getNextStep(nextPage);
+        navigate(nextPage, { state: { nextPage: nextNextPage } });
+      }, NAV_DELAY_MS);
     } catch (e: any) {
-      console.error("Error preparing for background upload:", e);
-      setErrMsg(
-        e?.message === "Failed to fetch"
-          ? t("uploadComplete.networkError") || "Network error: Unable to reach the server."
-          : e?.message || t("uploadComplete.uploadError") || "Failed to initiate upload process."
-      );
-      setIsSubmitting(false); // Allow re-submission if initiation failed
+      setUploadErr(t("uploadComplete.uploadError") || "Upload failed.");
+    } finally {
+      setIsUploading(false);
     }
-    // No finally block to set isSubmitting(false) or show successMsg,
-    // as navigation happens immediately.
   };
 
   const getNextStep = (currentPage: string) => {
     switch (currentPage) {
-      case "/record-speech":
-        return "/upload-complete"; // Assuming this is the placeholder for the next step after speech
-      case "/record-breath":
-        return "/upload-complete"; // Assuming this is the placeholder for the next step after breath
-      default:
-        return "/confirmation"; // Or whatever your final confirmation/dashboard page is
+      case "/record-speech": return "/upload-complete";
+      case "/record-breath": return "/upload-complete";
+      default: return "/confirmation";
     }
   };
 
   return (
    <>
-         < AppHeader maxWidth={490} locale={isArabic ? "ar" : "en"}/>
+    <AppHeader maxWidth={490} locale={isArabic ? "ar" : "en"}/> 
     <PageWrapper>
       <ContentWrapper>
         <audio ref={audioRef} src={audioFileUrl || ""} preload="auto" />
@@ -305,8 +361,10 @@ const UploadCompleteCough: React.FC = () => {
           />
 
           <TimeRow>
+            {/* Current Time: 0:00 */}
             <span>{formatTime(currentTime)}</span>
-            <span>- {formatTime(Math.max(duration - currentTime, 0))}</span>
+            {/* Remaining Time: - 0:00 */}
+            <span>- {formatTime(Math.max(0, duration - currentTime))}</span>
           </TimeRow>
 
           {errMsg && (
@@ -315,8 +373,7 @@ const UploadCompleteCough: React.FC = () => {
             </div>
           )}
 
-          {/* Removed upload status messages as they are now handled in the background */}
-          {/* {isUploading && (
+          {isUploading && (
             <div style={{ color: "#555", marginTop: 8 }}>
               {t("uploadComplete.uploading", "Uploading...")}
             </div>
@@ -330,10 +387,10 @@ const UploadCompleteCough: React.FC = () => {
             <div style={{ color: "#0a0", marginTop: 8, fontWeight: 600 }}>
               {successMsg}
             </div>
-          )} */}
+          )}
         </ControlsWrapper>
 
-        <PlayButton onClick={handlePlayPause} disabled={!audioFileUrl || duration === 0 || isSubmitting}>
+        <PlayButton onClick={handlePlayPause} disabled={!audioFileUrl || duration === 0 || isUploading} isPlaying={isPlaying}>
           <img
             src={isPlaying ? PauseIcon : PlayIcon}
             alt={isPlaying ? t("uploadComplete.pause") : t("uploadComplete.play")}
@@ -344,11 +401,11 @@ const UploadCompleteCough: React.FC = () => {
         </PlayButton>
 
         <ButtonsWrapper>
-          <RetakeButton onClick={handleRetake} disabled={isSubmitting}>
+          <RetakeButton onClick={handleRetake} disabled={isUploading}>
             {t("uploadComplete.retake")}
           </RetakeButton>
-          <SubmitButton onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? t("uploadComplete.submitting", "Submitting...") : t("uploadComplete.submit")}
+          <SubmitButton onClick={handleSubmit} disabled={isUploading}>
+            {isUploading ? t("uploadComplete.submitting", "Submitting...") : t("uploadComplete.submit")}
           </SubmitButton>
         </ButtonsWrapper>
 
@@ -368,23 +425,6 @@ const UploadCompleteCough: React.FC = () => {
 };
 
 export default UploadCompleteCough;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
