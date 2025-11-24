@@ -57,7 +57,10 @@ const SpeechRecordScreen: React.FC = () => {
 
   // refs for any local header measurements (kept for layout consistency)
   const headerRef = useRef<HTMLDivElement | null>(null);
-
+// Scroll to top when the page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   /* ----------------- Cleanup resources ----------------- */
   useEffect(() => {
     return () => {

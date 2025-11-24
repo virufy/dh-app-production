@@ -61,7 +61,10 @@ const CoughRecordScreen: React.FC = () => {
 
   // Refs for header
   const headerRef = useRef<HTMLDivElement | null>(null);
-
+// --- CHANGE 1: Scroll to top on component mount ---
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   useEffect(() => {
     return () => {
       // hook handles cleanup

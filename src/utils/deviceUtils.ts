@@ -99,9 +99,9 @@ export async function logDeviceDebugInfo(): Promise<void> {
   export async function generateUserAgent(): Promise<string> {
     const deviceName = await getDeviceName();
     const ua = navigator.userAgent || '';
-    const isMobile = /Mobile|Android|iPhone|iPad/i.test(ua);
-    const isTablet = /iPad|Tablet/i.test(ua) || (deviceName.includes('Tab') && /Android/i.test(deviceName));
-    const isDesktop = !isMobile && !isTablet;
+    // const isMobile = /Mobile|Android|iPhone|iPad/i.test(ua);
+    // const isTablet = /iPad|Tablet/i.test(ua) || (deviceName.includes('Tab') && /Android/i.test(deviceName));
+    // const isDesktop = !isMobile && !isTablet;
 
     // Browser versions (modern, realistic)
     const chromeVersions = ['114.0.5735.196', '120.0.6099.144', '122.0.6261.94'];

@@ -2,7 +2,7 @@
 
 import { generateSignature } from "../utils/signature";
 import { blobUrlToBase64 } from "../utils/audioUtils"; // You'll create this or move existing
-import { getDeviceName, generateUserAgent } from "../utils/deviceUtils"; // You'll create this or move existing
+// import { getDeviceName, generateUserAgent } from "../utils/deviceUtils"; // You'll create this or move existing
 
 //test api base
 const API_BASE =

@@ -54,7 +54,10 @@ const BreathRecordScreen: React.FC = () => {
 
   // refs for dynamic header
   const headerRef = useRef<HTMLDivElement | null>(null);
-
+// Scroll to top when the page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   useEffect(() => {
     return () => {
       // hook handles cleanup
