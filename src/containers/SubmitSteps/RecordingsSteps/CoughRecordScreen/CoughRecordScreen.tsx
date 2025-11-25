@@ -1,4 +1,3 @@
-// CoughRecordScreen.tsx (refactored & skip button repositioning — RTL fix)
 import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -40,10 +39,6 @@ import {
   FooterLink,
 } from "./styles";
 
-/* ----------------- Minimum Duration Modal ----------------- */
-
-/* ----------------- helper: t without importing i18next directly ----------------- */
-// ...existing code...
 
 const CoughRecordScreen: React.FC = () => {
   const { t } = useTranslation();
@@ -59,9 +54,8 @@ const CoughRecordScreen: React.FC = () => {
 
   const [involuntary, setInvoluntary] = useState(false);
 
-  // Refs for header
+  
   const headerRef = useRef<HTMLDivElement | null>(null);
-// --- CHANGE 1: Scroll to top on component mount ---
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -227,9 +221,7 @@ const CoughRecordScreen: React.FC = () => {
                   width={24} 
                   height={24} 
                   style={{
-                    // IF BUTTON IS BLUE (audioData exists), TURN ICON WHITE.
                     filter: audioData ? "brightness(0) invert(1)" : "none",
-                    // Center the play triangle slightly
                     marginLeft: isPlaying ? 0 : "3px"
                   }}
                 />

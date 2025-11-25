@@ -101,7 +101,7 @@ const sessionPatientId = typeof window !== 'undefined' ? sessionStorage.getItem(
                   </h2>
                 </div>
 
-                {/* Main Text */}
+                
                 <p
                   style={{
                     marginTop: '3rem',
@@ -121,18 +121,7 @@ const sessionPatientId = typeof window !== 'undefined' ? sessionStorage.getItem(
                     {t('consent.dubaiHealthDesc')}
                   </span>
                   <Spacer height="0.5rem" />
-                  {/* <a
-                    href={
-                      i18n.language === 'ar'
-                        ? 'https://drive.google.com/file/d/1YdHC4Wu0zs8dWwBWdYpEyfYTjsJpYOTi/view'
-                        : 'https://drive.google.com/file/d/1rXh2N6-EFfsVo_0xeSKXqGRzMTxtw5cE/view'
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: '#007bff' }}
-                  >
-                    {t('consent.readFull')}
-                  </a> */}
+                
                   <Spacer height="1rem" />
                   {i18n.language === 'ar' ? <ArabicConsent /> : <EnglishConsent />}
                 </div>
@@ -180,7 +169,7 @@ const sessionPatientId = typeof window !== 'undefined' ? sessionStorage.getItem(
         </div>
       </ConsentContent>
 
-      {/* Sticky Footer (now limited to page width) */}
+      {/* Sticky Footer limited to page width */}
       <div
         style={{
           position: 'fixed',

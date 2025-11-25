@@ -41,8 +41,6 @@ const App: React.FC = () => {
         <Route path="/record-speech" element={<SpeechRecordScreen />} />
         <Route path="/record-coughs" element={<CoughRecordScreen />} />
         <Route path="/clinical-login" element={<ClinicalLogin />} />
-        {/* Upload-complete page removed; submission happens inline on recording screens */}
-        {/* Catch all invalid routes and redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>

@@ -21,7 +21,7 @@ function getOrCreateUUID(): string {
 async function getDeviceId() {
   const fp = await FingerprintJS.load();
   const result = await fp.get();
-  return result.visitorId; // unique per browser/device
+  return result.visitorId;
 }
 
 // --- Generate encrypted signature (geolocation fully removed) ---
@@ -29,20 +29,19 @@ export async function generateSignature() {
   const deviceId = await getDeviceId();
   const userUUID = getOrCreateUUID();
 
-  // Payload without geolocation
+
   const payload = {
     uuid: userUUID,
     deviceId,
     timestamp: Date.now(),
   };
 
-  // Log the clean payload
+
   console.log("Signature payload:", payload);
 
-  // Encrypt and return
+
   const signature = CryptoJS.AES.encrypt(JSON.stringify(payload), SECRET).toString();
 
-  // Log signature too
   console.log("Generated Signature:", signature);
 
   return signature;

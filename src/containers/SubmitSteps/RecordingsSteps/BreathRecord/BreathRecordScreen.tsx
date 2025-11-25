@@ -1,9 +1,8 @@
-// BreathRecordScreen.tsx (refactored & RTL-aware skip button)
 import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-// Assets
+
 import keepDistance from "../../../../assets/images/keepDistance.png";
 import mouthBreathDistance from "../../../../assets/images/mouthBreathDistance.png";
 import BackIcon from "../../../../assets/icons/arrowLeft.svg";
@@ -51,8 +50,6 @@ const BreathRecordScreen: React.FC = () => {
   const [duration, setDuration] = useState(0);
   const { isRecording, recordingTime, audioData, error, tooShort, startRecording, stopRecording, setError, resetTooShort} =
     useAudioRecorder(44100, "breath");
-
-  // refs for dynamic header
   const headerRef = useRef<HTMLDivElement | null>(null);
 // Scroll to top when the page loads
   useEffect(() => {
@@ -210,7 +207,6 @@ const BreathRecordScreen: React.FC = () => {
                   width={24} 
                   height={24} 
                   style={{
-                    // IF BUTTON IS BLUE (audioData exists), TURN ICON WHITE.
                     filter: audioData ? "brightness(0) invert(1)" : "none",
                     marginLeft: isPlaying ? 0 : "3px"
                   }}

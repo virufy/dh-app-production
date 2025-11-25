@@ -23,7 +23,7 @@ import { Slider, TimeRow, FileRow } from "../UploadCompleteCough/styles";
 import { addUploadTask } from "../../../../services/backgroundUploadService";
 import { getDeviceName, generateUserAgent } from "../../../../utils/deviceUtils";
 
-// Styled comps
+
 import {
   ActionButtons,
   BackButton,
@@ -39,7 +39,7 @@ import {
   InstructionText,
   StepCircle,
   StepWrapper,
-    // ...existing code...
+    
 } from "./styles";
 
 
@@ -55,26 +55,18 @@ const SpeechRecordScreen: React.FC = () => {
   const { isRecording, recordingTime, audioData, error, tooShort, startRecording, stopRecording, setError, resetTooShort} =
     useAudioRecorder(44100, "speech");
 
-  // refs for any local header measurements (kept for layout consistency)
   const headerRef = useRef<HTMLDivElement | null>(null);
-// Scroll to top when the page loads
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-  /* ----------------- Cleanup resources ----------------- */
+  
   useEffect(() => {
     return () => {
       // hook handles cleanup
     };
   }, []);
 
-  // use navigate directly for back when needed
-
-  /* ----------------- Stop Recording ----------------- */
-  // stopRecording is provided by hook
-
-  /* ----------------- Start Recording ----------------- */
-  // startRecording is provided by hook
 
  /* ----------------- Submit (background upload) ----------------- */
  const handleSubmit = async () => {
@@ -226,7 +218,7 @@ return (
                 width={24} 
                 height={24} 
                 style={{
-                  // IF BUTTON IS BLUE (audioData exists), TURN ICON WHITE.
+      
                   filter: audioData ? "brightness(0) invert(1)" : "none",
                   marginLeft: isPlaying ? 0 : "3px"
                 }}
