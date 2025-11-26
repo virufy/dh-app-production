@@ -278,7 +278,7 @@ export function useAudioRecorder(targetSampleRate = 44100, recordingType: RecTyp
       const filename = `${storedPatientId}-${capitalize(recordingType)}-${timestamp}.wav`;
 
       const elapsedSeconds = startTimeRef.current != null ? Math.floor((Date.now() - startTimeRef.current) / 1000) : recordingTime;
-      const isMaxDuration = elapsedSeconds === 15;
+      const isMaxDuration = elapsedSeconds === 40;
       
       if (elapsedSeconds < 3 && !isMaxDuration) {
         setTooShort(true);
@@ -402,9 +402,9 @@ export function useAudioRecorder(targetSampleRate = 44100, recordingType: RecTyp
         }
         
         setIsRecording(false);
-        setRecordingTime(15);
+        setRecordingTime(40);
         chunksRef.current = []; // Clear ref
-      }, 15_000);
+      }, 40_000);
 
     } catch (err) {
       console.error("Recording error:", err);
