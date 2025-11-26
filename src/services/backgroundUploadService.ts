@@ -1,12 +1,18 @@
 
 import { generateSignature } from "../utils/signature";
 import { blobUrlToBase64 } from "../utils/audioUtils"; 
-
+import { COUGH_API_URL } from '../config';
 
 //test api base
-const API_BASE =
-  process.env.REACT_APP_API_BASE ??
-  "https://tvw8a1lqyd.execute-api.me-central-1.amazonaws.com/test";
+// const API_BASE =
+//   process.env.REACT_APP_API_BASE ??
+//   "https://tvw8a1lqyd.execute-api.me-central-1.amazonaws.com/test";
+
+
+//prod api base
+// const API_BASE =
+//   process.env.REACT_APP_API_BASE ??
+//   "https://uq9k4jco32.execute-api.me-central-1.amazonaws.com/test;
 
 
 interface UploadTask {
@@ -34,7 +40,7 @@ async function processUploadTask(task: UploadTask): Promise<void> {
     const { base64 } = await blobUrlToBase64(task.audioFileUrl);
     const signature = await generateSignature();
 
-    const res = await fetch(`${API_BASE}/cough-upload`, { 
+    const res = await fetch(`${COUGH_API_URL}/cough-upload`, { 
       method: "POST",
       headers: {
         "Content-Type": "application/json",

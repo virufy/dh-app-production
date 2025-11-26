@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { generateSignature } from "../../utils/signature";
 import AppHeader from '../../components/AppHeader';
+import { PATIENT_API_URL } from '../../config';
 import {
   pageContainer,
   title,
@@ -16,10 +17,15 @@ import {
   logoStyle,
 } from './style';
 
-const API_BASE =
-  process.env.REACT_APP_API_BASE ??
-  'https://fc8eht392h.execute-api.me-central-1.amazonaws.com/test';
+//test api base
+// const API_BASE =
+//   process.env.REACT_APP_API_BASE ??
+//   'https://fc8eht392h.execute-api.me-central-1.amazonaws.com/test';
 
+//prod api base
+// const API_BASE =
+//   process.env.REACT_APP_API_BASE ??
+//   'https://rb380z2ini.execute-api.me-central-1.amazonaws.com/test';
 
 const Clinical_Login: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -79,7 +85,7 @@ const Clinical_Login: React.FC = () => {
         }
 
         // 🧠 Add timestamp to avoid CloudFront/API Gateway caching
-        const url = new URL(`${API_BASE}/status/last-patient`);
+        const url = new URL(`${PATIENT_API_URL}/status/last-patient`);
         url.searchParams.set('hospital', hospitalCode);
         url.searchParams.set('nocache', Date.now().toString());
 

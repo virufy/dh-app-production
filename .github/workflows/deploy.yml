@@ -1,0 +1,99 @@
+name: Multi-Env CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - testing  # Deploy to Test
+      - main     # Deploy to Prod
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  # ======================================================
+  # JOB 1: DEPLOY TO TEST (Branch: testing)
+  # ======================================================
+  deploy-test:
+    name: Deploy to Test
+    if: github.ref == 'refs/heads/testing'
+    runs-on: ubuntu-latest
+    environment: Testing
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm install
+
+      # --- HERE IS THE MAGIC FOR TEST ---
+      - name: Build for Test
+        run: npm run build
+        env:
+          # We map the TEST secrets to the React Environment Variables
+          REACT_APP_COUGH_API_URL: ${{ secrets.API_TEST_COUGH }}
+          REACT_APP_PATIENT_API_URL: ${{ secrets.API_TEST_PATIENT }}
+          # React will bake these strings into the build folder
+
+      - name: Configure AWS Credentials (TEST)
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TEST }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Sync to S3 (TEST)
+        run: |
+          aws s3 sync build/ s3://${{ secrets.S3_BUCKET_TEST }} --delete
+
+      - name: Invalidate CloudFront (TEST)
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_ID_TEST }} --paths "/*"
+
+  # ======================================================
+  # JOB 2: DEPLOY TO PROD (Branch: main)
+  # ======================================================
+  deploy-prod:
+    name: Deploy to Prod
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: Production
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm install
+
+      # --- HERE IS THE MAGIC FOR PROD ---
+      - name: Build for Prod
+        run: npm run build
+        env:
+          # We map the PROD secrets to the SAME React Environment Variables
+          REACT_APP_COUGH_API_URL: ${{ secrets.API_PROD_COUGH }}
+          REACT_APP_PATIENT_API_URL: ${{ secrets.API_PROD_PATIENT }}
+
+      - name: Configure AWS Credentials (PROD)
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_PROD }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Sync to S3 (PROD)
+        run: |
+          aws s3 sync build/ s3://${{ secrets.S3_BUCKET_PROD }} --delete
+
+      - name: Invalidate CloudFront (PROD)
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_ID_PROD }} --paths "/*"
