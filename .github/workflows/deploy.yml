@@ -30,7 +30,7 @@ jobs:
           node-version: '18'
 
       - name: Install Dependencies
-        run: npm install
+        run:  npm install --legacy-peer-deps
 
       # --- HERE IS THE MAGIC FOR TEST ---
       - name: Build for Test
@@ -74,7 +74,7 @@ jobs:
           node-version: '18'
 
       - name: Install Dependencies
-        run: npm install
+        run:  npm install --legacy-peer-deps
 
       # --- HERE IS THE MAGIC FOR PROD ---
       - name: Build for Prod
