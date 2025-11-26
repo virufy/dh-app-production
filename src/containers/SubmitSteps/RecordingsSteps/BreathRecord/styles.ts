@@ -1,3 +1,4 @@
+
 import styled from 'styled-components';
 
 export const Container = styled.div`
@@ -6,11 +7,11 @@ export const Container = styled.div`
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    padding: 1.5rem;
+    padding: 0.5rem;
     box-sizing: border-box;
     font-family: 'Source Sans Pro', sans-serif;
     font-size: 14px;
-    
+   
 `;
 
 export const Content = styled.div`
@@ -38,9 +39,9 @@ export const BackButton = styled.button<{ isArabic?: boolean }>`
     cursor: pointer;
     ${({ isArabic }) => (isArabic ? 'right: -10px;' : 'left: -10px;')};
     @media (min-width: 768px) {
-    ${({ isArabic }) => (isArabic ? 'right: -30px;' : 'left: -30px;')}
+        ${({ isArabic }) => (isArabic ? 'right: -30px;' : 'left: -30px;')}
 
-}
+
 `;
 
 export const HeaderText = styled.div`
@@ -72,55 +73,12 @@ export const StepCircle = styled.div`
   color: #3578de;
   font-size: 14px;
   flex-shrink: 0;
-  
 `;
-
-
-export const InstructionText = styled.div`
-    flex: 1;
-    font-size: 14px;
-    max-width: 400px;
-    margin: 0 auto 0 0;
-    //margin-left:0px
-
-     [dir="rtl"] & {
-        direction: rtl;
-        text-align: right;
-        unicode-bidi: isolate;
-        margin: 0 0 0 auto; /* Flip margin for RTL */
-    }
-    @media(min-width:768px ) {
-        max-width: 550px;
-        margin-bottom: 1.5rem;
-        margin-top: 1.5rem;
-        text-align: left;
-
-    }
-    
-`;
-
 export const Image = styled.img`
-  width: 190px;
-  height: 127px;
-  margin: 0 auto 2rem;
-  display: block;
-    
-   
-`;
-
-export const Timer = styled.div`
-    display: flex;
-    justify-content: center;
-    margin: 3.5rem 0 1.75rem;
-`;
-
-export const TimerBox = styled.div`
-    border: 1px solid #3578de;
-    color: #3578de;
-    padding: 0.6rem 1.5rem;
-    border-radius: 12px;
-    font-weight: bold;
-    font-size: 20px;
+    width: 190px;
+    height: 127px;
+    margin: 0 auto 2rem;
+    display: block;
 `;
 
 export const ButtonRow = styled.div`

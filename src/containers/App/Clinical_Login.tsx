@@ -1,249 +1,15 @@
-// import React, { useState, useEffect } from 'react';
-// import SehaDubaiLogo from '../../assets/images/SehaDubaiLogo.png';
-// import { useNavigate } from 'react-router-dom';
-// import { useTranslation } from 'react-i18next';
-// import { generateSignature } from "../../utils/signature";
-
-// import {
-//   pageContainer,
-//   title,
-//   fieldLabel,
-//   fieldInput,
-//   dropdown,
-//   buttonCircle,
-//   buttonContainer,
-//   arrowIcon,
-//   logoStyle,
-// } from './style';
-
-// const API_BASE =
-//   process.env.REACT_APP_API_BASE ??
-//   'https://tg3he2qa23.execute-api.me-central-1.amazonaws.com/prod';
-
-// const Clinical_Login: React.FC = () => {
-//   const { t, i18n } = useTranslation();
-//   const [patientId, setPatientId] = useState('');
-//   const [error, setError] = useState('');
-//   const [checking, setChecking] = useState(false);
-//   const [showConfirm, setShowConfirm] = useState(false);
-//   const navigate = useNavigate();
-
-//   // robust Arabic check (handles "ar", "ar-AE", etc.)
-//   const isArabic = (i18n.resolvedLanguage || i18n.language || '').startsWith('ar');
-
-//   // Always reset language to English when this page loads
-//   useEffect(() => {
-//     i18n.changeLanguage('en');
-//   }, [i18n]);
-
-//   // close modal on Escape
-//   useEffect(() => {
-//     if (!showConfirm) return;
-//     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setShowConfirm(false);
-//     window.addEventListener('keydown', onKey);
-//     return () => window.removeEventListener('keydown', onKey);
-//   }, [showConfirm]);
-
-//     useEffect(() => {
-//     async function initSignature() {
-//       try {
-//         const sig = await generateSignature();
-//         console.log("Initial app signature:", sig);
-//         sessionStorage.setItem("app_signature", sig);
-//       } catch (err) {
-//         console.error("Failed to generate initial signature:", err);
-//       }
-//     }
-//     initSignature();
-//   }, []);
-//   const proceedWithId = () => {
-//     const id = patientId.trim();
-//     sessionStorage.setItem('patientId', id);
-//     navigate('/consent', { state: { patientId: id } });
-//   };
-
-//   const handleSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault();
-//     const id = patientId.trim();
-
-//     if (!id) {
-//       setError(t('home.error.patient_id_required'));
-//       return;
-//     }
-//     if (!/^\d+$/.test(id)) {
-//       setError(t('home.error.patient_id_numeric'));
-//       return;
-//     }
-//     setError('');
-
-//     try {
-//       setChecking(true);
-//       const url = new URL(`${API_BASE}/status/check-patient`);
-//       url.searchParams.set('patientId', id);
-//       const res = await fetch(url.toString());
-//       if (!res.ok) throw new Error(`Check failed (${res.status})`);
-//       const data = await res.json(); // { exists, ... }
-
-//       if (data?.exists) {
-//         setShowConfirm(true);
-//       } else {
-//         proceedWithId();
-//       }
-//     } catch (err) {
-//       setError(
-//         t('home.error.patient_check_failed', 'Unable to verify the patient ID. Please try again.')
-//       );
-//     } finally {
-//       setChecking(false);
-//     }
-//   };
-
-//   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-//     i18n.changeLanguage(e.target.value);
-//   };
-
-//   return (
-//     <form onSubmit={handleSubmit} style={pageContainer} noValidate>
-//       <img src={SehaDubaiLogo} alt="Dubai Health Logo" style={logoStyle} />
-//       <h1 style={title}>{t('home.title')}</h1>
-
-//       <label style={fieldLabel}>{t('home.language_label')}</label>
-//       <select style={dropdown} value={i18n.language} onChange={handleLanguageChange}>
-//         <option value="en">English</option>
-//         <option value="ar">العربية</option>
-//       </select>
-
-//       <label style={fieldLabel}>
-//         {t('home.patient_id_label')} <span style={{ color: 'red' }}>*</span>
-//       </label>
-//       <input
-//         type="text"
-//         inputMode="numeric"
-//         pattern="[0-9]*"
-//         style={fieldInput}
-//         placeholder={t('home.patient_id_placeholder')}
-//         value={patientId}
-//         onChange={(e) => {
-//           const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-//           setPatientId(value);
-//         }}
-//         aria-invalid={!!error}
-//         aria-describedby="patientId-error"
-//       />
-
-//       {error && (
-//         <div id="patientId-error" style={{ color: 'red', marginTop: 4 }}>
-//           {error}
-//         </div>
-//       )}
-
-//       <label style={fieldLabel}>{t('home.hospital_label')}</label>
-//       <select style={dropdown} defaultValue="Al Barsha Health Centre">
-//         <option>{t('home.hospital_options.barsha')}</option>
-//         <option>{t('home.hospital_options.nadd')}</option>
-//       </select>
-
-//       <div style={buttonContainer}>
-//         <button style={buttonCircle} type="submit" disabled={checking}>
-//           <span
-//             style={{
-//               ...arrowIcon,
-//               transform: isArabic ? 'rotate(180deg)' : 'none',
-//               opacity: checking ? 0.5 : 1,
-//             }}
-//           >
-//             {checking ? '…' : '➜'}
-//           </span>
-//         </button>
-//       </div>
-
-//       {/* Confirmation modal */}
-//       {showConfirm && (
-//         <div
-//           key={i18n.resolvedLanguage || i18n.language}
-//           role="dialog"
-//           aria-modal="true"
-//           onClick={(e) => {
-//             // close when clicking the shaded backdrop only
-//             if (e.target === e.currentTarget) setShowConfirm(false);
-//           }}
-//           style={{
-//             position: 'fixed',
-//             inset: 0,
-//             background: 'rgba(0,0,0,0.35)',
-//             display: 'grid',
-//             placeItems: 'center',
-//             padding: 16,
-//             zIndex: 1000,
-//           }}
-//         >
-//           <div
-//             style={{
-//               background: 'white',
-//               borderRadius: 12,
-//               padding: 20,
-//               maxWidth: 420,
-//               width: '100%',
-//               boxShadow: '0 14px 30px rgba(0,0,0,0.18)',
-//               direction: isArabic ? 'rtl' : 'ltr',
-//             }}
-//           >
-//             <h3 style={{ marginTop: 0 }}>{t('home.patient_exists_title')}</h3>
-//             <p style={{ marginTop: 8 }}>{t('home.patient_exists_question')}</p>
-
-//             <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-//               <button
-//                 type="button"
-//                 onClick={() => setShowConfirm(false)}
-//                 style={{
-//                   flex: 1,
-//                   padding: 12,
-//                   borderRadius: 8,
-//                   border: '1px solid #ddd',
-//                   background: '#f7f7f7',
-//                   cursor: 'pointer',
-//                 }}
-//               >
-//                 {t('home.common_no')}
-//               </button>
-//               <button
-//                 type="button"
-//                 onClick={() => {
-//                   setShowConfirm(false);
-//                   proceedWithId();
-//                 }}
-//                 style={{
-//                   flex: 1,
-//                   padding: 12,
-//                   borderRadius: 8,
-//                   border: 'none',
-//                   background: '#0d6efd',
-//                   color: 'white',
-//                   cursor: 'pointer',
-//                 }}
-//               >
-//                 {t('home.common_yes')}
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </form>
-//   );
-// };
-
-// export default Clinical_Login;
+// Clinical_Login.tsx
 import React, { useState, useEffect } from 'react';
 import SehaDubaiLogo from '../../assets/images/SehaDubaiLogo.png';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { generateSignature } from "../../utils/signature";
-
+import AppHeader from '../../components/AppHeader';
+import { PATIENT_API_URL } from '../../config';
 import {
   pageContainer,
   title,
   fieldLabel,
-  fieldInput,
   dropdown,
   buttonCircle,
   buttonContainer,
@@ -251,246 +17,204 @@ import {
   logoStyle,
 } from './style';
 
-const API_BASE =
-  process.env.REACT_APP_API_BASE ??
-  'https://tg3he2qa23.execute-api.me-central-1.amazonaws.com/prod';
+//test api base
+// const API_BASE =
+//   process.env.REACT_APP_API_BASE ??
+//   'https://fc8eht392h.execute-api.me-central-1.amazonaws.com/test';
+
+//prod api base
+// const API_BASE =
+//   process.env.REACT_APP_API_BASE ??
+//   'https://rb380z2ini.execute-api.me-central-1.amazonaws.com/test';
 
 const Clinical_Login: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const [patientId, setPatientId] = useState(''); // numeric portion only
-  const [hospitalCode, setHospitalCode] = useState('BHC'); // CNM code e.g. BHC or NAH
-  const [error, setError] = useState('');
+  const [backendPatientFull, setBackendPatientFull] = useState<string>('');
+  const [displayPatientFull, setDisplayPatientFull] = useState<string>('');
+  const [hospitalCode, setHospitalCode] = useState<string>(() => {
+    // Get hospital from local storage or default to AB (Al Barsha)
+    return localStorage.getItem('selectedHospital') || 'AB';
+  });
   const [checking, setChecking] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const navigate = useNavigate();
-
-  // robust Arabic check (handles "ar", "ar-AE", etc.)
   const isArabic = (i18n.resolvedLanguage || i18n.language || '').startsWith('ar');
 
-  // Always reset language to English when this page loads
+  // Respect persisted language; if none is set, keep i18n default
   useEffect(() => {
-    i18n.changeLanguage('en');
+    const stored = localStorage.getItem('i18nextLng');
+    if (stored && stored !== i18n.language) {
+      i18n.changeLanguage(stored).catch(() => {});
+    }
   }, [i18n]);
 
-  // close modal on Escape
+  // Initialize app signature once
   useEffect(() => {
-    if (!showConfirm) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setShowConfirm(false);
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [showConfirm]);
-
-  useEffect(() => {
-    async function initSignature() {
+    (async () => {
       try {
         const sig = await generateSignature();
-        console.log("Initial app signature:", sig);
         sessionStorage.setItem("app_signature", sig);
       } catch (err) {
-        console.error("Failed to generate initial signature:", err);
+        console.error("Signature init failed:", err);
       }
-    }
-    initSignature();
+    })();
   }, []);
 
-  // helper: build full patient id (CNM_numeric)
-  const buildFullPatientId = (numericId: string, code: string) => {
-    return `${code}_${numericId}`;
+  const underscoreToDash = (s: string) => (s ? s.replace(/_/g, '-') : '');
+
+  const normalizeBackendId = (raw: string | null | undefined, defaultHospital: string) => {
+    if (!raw) return `${defaultHospital}_1000`;
+    const trimmed = String(raw).trim();
+    if (/_\d+$/.test(trimmed)) return trimmed;
+    if (/-\d+$/.test(trimmed)) return trimmed.replace('-', '_');
+    return `${defaultHospital}_${trimmed || '1000'}`;
   };
 
+  // 🚀 Fetch latest sequential ID directly from backend
+  useEffect(() => {
+    let mounted = true;
+    const localKey = `openPatient_${hospitalCode}`;
+
+    async function load() {
+      try {
+        // 🔥 FULL RESET: clear browser cache layers
+        sessionStorage.clear();
+        localStorage.removeItem(localKey);
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }
+
+        // 🧠 Add timestamp to avoid CloudFront/API Gateway caching
+        const url = new URL(`${PATIENT_API_URL}/status/last-patient`);
+        url.searchParams.set('hospital', hospitalCode);
+        url.searchParams.set('nocache', Date.now().toString());
+
+        const res = await fetch(url.toString(), {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            Pragma: 'no-cache',
+            Expires: '0',
+          },
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const body = await res.json();
+        console.log("✅ API JSON:", body);
+
+        const suggested = normalizeBackendId(body?.suggested, hospitalCode);
+
+        if (!mounted) return;
+
+        console.log("✅ Latest patient ID from backend:", suggested);
+        setBackendPatientFull(suggested);
+
+        // display uses dashed form
+        const dashed = underscoreToDash(suggested);
+        setDisplayPatientFull(dashed);
+
+        // store dashed id in localStorage (so other code reading localKey gets dashed)
+        localStorage.setItem(localKey, dashed);
+      } catch (err) {
+        console.error("⚠️ Failed to fetch latest ID:", err);
+        const fallback = `${hospitalCode}_1000`;
+        if (!mounted) return;
+        setBackendPatientFull(fallback);
+        const dashedFallback = underscoreToDash(fallback);
+        setDisplayPatientFull(dashedFallback);
+        localStorage.setItem(localKey, dashedFallback);
+      }
+    }
+
+    load();
+    return () => { mounted = false; };
+  }, [hospitalCode]);
+
   const proceedWithId = () => {
-    const numeric = patientId.trim();
-    const fullId = buildFullPatientId(numeric, hospitalCode);
-    sessionStorage.setItem('patientId', fullId);
-    navigate('/consent', { state: { patientId: fullId } });
+    if (!backendPatientFull) {
+      console.error('No patient ID available.');
+      return;
+    }
+
+    // convert underscore -> dash before storing / navigating
+    const dashedId = underscoreToDash(backendPatientFull);
+    sessionStorage.setItem('patientId', dashedId);
+    navigate('/consent', { state: { patientId: dashedId } });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const numeric = patientId.trim();
-
-    if (!numeric) {
-      setError(t('home.error.patient_id_required'));
+    if (!backendPatientFull) {
+      console.error('Unable to generate patient ID. Please try again.');
       return;
     }
-    if (!/^\d+$/.test(numeric)) {
-      setError(t('home.error.patient_id_numeric'));
-      return;
-    }
-    setError('');
-
-    const fullId = buildFullPatientId(numeric, hospitalCode);
-
-    try {
-      setChecking(true);
-      const url = new URL(`${API_BASE}/status/check-patient`);
-      // send full CNM patient id to backend e.g. "NAH_1607"
-      url.searchParams.set('patientId', fullId);
-      const res = await fetch(url.toString());
-      if (!res.ok) throw new Error(`Check failed (${res.status})`);
-      const data = await res.json(); // { exists, ... }
-
-      if (data?.exists) {
-        setShowConfirm(true);
-      } else {
-        // saved & navigate with prefixed id
-        proceedWithId();
-      }
-    } catch (err) {
-      setError(
-        t('home.error.patient_check_failed', 'Unable to verify the patient ID. Please try again.')
-      );
-    } finally {
-      setChecking(false);
-    }
+    setChecking(true);
+    proceedWithId();
+    setChecking(false);
   };
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     i18n.changeLanguage(e.target.value);
   };
 
-  // Hospital options: value is the CNM code, label is localized text
+  const handleHospitalChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newHospital = e.target.value;
+    setHospitalCode(newHospital);
+    localStorage.setItem('selectedHospital', newHospital);
+  };
+
   const hospitalOptions = [
-    { value: 'BHC', label: t('home.hospital_options.barsha') }, // Al Barsha Health Centre => BHC
-    { value: 'NAH', label: t('home.hospital_options.nadd') },   // Nadd Al Hammar Health Centre => NAH
+    { value: 'AB', label: t('home.hospital_options.barsha') },
+    { value: 'NA', label: t('home.hospital_options.nadd') },
   ];
 
   return (
-    <form onSubmit={handleSubmit} style={pageContainer} noValidate>
-      <img src={SehaDubaiLogo} alt="Dubai Health Logo" style={logoStyle} />
-      <h1 style={title}>{t('home.title')}</h1>
-
-      <label style={fieldLabel}>{t('home.language_label')}</label>
-      <select style={dropdown} value={i18n.language} onChange={handleLanguageChange}>
-        <option value="en">English</option>
-        <option value="ar">العربية</option>
-      </select>
-
-      <label style={fieldLabel}>
-        {t('home.patient_id_label')} <span style={{ color: 'red' }}>*</span>
-      </label>
-      <input
-        type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        style={fieldInput}
-        placeholder={t('home.patient_id_placeholder')}
-        value={patientId}
-        onChange={(e) => {
-          // only numeric, max length 10
-          const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-          setPatientId(value);
-        }}
-        aria-invalid={!!error}
-        aria-describedby="patientId-error"
+    <>
+      <AppHeader
+        maxWidth={530}
+        patientId={displayPatientFull || undefined}
+        locale={isArabic ? "ar" : "en"}
       />
 
-      {error && (
-        <div id="patientId-error" style={{ color: 'red', marginTop: 4 }}>
-          {error}
-        </div>
-      )}
+      <form onSubmit={handleSubmit} style={pageContainer} noValidate>
+        <img src={SehaDubaiLogo} alt="Dubai Health Logo" style={logoStyle} />
+        <h1 style={title}>{t('home.title')}</h1>
 
-      <label style={fieldLabel}>{t('home.hospital_label')}</label>
-      <select
-        style={dropdown}
-        value={hospitalCode}
-        onChange={(e) => setHospitalCode(e.target.value)}
-      >
-        {hospitalOptions.map((h) => (
-          <option key={h.value} value={h.value}>
-            {h.label}
-          </option>
-        ))}
-      </select>
+        <label style={fieldLabel}>{t('home.language_label')}</label>
+        <select style={dropdown} value={i18n.language} onChange={handleLanguageChange}>
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+        </select>
 
-
-      <div style={buttonContainer}>
-        <button style={buttonCircle} type="submit" disabled={checking}>
-          <span
-            style={{
-              ...arrowIcon,
-              transform: isArabic ? 'rotate(180deg)' : 'none',
-              opacity: checking ? 0.5 : 1,
-            }}
-          >
-            {checking ? '…' : '➜'}
-          </span>
-        </button>
-      </div>
-
-      {/* Confirmation modal */}
-      {showConfirm && (
-        <div
-          key={i18n.resolvedLanguage || i18n.language}
-          role="dialog"
-          aria-modal="true"
-          onClick={(e) => {
-            // close when clicking the shaded backdrop only
-            if (e.target === e.currentTarget) setShowConfirm(false);
-          }}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.35)',
-            display: 'grid',
-            placeItems: 'center',
-            padding: 16,
-            zIndex: 1000,
-          }}
+        <label style={fieldLabel}>{t('home.hospital_label')}</label>
+        <select
+          style={dropdown}
+          value={hospitalCode}
+          onChange={handleHospitalChange}
         >
-          <div
-            style={{
-              background: 'white',
-              borderRadius: 12,
-              padding: 20,
-              maxWidth: 420,
-              width: '100%',
-              boxShadow: '0 14px 30px rgba(0,0,0,0.18)',
-              direction: isArabic ? 'rtl' : 'ltr',
-            }}
-          >
-            <h3 style={{ marginTop: 0 }}>{t('home.patient_exists_title')}</h3>
-            <p style={{ marginTop: 8 }}>{t('home.patient_exists_question')}</p>
+          {hospitalOptions.map((h) => (
+            <option key={h.value} value={h.value}>
+              {h.label}
+            </option>
+          ))}
+        </select>
 
-            <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-              <button
-                type="button"
-                onClick={() => setShowConfirm(false)}
-                style={{
-                  flex: 1,
-                  padding: 12,
-                  borderRadius: 8,
-                  border: '1px solid #ddd',
-                  backgroundColor: "#007BFF", // blue
-                  cursor: 'pointer',
-                }}
-              >
-                {t('home.common_no')}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowConfirm(false);
-                  proceedWithId();
-                }}
-                style={{
-                  flex: 1,
-                  padding: 12,
-                  borderRadius: 8,
-                  border: 'none',
-                  backgroundColor: "#dc3545", // red for destructive
-                  color: 'white',
-                  cursor: 'pointer',
-                }}
-              >
-                {t('home.common_yes')}
-              </button>
-            </div>
-          </div>
+        <div style={buttonContainer}>
+          <button style={buttonCircle} type="submit" disabled={checking}>
+            <span
+              style={{
+                ...arrowIcon,
+                transform: isArabic ? 'rotate(180deg)' : 'none',
+                opacity: checking ? 0.5 : 1,
+              }}
+            >
+              {checking ? '…' : '➜'}
+            </span>
+          </button>
         </div>
-      )}
-    </form>
+      </form>
+    </>
   );
 };
 

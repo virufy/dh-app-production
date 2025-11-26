@@ -10,8 +10,8 @@
     },
     "hospital_label": "Hospital Name",
     "hospital_options": {
-      "barsha": "Al Barsha Health Centre",
-      "nadd": "Nadd Al Hammar Health Centre"
+      "barsha": "Al Barsha Health Center",
+      "nadd": "Nadd Al Hammar Health Center"
     },
     "submit_button": "Next",
     "patient_exists_title": "Duplicate Patient ID",
@@ -33,14 +33,6 @@
       "virufyTitle": "2. Virufy - Partner Privacy Policy",
       "virufyDesc": "As our research partner, Virufy helps analyze the data. This document explains how Virufy handles your data.",
       "readFull": "Tap to read the full document",
-      "confirmationTitle": "Confirmation Checkboxes:",
-      "confirmationDesc": "By checking the boxes below, you confirm you have reviewed the information and agree to participate.",
-      "checkbox1": "I certify that I am 18 years of age or older.",
-      "checkbox2": "I have read and understood the Dubai Health Participant Information & Consent Form. I voluntarily agree to participate in this study.",
-      "checkbox3": "I acknowledge that my anonymized data will be shared with Virufy for analysis and have had the opportunity to review their Privacy Policy.",
-      "checkbox4": "I explicitly consent to the collection and processing of my health information and recordings (cough, breathing, speech) for the research purposes described.",
-      "next": "Next",
-      "nextPaper": "Next (Signed Paper Consent Form)",
       "footerIssue": "Something wrong?",
       "report": "Report an error"
       
@@ -67,8 +59,8 @@
 
       "recordButton": "Record",
       "stopButton": "Stop",
-      "continueButton": "Continue",
-      "uploadFile": "Upload your own file",
+      "continueButton": "Submit",
+      "uploadFile": "",
       "reportIssue": "Something wrong? Report an issue",
       "goBackAria": "Go back",
       "goBackAlt": "Back",
@@ -105,8 +97,8 @@
 
       "recordButton": "Record",
       "stopButton": "Stop",
-      "continueButton": "Continue",
-      "uploadFile": "Upload your own file",
+      "continueButton": "Submit",
+      "uploadFile": "",
       "reportIssue": "Something wrong? Report an error",
       "goBackAria": "Go back",
       "goBackAlt": "Back",
@@ -144,8 +136,8 @@
     "recordButton": "Record",
     "stopButton": "Stop",
     "checkboxLabel": "Were the coughs involuntary?",
-    "continueButton": "Continue",
-    "uploadFile": "Upload your own file",
+    "continueButton": "Submit",
+    "uploadFile": "",
     "reportIssue": "Something wrong? Report an error",
     "goBackAria": "Go back",
     "goBackAlt": "Back",

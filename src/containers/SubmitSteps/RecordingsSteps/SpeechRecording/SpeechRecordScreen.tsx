@@ -1,7 +1,8 @@
-// SpeechRecordScreen.tsx
-import React, { useRef, useState, useEffect } from "react";
+// SpeechRecordScreen.tsx (refactored & RTL-aware skip button)
+import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import MinimumDurationModal from "../../../../components/RecordingControls/MinimumDurationModal";
 
 // Assets
 import keepDistance from "../../../../assets/images/keepDistance.png";
@@ -9,241 +10,127 @@ import mouthSpeechDistance from "../../../../assets/images/mouthSpeechDistance.p
 import BackIcon from "../../../../assets/icons/arrowLeft.svg";
 import StartIcon from "../../../../assets/icons/start.svg";
 import StopIcon from "../../../../assets/icons/stop.svg";
-import UploadIcon from "../../../../assets/icons/upload.svg";
 import i18n from "../../../../i18n";
+import PlayIcon from "../../../../assets/icons/play.svg";
+import PauseIcon from "../../../../assets/icons/pause.svg";
+import SkipButton from "../../../../components/RecordingControls/SkipButton";
+import { useAudioRecorder } from "../../../../components/RecordingControls/useAudioRecorder";
+import SharedBackButton from "../../../../components/RecordingControls/BackButton";
+import AppHeader from "../../../../components/AppHeader";
+import TimerDisplay from "../../../../components/RecordingControls/TimerDisplay";
+import formatTime from "../../../../utils/formatTime";
+import { Slider, TimeRow, FileRow } from "../UploadCompleteCough/styles";
+import { addUploadTask } from "../../../../services/backgroundUploadService";
+import { getDeviceName, generateUserAgent } from "../../../../utils/deviceUtils";
 
-// Styled comps
+
 import {
   ActionButtons,
-  BackButton, ButtonLabel, ButtonRow, CircleButton,
+  BackButton,
+  ButtonLabel,
+  ButtonRow,
+  CircleButton,
   Container,
-  Content, FooterLink,
+  Content,
+  FooterLink,
   Header,
-  HeaderText, HiddenFileInput, Image,
+  HeaderText,
+  Image,
   InstructionText,
   StepCircle,
-  StepWrapper, Timer, TimerBox, UploadButton, UploadText,
-  ModalOverlay,
-  ModalContainer,
-  ModalTitle,
-  ModalText,
-  ModalButton
+  StepWrapper,
+    
 } from "./styles";
-import { t } from "i18next";
 
-/* ----------------- Minimum Duration Modal ----------------- */
-const MinimumDurationModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
-  <ModalOverlay>
-    <ModalContainer>
-      <ModalTitle>{t("recordSpeech.minimum_duration_title")}</ModalTitle>
-      <ModalText>{t("recordSpeech.minimum_duration_text")}</ModalText>
-      <ModalButton onClick={onClose}>{t("recordSpeech.minimum_duration_retry")}</ModalButton>
-    </ModalContainer>
-  </ModalOverlay>
-);
-
-/* ----------------- Encode Float32 → PCM WAV (same as cough) ----------------- */
-function encodeWav(samples: Float32Array, sampleRate = 44100): Blob {
-  const buffer = new ArrayBuffer(44 + samples.length * 2);
-  const view = new DataView(buffer);
-
-  const writeStr = (off: number, str: string) => {
-    for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i));
-  };
-
-  // WAV header
-  writeStr(0, "RIFF");
-  view.setUint32(4, 36 + samples.length * 2, true);
-  writeStr(8, "WAVE");
-  writeStr(12, "fmt ");
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true); // PCM
-  view.setUint16(22, 1, true); // mono
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true); // byte rate (sr * channels * bytes/sample)
-  view.setUint16(32, 2, true); // block align (channels * bytes/sample)
-  view.setUint16(34, 16, true); // bits per sample
-  writeStr(36, "data");
-  view.setUint32(40, samples.length * 2, true);
-
-  // PCM samples
-  let offset = 44;
-  for (let i = 0; i < samples.length; i++, offset += 2) {
-    const s = Math.max(-1, Math.min(1, samples[i]));
-    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-  }
-
-  return new Blob([view], { type: "audio/wav" });
-}
 
 const SpeechRecordScreen: React.FC = () => {
   const { t } = useTranslation();
   const isArabic = i18n.language === "ar";
   const navigate = useNavigate();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
 
-  // EXACT same scheme as cough: AudioContext + ScriptProcessor + Float32 chunks
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const processorRef = useRef<ScriptProcessorNode | null>(null);
-  const chunksRef = useRef<Float32Array[]>([]);
+  const { isRecording, recordingTime, audioData, error, tooShort, startRecording, stopRecording, setError, resetTooShort} =
+    useAudioRecorder(44100, "speech");
 
-  const [showTooShortModal, setShowTooShortModal] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
-  const [audioData, setAudioData] = useState<{ audioFileUrl: string; filename: string } | null>(null);
-
-  const timerRef = useRef<number | null>(null);
-  const startTimeRef = useRef<number | null>(null);
-
-  // patientId in sessionStorage is now CNM_PatientID (e.g., BHC_12345 or NAH_12345)
-  const storedPatientId = sessionStorage.getItem("patientId") || "unknown";
+  const headerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+  
+  useEffect(() => {
     return () => {
-      stopRecording();
-      if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => {});
-      }
+      // hook handles cleanup
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleBack = () => navigate(-1);
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60).toString();
-    const secs = (seconds % 60).toString().padStart(2, "0");
-    return `${mins}:${secs}`;
+ /* ----------------- Submit (background upload) ----------------- */
+ const handleSubmit = async () => {
+  if (!audioData) {
+    setError(t("recordSpeech.error") || "Please record first.");
+    return;
+  }
+  const patientId = sessionStorage.getItem("patientId") || "";
+  const timestamp = new Date().toISOString();
+  addUploadTask({
+    patientId,
+    filename: audioData.filename,
+    timestamp,
+    audioType: "speech",
+    audioFileUrl: audioData.audioFileUrl,
+    deviceName: await getDeviceName(),
+    userAgent: await generateUserAgent(),
+  });
+  navigate("/record-breath");
+};
+
+const togglePlay = () => {
+  const el = audioRef.current;
+  if (!el || !audioData?.audioFileUrl) return;
+  if (isPlaying) {
+    el.pause();
+    setIsPlaying(false);
+  } else {
+    el.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+  }
+};
+
+useEffect(() => {
+  const el = audioRef.current;
+  if (!el) return;
+  const onTime = () => setCurrentTime(el.currentTime || 0);
+  const onMeta = () => setDuration(el.duration || 0);
+  const onEnded = () => setIsPlaying(false);
+  el.addEventListener("timeupdate", onTime);
+  el.addEventListener("loadedmetadata", onMeta);
+  el.addEventListener("ended", onEnded);
+  return () => {
+    el.removeEventListener("timeupdate", onTime);
+    el.removeEventListener("loadedmetadata", onMeta);
+    el.removeEventListener("ended", onEnded);
   };
+}, []);
 
-  /* ----------------- Start Recording (lossless, like cough) ----------------- */
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const ctx = new AudioContext({ sampleRate: 44100 });
-      const source = ctx.createMediaStreamSource(stream);
-      const processor = ctx.createScriptProcessor(4096, 1, 1);
+const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const el = audioRef.current;
+  if (!el) return;
+  const t = parseFloat(e.target.value);
+  el.currentTime = isNaN(t) ? 0 : t;
+  setCurrentTime(el.currentTime);
+};
 
-      chunksRef.current = [];
-      source.connect(processor);
-      processor.connect(ctx.destination);
 
-      processor.onaudioprocess = (e) => {
-        const input = e.inputBuffer.getChannelData(0);
-        // copy the buffer so we don't keep references to the same underlying array
-        chunksRef.current.push(new Float32Array(input));
-      };
-
-      audioCtxRef.current = ctx;
-      processorRef.current = processor;
-
-      setIsRecording(true);
-      setRecordingTime(0);
-      setError(null);
-      setAudioData(null);
-
-      startTimeRef.current = Date.now();
-      timerRef.current = window.setInterval(() => {
-        if (startTimeRef.current != null) {
-          const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-          setRecordingTime(elapsed);
-        }
-      }, 1000);
-
-      // auto stop after 30s
-      setTimeout(() => stopRecording(), 30000);
-    } catch (err) {
-      console.error("Microphone access error:", err);
-      setError(t("recordSpeech.microphoneAccessError") || "Microphone access denied.");
-      setIsRecording(false);
-    }
-  };
-
-  /* ----------------- Stop Recording (same flow as cough) ----------------- */
-  const stopRecording = () => {
-    if (!isRecording) return;
-
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-
-    const ctx = audioCtxRef.current;
-    const processor = processorRef.current;
-    if (processor) {
-      try { processor.disconnect(); } catch {}
-    }
-    if (ctx) {
-      try { ctx.close(); } catch {}
-    }
-
-    // flatten chunks → single Float32Array
-    const flat = chunksRef.current.length
-      ? new Float32Array(chunksRef.current.reduce((acc, cur) => acc + cur.length, 0))
-      : null;
-
-    if (flat) {
-      let offset = 0;
-      for (const chunk of chunksRef.current) {
-        flat.set(chunk, offset);
-        offset += chunk.length;
-      }
-
-      const wavBlob = encodeWav(flat, 44100);
-      const wavUrl = URL.createObjectURL(wavBlob);
-      const filename = `${storedPatientId}_speechS-${new Date().toISOString().replace(/\.\d+Z$/, "").replace(/:/g, "-")}.wav`;
-
-      if (recordingTime < 3) {
-        setShowTooShortModal(true);
-        setAudioData(null);
-      } else {
-        setAudioData({ audioFileUrl: wavUrl, filename });
-      }
-    }
-
-    setIsRecording(false);
-  };
-
-  /* ----------------- Continue / Upload / Skip ----------------- */
-  const handleContinue = () => {
-    if (audioData) {
-      setError(null);
-      navigate("/upload-complete", {
-        state: { ...audioData, nextPage: "/record-breath" }
-      });
-    } else {
-      const file = fileInputRef.current?.files?.[0];
-      if (!file) {
-        setError(t("recordSpeech.error") || "Please record or upload an audio file first.");
-      } else {
-        const audioUrl = URL.createObjectURL(file);
-        navigate("/upload-complete", {
-          state: { audioFileUrl: audioUrl, filename: file.name, nextPage: "/record-breath" },
-        });
-      }
-    }
-  };
-
-  const triggerFileInput = () => fileInputRef.current?.click();
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const audioUrl = URL.createObjectURL(file);
-    navigate("/upload-complete", {
-      state: { audioFileUrl: audioUrl, filename: file.name, nextPage: "/record-breath" },
-    });
-  };
-
-  return (
+return (
+  <>
+    <AppHeader maxWidth={450} locale={isArabic ? "ar" : "en"} />
     <Container>
       <Content>
-        <Header>
-          <BackButton
-            onClick={handleBack}
-            aria-label={t("recordSpeech.goBackAria")}
-            isArabic={isArabic}
-          >
+        <Header ref={headerRef}>
+          <SharedBackButton component={BackButton} ariaLabel={t("recordSpeech.goBackAria")} isArabic={isArabic}>
             <img
               src={BackIcon}
               alt={t("recordSpeech.goBackAlt")}
@@ -251,31 +138,19 @@ const SpeechRecordScreen: React.FC = () => {
               height={24}
               style={{ transform: isArabic ? "rotate(180deg)" : "none" }}
             />
-          </BackButton>
+          </SharedBackButton>
           <HeaderText>{t("recordSpeech.title")}</HeaderText>
         </Header>
 
-        <h3
-          style={{
-            fontFamily: "Source Open Sans, sans-serif",
-            fontSize: "24px",
-            textAlign: "center",
-            fontWeight: 600,
-            marginBottom: "1.5rem",
-            color: "#000000",
-            marginTop: "1.5rem",
-          }}
-        >
+        <h3 style={{ fontFamily: "Source Open Sans, sans-serif", fontSize: "24px", textAlign: "center", fontWeight: 600, marginBottom: "1.5rem", color: "#000000", marginTop: "1.5rem" }}>
           {t("recordSpeech.instructionsTitle")}
         </h3>
 
         <StepWrapper>
           <StepCircle>{isArabic ? "١" : "1"}</StepCircle>
           <InstructionText>
-            {t("recordSpeech.instruction1_part1")}{" "}
-            <strong>{t("recordSpeech.instruction1_bold1")}</strong>
-            {t("recordSpeech.instruction1_part2")}{" "}
-            <strong>{t("recordSpeech.instruction1_bold2")}</strong>
+            {t("recordSpeech.instruction1_part1")} <strong>{t("recordSpeech.instruction1_bold1")}</strong>
+            {t("recordSpeech.instruction1_part2")} <strong>{t("recordSpeech.instruction1_bold2")}</strong>
             {t("recordSpeech.instruction1_part3")}
           </InstructionText>
         </StepWrapper>
@@ -294,17 +169,15 @@ const SpeechRecordScreen: React.FC = () => {
         <StepWrapper>
           <StepCircle>{isArabic ? "٣" : "3"}</StepCircle>
           <InstructionText>
-            {t("recordSpeech.instruction3_part1")}{" "}
-            <strong>{t("recordSpeech.instruction3_bold1")}</strong>
+            {t("recordSpeech.instruction3_part1")} <strong>{t("recordSpeech.instruction3_bold1")}</strong>
             {t("recordSpeech.instruction3_part2")}
             <strong>{t("recordSpeech.instruction3_bold2")}</strong>
             {t("recordSpeech.instruction3_part3")}
           </InstructionText>
         </StepWrapper>
 
-        <Timer>
-          <TimerBox>{formatTime(recordingTime)}</TimerBox>
-        </Timer>
+        {/* Pass the local strict formatTime */}
+        <TimerDisplay seconds={recordingTime} formatTime={formatTime} color={recordingTime === 0 ? '#fff' : '#3578de'} />
 
         <ButtonRow>
           <div style={{ textAlign: "center" }}>
@@ -313,95 +186,93 @@ const SpeechRecordScreen: React.FC = () => {
               aria-label={t("recordSpeech.recordButton")}
               onClick={startRecording}
               disabled={isRecording}
-              style={{
-                opacity: isRecording ? 0.6 : 1,
-                cursor: isRecording ? "not-allowed" : "pointer",
-                width: "56px",
-                height: "56px",
-              }}
+              style={{ opacity: isRecording ? 0.6 : 1, width: "56px", height: "56px" }}
             >
-              <img src={StartIcon} alt={t("recordSpeech.recordButton")} width={28} height={28} />
+              <img src={StartIcon} alt="record" width={24} height={24} />
             </CircleButton>
             <ButtonLabel>{t("recordSpeech.recordButton")}</ButtonLabel>
           </div>
           <div style={{ textAlign: "center" }}>
             <CircleButton
-              bg={isRecording ? "#3578de" : "#DDE9FF"}
+              bg={isRecording ? "#3578de" : "#BFD3F9"}
               aria-label={t("recordSpeech.stopButton")}
               onClick={stopRecording}
               disabled={!isRecording}
-              style={{
-                opacity: !isRecording ? 0.6 : 1,
-                cursor: !isRecording ? "not-allowed" : "pointer",
-                width: "56px",
-                height: "56px",
-              }}
+              style={{ opacity: !isRecording ? 0.6 : 1, width: "56px", height: "56px" }}
             >
-              <img src={StopIcon} alt={t("recordSpeech.stopButton")} width={20} height={20} />
+              <img src={StopIcon} alt="stop" width={20} height={20} />
             </CircleButton>
             <ButtonLabel>{t("recordSpeech.stopButton")}</ButtonLabel>
           </div>
+          <div style={{ textAlign: "center" }}>
+            <CircleButton
+              bg={audioData ? "#3578de" : "#DDE9FF"}
+              aria-label={t("uploadComplete.play")}
+              onClick={togglePlay}
+              disabled={!audioData}
+              style={{ opacity: !audioData ? 0.6 : 1, width: "56px", height: "56px" }}
+            >
+              <img 
+                src={isPlaying ? PauseIcon : PlayIcon} 
+                alt="play" 
+                width={24} 
+                height={24} 
+                style={{
+      
+                  filter: audioData ? "brightness(0) invert(1)" : "none",
+                  marginLeft: isPlaying ? 0 : "3px"
+                }}
+              />
+            </CircleButton>
+            <ButtonLabel>{t("uploadComplete.play")}</ButtonLabel>
+          </div>
         </ButtonRow>
 
-        {error && (<p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>{error}</p>)}
+        <FileRow>
+          <span>{audioData?.filename || t("recordSpeech.defaultFilename")}</span>
+        </FileRow>
+        <Slider
+          type="range"
+          min="0"
+          max={duration || 0}
+          value={currentTime}
+          step="0.1"
+          onChange={handleSeek}
+          aria-label={t("uploadComplete.sliderAria")}
+          disabled={!audioData}
+        />
+        <TimeRow>
+          <span>{formatTime(currentTime)}</span>
+          <span>- {formatTime(Math.max((duration || 0) - currentTime, 0))}</span>
+        </TimeRow>
 
-        {/* Quick Skip for testing */}
-       <button
-          type="button"
-          onClick={() => navigate("/record-breath", { state: { skipped: true } })}
-          style={{
-            position: "absolute",
-            top: "20px",
-            right: "20px",
-            backgroundColor: "#f0f0f0",
-            border: "1px solid #ccc",
-            padding: "8px 16px",
-            borderRadius: "4px",
-            cursor: "pointer"
-          }}
-        >
-          {t("recordSpeech.skipButton")}
-        </button>
+        {error && <p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>{error}</p>}
+
+        <SkipButton to="/record-breath" label={t("recordSpeech.skipButton")} ariaLabel={t("recordSpeech.skipButton")} />
 
         <ActionButtons>
-          <button onClick={handleContinue}>{t("recordSpeech.continueButton")}</button>
-          <UploadButton onClick={triggerFileInput} aria-label={t("recordSpeech.uploadFile")}>
-            <img
-              src={UploadIcon}
-              alt={t("recordSpeech.uploadFile")}
-              width={22}
-              height={22}
-              style={{ marginBottom: "0.3rem", marginRight: "0.5rem" }}
-            />
-            <UploadText>{t("recordSpeech.uploadFile")}</UploadText>
-          </UploadButton>
-          <HiddenFileInput
-            type="file"
-            accept="audio/*"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-          />
+          <button onClick={handleSubmit}>{t("uploadComplete.submit")}</button>
         </ActionButtons>
 
-        {showTooShortModal && (
+        {tooShort && (
           <MinimumDurationModal
+            title={t("recordSpeech.minimum_duration_title")}
+            text={t("recordSpeech.minimum_duration_text")}
+            retryLabel={t("recordSpeech.minimum_duration_retry")}
             onClose={() => {
-              setShowTooShortModal(false);
-              setRecordingTime(0);
+              resetTooShort();
             }}
           />
         )}
 
-        <FooterLink
-          href="https://docs.google.com/forms/d/e/1FAIpQLSdlBAA3drY6NydPkxKkMWTEZQhE9p5BSH5YSuaK18F_rObBFg/viewform"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <FooterLink href="https://docs.google.com/forms/d/e/1FAIpQLSdlBAA3drY6NydPkxKkMWTEZQhE9p5BSH5YSuaK18F_rObBFg/viewform" target="_blank" rel="noopener noreferrer">
           {t("recordSpeech.reportIssue")}
         </FooterLink>
       </Content>
     </Container>
-  );
+    <audio ref={audioRef} src={audioData?.audioFileUrl || ""} preload="auto" />
+  </>
+);
 };
 
 export default SpeechRecordScreen;

@@ -5,17 +5,18 @@ const EnglishConsent: React.FC = () => {
     return (
         <div
             style={{
-                maxHeight: '300px',
+                height: '300px',
                 overflowY: 'auto',
                 border: '1px solid black',
-                padding: '1rem',
+                padding: '0.75rem',
                 backgroundColor: '#f9f9f9',
                 borderRadius: '8px',
                 fontSize: '12px',
-                lineHeight: 1.5,
+                lineHeight: 1.4,
                 whiteSpace: 'pre-line',
                 color: '#000',
-                fontWeight: 'normal'
+                fontWeight: 'normal',
+                marginBottom: '1rem'
             }}
         >
             <p style={{ textAlign: 'center' }}><b>Institutional Review Board (MBRU-IRB)
@@ -44,7 +45,7 @@ const EnglishConsent: React.FC = () => {
 
 
             <p><b> Phone: </b> <span style={{ color: 'blue' }}> +971527689649</span></p>
-            <p><b>Sites where the study will be conducted: </b> Al Barsha Health Centre, Nadd Al
+            <p><b>Sites where the study will be conducted: </b> Al Barsha Health Center, Nadd Al
                 Hammar Health Center</p>
             <p>
                 <b>You are invited to participate in this research study conducted at Dubai

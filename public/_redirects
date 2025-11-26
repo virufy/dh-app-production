@@ -9,6 +9,9 @@
 # Send all remaining /dh-app routes to the SPA entry
 /dh-app/*                   /index.html               200
 
+# Handle direct access to all paths for SPA
+/*                          /index.html               200
+
 
 /                           /index.html   200
 /*                          /index.html   200
