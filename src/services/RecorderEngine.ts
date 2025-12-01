@@ -40,8 +40,8 @@ export class RecorderEngine {
     // 2. Initialize Audio Context with FORCED 44100 Hz
     const AC = (window as any).AudioContext || (window as any).webkitAudioContext;
     
-    // ✅ FORCE 44100Hz: Critical to keep 32-bit files from becoming massive
-    const ctx = new AC({ sampleRate: 44100 }); 
+    // Uses the system default
+    const ctx = new AC({ }); 
     this.audioCtx = ctx;
 
     // 3. Load Worklet
@@ -102,12 +102,12 @@ export class RecorderEngine {
     const base64Size = Math.ceil(binarySize / 3) * 4;
     const base64MB = (base64Size / (1024 * 1024)).toFixed(2);
 
-    console.log(`[Recorder] 📦 Binary Size: ${binaryMB} MB`);
-    console.log(`[Recorder] 🚀 Base64 Size: ${base64MB} MB`);
+    console.log(`[Recorder]  Binary Size: ${binaryMB} MB`);
+    console.log(`[Recorder]  Base64 Size: ${base64MB} MB`);
     
-    if (base64Size > 6 * 1024 * 1024) {
-      console.warn(`[Recorder] ⚠️ CRITICAL: File exceeds AWS Lambda 6MB limit! Upload will likely fail.`);
-    }
+    // if (base64Size > 6 * 1024 * 1024) {
+    //   console.warn(`[Recorder] ⚠️ CRITICAL: File exceeds AWS Lambda 6MB limit! Upload will likely fail.`);
+    // }
 
     if (isAutoStop && this.onStopCallback) {
       this.onStopCallback(blob);
