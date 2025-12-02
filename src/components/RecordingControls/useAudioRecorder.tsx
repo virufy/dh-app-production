@@ -7,7 +7,8 @@
 // type RecType = "speech" | "cough" | "breath" | "unknown";
 // type AudioData = { audioFileUrl: string; filename: string; recordingType: RecType } | null;
 
-// export function useAudioRecorder(targetSampleRate = 44100, recordingType: RecType = "unknown") {
+// // UPDATED: Removed unused targetSampleRate parameter
+// export function useAudioRecorder(recordingType: RecType = "unknown") {
   
 //   const engineRef = useRef<RecorderEngine | null>(null);
   
@@ -198,6 +199,7 @@
 // }
 
 
+
 // src/hooks/useAudioRecorder.ts
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RecorderEngine } from "../../services/RecorderEngine";
@@ -207,7 +209,6 @@ import { capitalize } from "../../utils/recorderHelpers";
 type RecType = "speech" | "cough" | "breath" | "unknown";
 type AudioData = { audioFileUrl: string; filename: string; recordingType: RecType } | null;
 
-// UPDATED: Removed unused targetSampleRate parameter
 export function useAudioRecorder(recordingType: RecType = "unknown") {
   
   const engineRef = useRef<RecorderEngine | null>(null);
@@ -225,14 +226,25 @@ export function useAudioRecorder(recordingType: RecType = "unknown") {
   const uiTimerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
 
-  // --- Helper: Dynamic Duration ---
-  const getMaxDuration = () => {
+  // --- Load Initial Data ---
+  const [audioData, setAudioData] = useState<AudioData>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const saved = sessionStorage.getItem(`audioData_${recordingType}`);
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+
+  // --- 1. Define Helpers with useCallback (Dependencies First) ---
+
+  // Helper: Get Max Duration based on type
+  const getMaxDuration = useCallback(() => {
     if (recordingType === 'breath') return 25; // 25s for breath
     return 15; // 15s for others
-  };
+  }, [recordingType]);
 
-  // --- Helper: URL Cleanup ---
-  const setSafeAudioUrl = (blob: Blob | null) => {
+  // Helper: URL Cleanup and Creation
+  const setSafeAudioUrl = useCallback((blob: Blob | null) => {
     if (activeUrlRef.current) {
       URL.revokeObjectURL(activeUrlRef.current);
       activeUrlRef.current = null;
@@ -244,21 +256,25 @@ export function useAudioRecorder(recordingType: RecType = "unknown") {
     const newUrl = URL.createObjectURL(blob);
     activeUrlRef.current = newUrl;
     return newUrl;
-  };
+  }, []);
 
-  // --- Load Initial Data ---
-  const [audioData, setAudioData] = useState<AudioData>(() => {
-    if (typeof window === 'undefined') return null;
-    try {
-      const saved = sessionStorage.getItem(`audioData_${recordingType}`);
-      return saved ? JSON.parse(saved) : null;
-    } catch { return null; }
-  });
+  // Helper: Reset logic
+  const resetRecordingTime = useCallback(async () => {
+    setRecordingTime(0);
+    setAudioData(null);
+    startTimeRef.current = null;
+    sessionStorage.removeItem(`audioData_${recordingType}`);
+    sessionStorage.removeItem(`recordingTime_${recordingType}`);
+    await audioDB.deleteRecording(recordingType);
+  }, [recordingType]);
 
-  // --- Hydrate from DB ---
+  // --- 2. Define Hydration Effect ---
+  
+  // Hydrate from DB
   useEffect(() => {
     let mounted = true;
     const hydrate = async () => {
+      // Only hydrate if we have metadata (audioData) matches current type
       if (audioData && audioData.recordingType === recordingType) {
         const blob = await audioDB.loadRecording(recordingType);
         if (blob && mounted) {
@@ -271,19 +287,12 @@ export function useAudioRecorder(recordingType: RecType = "unknown") {
     };
     hydrate();
     return () => { mounted = false; };
-  }, [recordingType]);
+  // We include audioData here, but logic prevents infinite loops because
+  // we are checking if blob exists in DB. 
+  }, [recordingType, audioData, setSafeAudioUrl]);
 
-  // --- Cleanup ---
-  useEffect(() => {
-    engineRef.current = new RecorderEngine();
-    return () => {
-      if (engineRef.current) engineRef.current.cleanup();
-      if (uiTimerRef.current) clearInterval(uiTimerRef.current);
-      if (activeUrlRef.current) URL.revokeObjectURL(activeUrlRef.current);
-    };
-  }, []);
+  // --- 3. Define Main Handlers ---
 
-  // --- Handlers ---
   const processFinishedRecording = useCallback(async (blob: Blob, forcedStop: boolean) => {
     const elapsedSeconds = startTimeRef.current 
       ? Math.floor((Date.now() - startTimeRef.current) / 1000) 
@@ -307,7 +316,7 @@ export function useAudioRecorder(recordingType: RecType = "unknown") {
       }
     }
     startTimeRef.current = null;
-  }, [recordingType]);
+  }, [recordingType, resetRecordingTime, setSafeAudioUrl]);
 
   const stopRecording = useCallback(async () => {
     if (!engineRef.current) return;
@@ -362,7 +371,7 @@ export function useAudioRecorder(recordingType: RecType = "unknown") {
       if (engineRef.current) engineRef.current.cleanup();
       setIsRecording(false);
     }
-  }, [isRecording, processFinishedRecording, recordingType]);
+  }, [isRecording, processFinishedRecording, getMaxDuration]);
 
   const triggerFile = useCallback((file: File) => {
     const url = setSafeAudioUrl(file);
@@ -371,16 +380,17 @@ export function useAudioRecorder(recordingType: RecType = "unknown") {
       setAudioData(data);
       sessionStorage.setItem(`audioData_${recordingType}`, JSON.stringify(data));
     }
-  }, [recordingType]);
+  }, [recordingType, setSafeAudioUrl]);
 
-  const resetRecordingTime = useCallback(async () => {
-    setRecordingTime(0);
-    setAudioData(null);
-    startTimeRef.current = null;
-    sessionStorage.removeItem(`audioData_${recordingType}`);
-    sessionStorage.removeItem(`recordingTime_${recordingType}`);
-    await audioDB.deleteRecording(recordingType);
-  }, [recordingType]);
+  // --- 4. Cleanup Effect ---
+  useEffect(() => {
+    engineRef.current = new RecorderEngine();
+    return () => {
+      if (engineRef.current) engineRef.current.cleanup();
+      if (uiTimerRef.current) clearInterval(uiTimerRef.current);
+      if (activeUrlRef.current) URL.revokeObjectURL(activeUrlRef.current);
+    };
+  }, []);
 
   return {
     isRecording,
