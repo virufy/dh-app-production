@@ -33,7 +33,7 @@ function logError(step: string, error: unknown, context?: Record<string, any>) {
     errorDetails.error = String(error);
   }
 
-  console.error(`❌ [PRESIGNED URL ERROR] ${step}:`, errorDetails);
+  console.error(` [PRESIGNED URL ERROR] ${step}:`, errorDetails);
   console.error("Full error details:", JSON.stringify(errorDetails, null, 2));
 }
 
@@ -44,7 +44,7 @@ export async function getPresignedUrl(
   request: PresignedUrlRequest
 ): Promise<PresignedUrlResponse> {
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log("🔗 [PresignedURL] Starting presigned URL request:", {
+  console.log(" PresignedURL] Starting presigned URL request:", {
     patientId: request.patientId,
     filename: request.filename,
     audioType: request.audioType,
@@ -75,7 +75,7 @@ export async function getPresignedUrl(
     let signature: string;
     try {
       signature = await generateSignature();
-      console.log("[PresignedURL] ✅ Signature generated:", signature.substring(0, 50) + "...");
+      console.log("[PresignedURL] Signature generated:", signature.substring(0, 50) + "...");
     } catch (signatureError) {
       logError("PresignedURL - Generate Signature", signatureError, {
         request,
@@ -129,13 +129,13 @@ export async function getPresignedUrl(
         const isLocalhost = typeof window !== 'undefined' && 
           (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
         
-        diagnosticMessage += "\n\n🔍 DIAGNOSTICS:";
+        diagnosticMessage += "\n\n DIAGNOSTICS:";
         diagnosticMessage += `\n• Error Type: ${isCORS ? "TypeError (likely CORS)" : "Network Error"}`;
         diagnosticMessage += `\n• Your Origin: ${typeof window !== 'undefined' ? window.location.origin : 'unknown'}`;
         diagnosticMessage += `\n• Target URL: ${apiUrl}`;
         diagnosticMessage += `\n• Running on: ${isLocalhost ? "localhost" : "production"}`;
         
-        diagnosticMessage += "\n\n💡 TROUBLESHOOTING STEPS:";
+        diagnosticMessage += "\n\n TROUBLESHOOTING STEPS:";
         diagnosticMessage += "\n1. Check if CORS is configured on API Gateway:";
         diagnosticMessage += `\n   - Allow-Origin header must include your origin`;
         diagnosticMessage += `\n   - Your origin: ${typeof window !== 'undefined' ? window.location.origin : 'unknown'}`;
@@ -146,7 +146,7 @@ export async function getPresignedUrl(
         diagnosticMessage += `\n   - Open: ${apiUrl}`;
         
         console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        console.error("🔴 [CORS/NETWORK ERROR DETECTED]");
+        console.error("[CORS/NETWORK ERROR DETECTED]");
         console.error("[PresignedURL] Network Error Diagnostics:", {
           url: apiUrl,
           origin: typeof window !== 'undefined' ? window.location.origin : 'unknown',
@@ -209,7 +209,7 @@ export async function getPresignedUrl(
       console.log("[PresignedURL] Response text preview:", responseText.substring(0, 200));
       
       data = JSON.parse(responseText);
-      console.log("[PresignedURL] ✅ Response parsed successfully");
+      console.log("[PresignedURL]  Response parsed successfully");
     } catch (parseError) {
       logError("PresignedURL - Parse Response", parseError, {
         status: response.status,
@@ -239,7 +239,7 @@ export async function getPresignedUrl(
       );
     }
 
-    console.log("✅ [PresignedURL] Successfully obtained presigned URL:", {
+    console.log("[PresignedURL] Successfully obtained presigned URL:", {
       key: data.key,
       filename: data.filename || request.filename,
     });
