@@ -50,7 +50,7 @@ const CoughRecordScreen: React.FC = () => {
   const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const { isRecording, recordingTime, audioData, error, tooShort, startRecording, stopRecording, setError, resetTooShort} =
-    useAudioRecorder(44100, "cough");
+    useAudioRecorder("cough");
 
   const [involuntary, setInvoluntary] = useState(false);
 
@@ -284,7 +284,7 @@ const CoughRecordScreen: React.FC = () => {
           </FooterLink>
         </Content>
       </Container>
-      <audio ref={audioRef} src={audioData?.audioFileUrl || ""} preload="auto" />
+      <audio ref={audioRef} src={audioData?.audioFileUrl || undefined} preload="auto" />
     </>
   );
 };

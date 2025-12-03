@@ -53,7 +53,7 @@ const SpeechRecordScreen: React.FC = () => {
   const [duration, setDuration] = useState(0);
 
   const { isRecording, recordingTime, audioData, error, tooShort, startRecording, stopRecording, setError, resetTooShort} =
-    useAudioRecorder(44100, "speech");
+    useAudioRecorder("speech");
 
   const headerRef = useRef<HTMLDivElement | null>(null);
 
@@ -270,7 +270,7 @@ return (
         </FooterLink>
       </Content>
     </Container>
-    <audio ref={audioRef} src={audioData?.audioFileUrl || ""} preload="auto" />
+    <audio ref={audioRef} src={audioData?.audioFileUrl || undefined} preload="auto" />
   </>
 );
 };

@@ -7,45 +7,24 @@ import { capitalize } from "../../utils/recorderHelpers";
 type RecType = "speech" | "cough" | "breath" | "unknown";
 type AudioData = { audioFileUrl: string; filename: string; recordingType: RecType } | null;
 
-export function useAudioRecorder(targetSampleRate = 44100, recordingType: RecType = "unknown") {
+export function useAudioRecorder(recordingType: RecType = "unknown") {
   
   const engineRef = useRef<RecorderEngine | null>(null);
   
-  // Track active URL for strict cleanup
+
   const activeUrlRef = useRef<string | null>(null);
 
-  // --- State ---
+ 
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [tooShort, setTooShort] = useState(false);
 
-  // Timers
+ 
   const uiTimerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
 
-  // --- Helper: Dynamic Duration ---
-  const getMaxDuration = () => {
-    if (recordingType === 'breath') return 25; // 25s for breath
-    return 15; // 15s for others
-  };
-
-  // --- Helper: URL Cleanup ---
-  const setSafeAudioUrl = (blob: Blob | null) => {
-    if (activeUrlRef.current) {
-      URL.revokeObjectURL(activeUrlRef.current);
-      activeUrlRef.current = null;
-    }
-    if (!blob) {
-      setAudioData(null);
-      return null;
-    }
-    const newUrl = URL.createObjectURL(blob);
-    activeUrlRef.current = newUrl;
-    return newUrl;
-  };
-
-  // --- Load Initial Data ---
+  
   const [audioData, setAudioData] = useState<AudioData>(() => {
     if (typeof window === 'undefined') return null;
     try {
@@ -54,35 +33,81 @@ export function useAudioRecorder(targetSampleRate = 44100, recordingType: RecTyp
     } catch { return null; }
   });
 
-  // --- Hydrate from DB ---
+  
+
+  const getMaxDuration = useCallback(() => {
+    if (recordingType === 'breath') return 25; 
+    return 15; 
+  }, [recordingType]);
+
+  const setSafeAudioUrl = useCallback((blob: Blob | null) => {
+    if (activeUrlRef.current) {
+      URL.revokeObjectURL(activeUrlRef.current);
+      activeUrlRef.current = null;
+    }
+    if (!blob) {
+      
+      return null;
+    }
+    const newUrl = URL.createObjectURL(blob);
+    activeUrlRef.current = newUrl;
+    return newUrl;
+  }, []);
+
+  const resetRecordingTime = useCallback(async () => {
+    setRecordingTime(0);
+    setAudioData(null);
+    startTimeRef.current = null;
+    
+  
+    if (activeUrlRef.current) {
+      URL.revokeObjectURL(activeUrlRef.current);
+      activeUrlRef.current = null;
+    }
+
+    sessionStorage.removeItem(`audioData_${recordingType}`);
+    sessionStorage.removeItem(`recordingTime_${recordingType}`);
+    await audioDB.deleteRecording(recordingType);
+  }, [recordingType]);
+
+ 
   useEffect(() => {
     let mounted = true;
+    
     const hydrate = async () => {
-      if (audioData && audioData.recordingType === recordingType) {
-        const blob = await audioDB.loadRecording(recordingType);
-        if (blob && mounted) {
-          const url = setSafeAudioUrl(blob);
-          if (url) {
-             setAudioData(prev => prev ? { ...prev, audioFileUrl: url } : null);
+      
+      if (!audioData) return;
+
+      
+      if (activeUrlRef.current === audioData.audioFileUrl) return;
+
+      
+      if (audioData.recordingType === recordingType) {
+        try {
+          const blob = await audioDB.loadRecording(recordingType);
+          
+          if (blob && mounted) {
+             const newUrl = setSafeAudioUrl(blob);
+             
+             if (newUrl) {
+                setAudioData(prev => prev ? { ...prev, audioFileUrl: newUrl } : null);
+             }
           }
+        } catch (e) {
+          console.error("Hydration failed", e);
         }
       }
     };
+
     hydrate();
+
     return () => { mounted = false; };
-  }, [recordingType]);
+    
+   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recordingType, setSafeAudioUrl]); 
 
-  // --- Cleanup ---
-  useEffect(() => {
-    engineRef.current = new RecorderEngine();
-    return () => {
-      if (engineRef.current) engineRef.current.cleanup();
-      if (uiTimerRef.current) clearInterval(uiTimerRef.current);
-      if (activeUrlRef.current) URL.revokeObjectURL(activeUrlRef.current);
-    };
-  }, []);
 
-  // --- Handlers ---
+
   const processFinishedRecording = useCallback(async (blob: Blob, forcedStop: boolean) => {
     const elapsedSeconds = startTimeRef.current 
       ? Math.floor((Date.now() - startTimeRef.current) / 1000) 
@@ -106,14 +131,13 @@ export function useAudioRecorder(targetSampleRate = 44100, recordingType: RecTyp
       }
     }
     startTimeRef.current = null;
-  }, [recordingType]);
+  }, [recordingType, resetRecordingTime, setSafeAudioUrl]);
 
   const stopRecording = useCallback(async () => {
     if (!engineRef.current) return;
     
     if (uiTimerRef.current) clearInterval(uiTimerRef.current);
     
-    // Manual Stop = false
     const blob = await engineRef.current.stop(false);
     
     setIsRecording(false);
@@ -128,16 +152,16 @@ export function useAudioRecorder(targetSampleRate = 44100, recordingType: RecTyp
     
     setError(null);
     setTooShort(false);
+
     setAudioData(null);
     
-    // Set dynamic limit
     const maxSeconds = getMaxDuration();
     const maxDurationMs = maxSeconds * 1000;
 
     try {
       engineRef.current.setOnStop((blob) => {
         setIsRecording(false);
-        setRecordingTime(maxSeconds); // Set UI to max limit
+        setRecordingTime(maxSeconds);
         if (uiTimerRef.current) clearInterval(uiTimerRef.current);
         processFinishedRecording(blob, true); 
       });
@@ -161,7 +185,7 @@ export function useAudioRecorder(targetSampleRate = 44100, recordingType: RecTyp
       if (engineRef.current) engineRef.current.cleanup();
       setIsRecording(false);
     }
-  }, [isRecording, processFinishedRecording, recordingType]);
+  }, [isRecording, processFinishedRecording, getMaxDuration]);
 
   const triggerFile = useCallback((file: File) => {
     const url = setSafeAudioUrl(file);
@@ -170,16 +194,19 @@ export function useAudioRecorder(targetSampleRate = 44100, recordingType: RecTyp
       setAudioData(data);
       sessionStorage.setItem(`audioData_${recordingType}`, JSON.stringify(data));
     }
-  }, [recordingType]);
+     
+  }, [recordingType, setSafeAudioUrl]);
 
-  const resetRecordingTime = useCallback(async () => {
-    setRecordingTime(0);
-    setAudioData(null);
-    startTimeRef.current = null;
-    sessionStorage.removeItem(`audioData_${recordingType}`);
-    sessionStorage.removeItem(`recordingTime_${recordingType}`);
-    await audioDB.deleteRecording(recordingType);
-  }, [recordingType]);
+  
+  useEffect(() => {
+    engineRef.current = new RecorderEngine();
+    return () => {
+      if (engineRef.current) engineRef.current.cleanup();
+      if (uiTimerRef.current) clearInterval(uiTimerRef.current);
+     
+      if (activeUrlRef.current) URL.revokeObjectURL(activeUrlRef.current);
+    };
+  }, []);
 
   return {
     isRecording,
@@ -196,5 +223,3 @@ export function useAudioRecorder(targetSampleRate = 44100, recordingType: RecTyp
     setError
   } as const;
 }
-
-

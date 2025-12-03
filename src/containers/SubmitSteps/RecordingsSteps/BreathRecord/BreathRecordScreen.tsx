@@ -49,7 +49,7 @@ const BreathRecordScreen: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const { isRecording, recordingTime, audioData, error, tooShort, startRecording, stopRecording, setError, resetTooShort} =
-    useAudioRecorder(44100, "breath");
+    useAudioRecorder("breath");
   const headerRef = useRef<HTMLDivElement | null>(null);
 // Scroll to top when the page loads
   useEffect(() => {
@@ -268,7 +268,7 @@ const BreathRecordScreen: React.FC = () => {
           </FooterLink>
         </Content>
       </Container>
-      <audio ref={audioRef} src={audioData?.audioFileUrl || ""} preload="auto" />
+      <audio ref={audioRef} src={audioData?.audioFileUrl || undefined} preload="auto" />
     </>
   );
 };
