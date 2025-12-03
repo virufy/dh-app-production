@@ -139,10 +139,9 @@
 
 
 // src/services/RecorderEngine.ts
-
 import { 
   RECORDER_WORKLET_CODE, 
-  encodeChunksToFloat32Wav, // Keeping your original 32-bit function
+  encodeChunksToFloat32Wav, 
   StereoChunk 
 } from "../utils/recorderHelpers";
 
@@ -160,24 +159,34 @@ export class RecorderEngine {
   }
 
   public get sampleRate(): number {
-    // Falls back to 44100 only if ctx is missing, otherwise uses system default (usually 48000)
     return this.audioCtx?.sampleRate || 44100;
   }
 
+  // --- Start Logic (Added Fallback for PC/Mono devices) ---
   async start(maxDurationMs: number = 40000): Promise<void> {
     this.cleanup();
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: false,
-        noiseSuppression: false,
-        autoGainControl: false,
-        channelCount: 2, 
-      },
-    });
+    let stream: MediaStream;
+    try {
+      // 1. Try High Quality (Stereo/Raw)
+      // This works on your Mobile, but might fail on PC
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+          channelCount: 2, 
+        },
+      });
+    } catch (err) {
+      console.warn("High-quality constraints failed. Using fallback.");
+      // 2. Fallback: Works on ALL devices (PC, Mono Mics, Bluetooth)
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    }
+    
     this.mediaStream = stream;
 
-    // Remove the forced sampleRate option to allow system default (prevent sample rate conversion artifacts)
+    // 3. Initialize Audio Context (Let browser decide rate, e.g., 48000)
     const AC = (window as any).AudioContext || (window as any).webkitAudioContext;
     const ctx = new AC(); 
     this.audioCtx = ctx;
@@ -198,15 +207,20 @@ export class RecorderEngine {
     source.connect(this.workletNode);
     this.workletNode.connect(ctx.destination);
 
-    console.log(`[Recorder] Started at ${ctx.sampleRate}Hz (32-bit Stereo)`);
+    console.log(`[Recorder] Started at ${ctx.sampleRate}Hz`);
 
     this.maxDurationTimer = window.setTimeout(() => {
       this.stop(true);
     }, maxDurationMs);
   }
 
+  // --- Stop Logic (FIXED DEEP VOICE BUG) ---
   async stop(isAutoStop: boolean = false): Promise<Blob | null> {
     if (this.maxDurationTimer) clearTimeout(this.maxDurationTimer);
+
+    // 👇 1. CAPTURE RATE NOW (Before closing context)
+    // On Mobile this captures 48000.
+    const finalSampleRate = this.sampleRate; 
 
     if (this.mediaStream) {
       this.mediaStream.getTracks().forEach((t) => t.stop());
@@ -216,15 +230,18 @@ export class RecorderEngine {
       this.workletNode.disconnect();
       this.workletNode = null;
     }
+    
+    // 👇 2. NOW CLOSE CONTEXT
     if (this.audioCtx && this.audioCtx.state !== 'closed') {
       await this.audioCtx.close();
-      this.audioCtx = null;
+      this.audioCtx = null; // This makes this.sampleRate return 44100 now
     }
 
     if (this.chunks.length === 0) return null;
 
-    //  Passing 'this.sampleRate' ensures the WAV header matches the actual recording
-    const blob = encodeChunksToFloat32Wav(this.chunks, this.sampleRate);
+    // 👇 3. USE THE CAPTURED VARIABLE
+    // Using finalSampleRate (48000) ensures the WAV header is correct.
+    const blob = encodeChunksToFloat32Wav(this.chunks, finalSampleRate);
     
     this.chunks = []; 
 
