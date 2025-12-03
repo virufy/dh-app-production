@@ -48,6 +48,16 @@ async function initializeApp() {
     }
   } catch (error) {
     console.error('Failed to initialize logging service:', error);
+    // Try to log this error if logger is partially initialized
+    try {
+      await logger.initialize().catch(() => {});
+      logger.error('Failed to initialize logging service', {
+        errorCategory: 'Logger',
+      }, error instanceof Error ? error : new Error(String(error)));
+    } catch (e) {
+      // Logger completely failed - nothing we can do
+      console.error('Logger completely failed to initialize:', e);
+    }
   }
 
   root.render(

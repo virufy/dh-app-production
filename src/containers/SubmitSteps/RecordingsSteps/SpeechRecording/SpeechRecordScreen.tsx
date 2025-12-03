@@ -22,6 +22,7 @@ import formatTime from "../../../../utils/formatTime";
 import { Slider, TimeRow, FileRow } from "../UploadCompleteCough/styles";
 import { addUploadTask } from "../../../../services/backgroundUploadService";
 import { getDeviceName, generateUserAgent } from "../../../../utils/deviceUtils";
+import { logger } from "../../../../services/loggingService";
 
 
 import {
@@ -95,7 +96,16 @@ const togglePlay = () => {
     el.pause();
     setIsPlaying(false);
   } else {
-    el.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+    el.play()
+      .then(() => setIsPlaying(true))
+      .catch((error) => {
+        logger.error('Audio playback failed', {
+          recordingType: 'speech',
+          audioFileUrl: audioData.audioFileUrl?.substring(0, 50),
+          errorCategory: 'AudioPlayback',
+        }, error instanceof Error ? error : new Error(String(error)));
+        setIsPlaying(false);
+      });
   }
 };
 
