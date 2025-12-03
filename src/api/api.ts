@@ -1,14 +1,12 @@
-import { generateSignature } from "../utils/signature";
+import { callApiWithLogging } from './apiWithLogging';
 
 export async function callApi(endpoint: string, body: any) {
-  const signature = await generateSignature();
-
-  return fetch(`${process.env.REACT_APP_API_BASE}/${endpoint}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-unique-signature": signature, //Encrypted header
+  return callApiWithLogging({
+    endpoint,
+    method: 'POST',
+    body,
+    logContext: {
+      apiCall: 'callApi',
     },
-    body: JSON.stringify(body),
   });
 }

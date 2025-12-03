@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { generateSignature } from "../../utils/signature";
 import AppHeader from '../../components/AppHeader';
 import { PATIENT_API_URL } from '../../config';
+import { logger } from '../../services/loggingService';
 import {
   pageContainer,
   title,
@@ -54,7 +55,7 @@ const Clinical_Login: React.FC = () => {
         const sig = await generateSignature();
         sessionStorage.setItem("app_signature", sig);
       } catch (err) {
-        console.error("Signature init failed:", err);
+        logger.error('Signature initialization failed', {}, err instanceof Error ? err : new Error(String(err)));
       }
     })();
   }, []);
@@ -68,6 +69,11 @@ const Clinical_Login: React.FC = () => {
     if (/-\d+$/.test(trimmed)) return trimmed.replace('-', '_');
     return `${defaultHospital}_${trimmed || '1000'}`;
   };
+
+  // Note: We don't automatically start a new patient session here
+  // A new patient session is only created after successful completion
+  // (on confirmation screen when returning to menu)
+  // This ensures we preserve logs even if the journey is not completed
 
   // 🚀 Fetch latest sequential ID directly from backend
   useEffect(() => {
@@ -117,7 +123,12 @@ const Clinical_Login: React.FC = () => {
         // store dashed id in localStorage (so other code reading localKey gets dashed)
         localStorage.setItem(localKey, dashed);
       } catch (err) {
-        console.error("⚠️ Failed to fetch latest ID:", err);
+        logger.error('Failed to fetch latest patient ID', {
+          hospitalCode,
+          endpoint: '/status/last-patient',
+          apiUrl: PATIENT_API_URL,
+        }, err instanceof Error ? err : new Error(String(err)));
+        
         const fallback = `${hospitalCode}_1000`;
         if (!mounted) return;
         setBackendPatientFull(fallback);
@@ -140,6 +151,8 @@ const Clinical_Login: React.FC = () => {
     // convert underscore -> dash before storing / navigating
     const dashedId = underscoreToDash(backendPatientFull);
     sessionStorage.setItem('patientId', dashedId);
+    logger.setPatientId(dashedId);
+    logger.info('Patient ID set for session', { patientId: dashedId });
     navigate('/consent', { state: { patientId: dashedId } });
   };
 
