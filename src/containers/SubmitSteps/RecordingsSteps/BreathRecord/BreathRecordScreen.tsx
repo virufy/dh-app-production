@@ -268,7 +268,7 @@ const BreathRecordScreen: React.FC = () => {
           </FooterLink>
         </Content>
       </Container>
-      <audio ref={audioRef} src={audioData?.audioFileUrl || ""} preload="auto" />
+      <audio ref={audioRef} src={audioData?.audioFileUrl || undefined} preload="auto" />
     </>
   );
 };
