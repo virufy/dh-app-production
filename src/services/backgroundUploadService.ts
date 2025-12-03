@@ -1,5 +1,6 @@
 import { getPresignedUrl } from "./presignedUrlService";
 import { audioDB } from "./audioDbService";
+import { logger } from "./loggingService";
 
 export interface UploadTask {
   patientId: string;
@@ -19,27 +20,6 @@ export interface UploadTask {
 const uploadQueue: UploadTask[] = [];
 let isProcessingQueue = false;
 
-/**
- * Log detailed error information
- */
-function logError(step: string, error: unknown, context?: Record<string, any>) {
-  const errorDetails: any = {
-    timestamp: new Date().toISOString(),
-    step,
-    context,
-  };
-
-  if (error instanceof Error) {
-    errorDetails.message = error.message;
-    errorDetails.stack = error.stack;
-    errorDetails.name = error.name;
-  } else {
-    errorDetails.error = String(error);
-  }
-  
-  // Also log to console.error with full details
-  console.error("Full error details:", JSON.stringify(errorDetails, null, 2));
-}
 
 /**
  * Upload file directly to S3 using presigned URL
@@ -61,6 +41,13 @@ async function uploadToS3(
 
   try {
     // Upload to S3 using presigned URL
+    logger.info("S3Upload - Uploading to S3...", {
+      filename,
+      contentType,
+      fileSize: audioBlob.size,
+      presignedUrlPreview: presignedUrl.substring(0, 200) + "...",
+    });
+
     console.log("[S3Upload] Uploading to S3...");
     let response: Response;
     try {
@@ -72,14 +59,21 @@ async function uploadToS3(
         body: audioBlob,
       });
     } catch (fetchError) {
-      logError("S3Upload - PUT Request", fetchError, {
+      logger.error("S3Upload - PUT Request", {
         presignedUrl: presignedUrl.substring(0, 200) + "...",
         filename,
         fileSize: audioBlob.size,
         contentType,
-      });
+        errorCategory: 'S3Upload',
+      }, fetchError instanceof Error ? fetchError : new Error(String(fetchError)));
       throw new Error(`Failed to upload to S3: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`);
     }
+
+    logger.info("S3Upload - S3 response received", {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+    });
 
     console.log("[S3Upload] S3 response received:", {
       status: response.status,
@@ -97,26 +91,35 @@ async function uploadToS3(
 
       const errorMsg = `S3 upload failed: HTTP ${response.status} ${response.statusText}${errorText ? ` - ${errorText.substring(0, 500)}` : ""}`;
       
-      logError("S3Upload - Upload Failed", new Error(errorMsg), {
+      logger.error("S3Upload - Upload Failed", {
         status: response.status,
         statusText: response.statusText,
-        errorText: errorText.substring(0, 1000), // Limit error text
+        errorText: errorText.substring(0, 1000),
         headers: Object.fromEntries(response.headers.entries()),
         filename,
         fileSize: audioBlob.size,
         contentType,
         presignedUrlPreview: presignedUrl.substring(0, 200) + "...",
-      });
+        errorCategory: 'S3Upload',
+      }, new Error(errorMsg));
       
       throw new Error(errorMsg);
     }
 
-    console.log(`✅ [S3Upload] Upload successful for ${filename}`);
-  } catch (error) {
-    logError("S3Upload - Overall", error, {
+    logger.info("S3Upload - Upload successful", {
       filename,
       contentType,
+      fileSize: audioBlob.size,
+      presignedUrlPreview: presignedUrl.substring(0, 200) + "...",
     });
+
+    console.log(`✅ [S3Upload] Upload successful for ${filename}`);
+  } catch (error) {
+    logger.error("S3Upload - Overall", {
+      filename,
+      contentType,
+      errorCategory: 'S3Upload',
+    }, error instanceof Error ? error : new Error(String(error)));
     throw error;
   }
 }
@@ -134,28 +137,57 @@ async function processUploadTask(task: UploadTask): Promise<void> {
     blobUrlPreview: task.audioFileUrl.substring(0, 80) + "...",
   });
 
+  logger.info("UploadTask - Starting upload task", {
+    filename: task.filename,
+    patientId: task.patientId,
+    audioType: task.audioType,
+    timestamp: task.timestamp,
+    blobUrlPreview: task.audioFileUrl.substring(0, 80) + "...",
+  });
+
   try {
     // Validate required fields
     console.log("[UploadTask] Validating task data...");
+    logger.info("UploadTask - Validating task data...", {
+      filename: task.filename,
+      patientId: task.patientId,
+      audioType: task.audioType,
+      timestamp: task.timestamp,
+      blobUrlPreview: task.audioFileUrl.substring(0, 80) + "...",
+    });
     if (!task.patientId) {
       const error = new Error("Patient ID is required");
-      logError("UploadTask - Validation", error, { task });
+      logger.error("UploadTask - Validation", { task, errorCategory: 'Validation' }, error);
       throw error;
     }
     if (!task.filename) {
       const error = new Error("Filename is required");
-      logError("UploadTask - Validation", error, { task });
+      logger.error("UploadTask - Validation", { task, errorCategory: 'Validation' }, error);
       throw error;
     }
     if (!task.audioFileUrl) {
       const error = new Error("Audio file URL is required");
-      logError("UploadTask - Validation", error, { task });
+      logger.error("UploadTask - Validation", { task, errorCategory: 'Validation' }, error);
       throw error;
     }
     console.log("[UploadTask] ✅ Task validation passed");
+    logger.info("UploadTask - Task validation passed", {
+      filename: task.filename,
+      patientId: task.patientId,
+      audioType: task.audioType,
+      timestamp: task.timestamp,
+      blobUrlPreview: task.audioFileUrl.substring(0, 80) + "...",
+    });
 
     // Step 1: Get presigned URL from Lambda
     console.log("[UploadTask] Step 1: Requesting presigned URL from Lambda...");
+    logger.info("UploadTask - Requesting presigned URL from Lambda...", {
+      filename: task.filename,
+      patientId: task.patientId,
+      audioType: task.audioType,
+      timestamp: task.timestamp,
+      blobUrlPreview: task.audioFileUrl.substring(0, 80) + "...",
+    });
     let uploadUrl: string;
     let key: string;
     try {
@@ -169,18 +201,35 @@ async function processUploadTask(task: UploadTask): Promise<void> {
       uploadUrl = result.uploadUrl;
       key = result.key;
       console.log(`[UploadTask] ✅ Got presigned URL for key: ${key}`);
+      logger.info("UploadTask - Got presigned URL", {
+        filename: task.filename,
+        patientId: task.patientId,
+        audioType: task.audioType,
+        timestamp: task.timestamp,
+        blobUrlPreview: task.audioFileUrl.substring(0, 80) + "...",
+        key: key,
+        uploadUrl: uploadUrl,
+      });
     } catch (error) {
-      logError("UploadTask - Get Presigned URL", error, {
+      logger.error("UploadTask - Get Presigned URL", {
         patientId: task.patientId,
         filename: task.filename,
         audioType: task.audioType,
         deviceName: task.deviceName,
-      });
+        errorCategory: 'PresignedURL',
+      }, error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
 
     // Step 2: Load blob from IndexedDB (more reliable than blob URL)
     console.log("[UploadTask] Step 2: Loading audio blob from IndexedDB...");
+    logger.info("UploadTask - Loading audio blob from IndexedDB...", {
+      filename: task.filename,
+      patientId: task.patientId,
+      audioType: task.audioType,
+      timestamp: task.timestamp,
+      blobUrlPreview: task.audioFileUrl.substring(0, 80) + "...",
+    });
     let audioBlob: Blob;
     try {
       const blobFromDB = await audioDB.loadRecording(task.audioType);
@@ -190,27 +239,46 @@ async function processUploadTask(task: UploadTask): Promise<void> {
       audioBlob = blobFromDB;
       const fileSizeMB = (audioBlob.size / (1024 * 1024)).toFixed(2);
       console.log(`[UploadTask] ✅ Loaded blob from IndexedDB. Size: ${fileSizeMB} MB`);
+      logger.info("UploadTask - Loaded blob from IndexedDB", {
+        filename: task.filename,
+        patientId: task.patientId,
+        audioType: task.audioType,
+        timestamp: task.timestamp,
+        blobUrlPreview: task.audioFileUrl.substring(0, 80) + "...",
+        fileSize: fileSizeMB,
+      });
     } catch (dbError) {
-      logError("UploadTask - Load from IndexedDB", dbError, {
+      logger.error("UploadTask - Load from IndexedDB", {
         filename: task.filename,
         audioType: task.audioType,
         blobUrl: task.audioFileUrl,
-      });
+        errorCategory: 'IndexedDB',
+      }, dbError instanceof Error ? dbError : new Error(String(dbError)));
       throw new Error(`Failed to load audio blob from IndexedDB: ${dbError instanceof Error ? dbError.message : String(dbError)}`);
     }
 
     // Step 3: Upload directly to S3
     console.log("[UploadTask] Step 3: Uploading file to S3...");
+    logger.info("UploadTask - Uploading file to S3...", {
+      filename: task.filename,
+      patientId: task.patientId,
+      audioType: task.audioType,
+      timestamp: task.timestamp,
+      blobUrlPreview: task.audioFileUrl.substring(0, 80) + "...",
+      key: key,
+      uploadUrl: uploadUrl,
+    });
     try {
       await uploadToS3(uploadUrl, audioBlob, task.filename, "audio/wav");
       console.log(`[UploadTask] ✅ Successfully uploaded ${task.filename} to S3`);
     } catch (error) {
-      logError("UploadTask - S3 Upload", error, {
+      logger.error("UploadTask - S3 Upload", {
         filename: task.filename,
         key,
         fileSize: audioBlob.size,
         uploadUrlPreview: uploadUrl.substring(0, 200) + "...",
-      });
+        errorCategory: 'S3Upload',
+      }, error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
 
@@ -224,13 +292,21 @@ async function processUploadTask(task: UploadTask): Promise<void> {
 
     console.log(`✅ [UploadTask] Upload completed successfully: ${task.filename}`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  } catch (error) {
-    logError("UploadTask - Overall Failure", error, {
+    logger.info("UploadTask - Upload completed successfully", {
       filename: task.filename,
       patientId: task.patientId,
       audioType: task.audioType,
       timestamp: task.timestamp,
+      blobUrlPreview: task.audioFileUrl.substring(0, 80) + "...",
     });
+  } catch (error) {
+    logger.error("UploadTask - Overall Failure", {
+      filename: task.filename,
+      patientId: task.patientId,
+      audioType: task.audioType,
+      timestamp: task.timestamp,
+      errorCategory: 'UploadTask',
+    }, error instanceof Error ? error : new Error(String(error)));
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     throw error;
   }
@@ -254,10 +330,11 @@ async function consumeQueue() {
       try {
         await processUploadTask(task);
       } catch (error) {
-        logError("Queue - Task Processing Failed", error, {
+        logger.error("Queue - Task Processing Failed", {
           filename: task.filename,
           remainingInQueue: uploadQueue.length,
-        });
+          errorCategory: 'Queue',
+        }, error instanceof Error ? error : new Error(String(error)));
         console.error(`[Queue] Failed to upload ${task.filename}, continuing with next task...`);
       }
     }
@@ -265,6 +342,10 @@ async function consumeQueue() {
 
   isProcessingQueue = false;
   console.log("[Queue] ✅ Queue processing complete. Queue is now empty.");
+  logger.info("Queue - Queue processing complete", {
+    queueSize: 0,
+    isProcessing: false,
+  });
 }
 
 /**
@@ -279,16 +360,17 @@ export function addUploadTask(task: UploadTask): void {
 
   // Validate task before adding to queue
   if (!task) {
-    logError("addUploadTask - Invalid Task", new Error("Task is null or undefined"), {});
+    logger.error("addUploadTask - Invalid Task", { errorCategory: 'Validation' }, new Error("Task is null or undefined"));
     return;
   }
 
   if (!task.patientId || !task.filename || !task.audioFileUrl) {
-    logError("addUploadTask - Missing Required Fields", new Error("Task missing required fields"), {
+    logger.error("addUploadTask - Missing Required Fields", {
       hasPatientId: !!task.patientId,
       hasFilename: !!task.filename,
       hasAudioFileUrl: !!task.audioFileUrl,
-    });
+      errorCategory: 'Validation',
+    }, new Error("Task missing required fields"));
     return;
   }
 
