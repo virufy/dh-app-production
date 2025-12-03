@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { RecorderEngine } from "../../services/RecorderEngine";
 import { audioDB } from "../../services/audioDbService";
 import { capitalize } from "../../utils/recorderHelpers";
+import { logger } from "../../services/loggingService";
 
 type RecType = "speech" | "cough" | "breath" | "unknown";
 type AudioData = { audioFileUrl: string; filename: string; recordingType: RecType } | null;
@@ -94,7 +95,11 @@ export function useAudioRecorder(recordingType: RecType = "unknown") {
              }
           }
         } catch (e) {
-          console.error("Hydration failed", e);
+          logger.error('Audio hydration failed - failed to load recording from IndexedDB', {
+            recordingType,
+            audioDataUrl: audioData.audioFileUrl?.substring(0, 50),
+            errorCategory: 'IndexedDB',
+          }, e instanceof Error ? e : new Error(String(e)));
         }
       }
     };
@@ -127,7 +132,17 @@ export function useAudioRecorder(recordingType: RecType = "unknown") {
         setAudioData(data);
         sessionStorage.setItem(`audioData_${recordingType}`, JSON.stringify(data));
         sessionStorage.setItem(`recordingTime_${recordingType}`, elapsedSeconds.toString());
-        await audioDB.saveRecording(blob, recordingType);
+        try {
+          await audioDB.saveRecording(blob, recordingType);
+        } catch (dbError) {
+          logger.error('Failed to save recording to IndexedDB', {
+            recordingType,
+            filename,
+            blobSize: blob.size,
+            elapsedSeconds,
+            errorCategory: 'IndexedDB',
+          }, dbError instanceof Error ? dbError : new Error(String(dbError)));
+        }
       }
     }
     startTimeRef.current = null;
@@ -180,7 +195,22 @@ export function useAudioRecorder(recordingType: RecType = "unknown") {
       }, 1000);
 
     } catch (err) {
-      console.error("Recording start failed", err);
+      const error = err instanceof Error ? err : new Error(String(err));
+      const isPermissionDenied = error.name === 'NotAllowedError' || 
+                                error.name === 'PermissionDeniedError' ||
+                                error.message.includes('permission') ||
+                                error.message.includes('denied');
+      
+      logger.error('Audio recording start failed', {
+        recordingType,
+        maxDurationMs,
+        errorName: error.name,
+        errorMessage: error.message,
+        isPermissionDenied,
+        errorCategory: isPermissionDenied ? 'Permission' : 'Recording',
+        userAgent: navigator.userAgent,
+      }, error);
+      
       setError("Microphone access denied.");
       if (engineRef.current) engineRef.current.cleanup();
       setIsRecording(false);

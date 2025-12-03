@@ -1,4 +1,5 @@
 // src/services/audioDbService.ts
+import { logger } from './loggingService';
 
 class AudioDBService {
   private dbName = 'recordings';
@@ -34,9 +35,13 @@ class AudioDBService {
       const request = indexedDB.open(this.dbName, this.dbVersion);
 
       request.onerror = () => {
-        console.error("[IndexedDB] Connection Failed", request.error);
+        const error = request.error || new Error('IndexedDB connection failed');
+        logger.error('AudioDB - IndexedDB connection failed', {
+          databaseName: this.dbName,
+          errorCategory: 'IndexedDB',
+        }, error instanceof Error ? error : new Error(String(error)));
         this.initPromise = null; 
-        reject(request.error);
+        reject(error);
       };
 
       request.onupgradeneeded = (event) => {
@@ -52,17 +57,26 @@ class AudioDBService {
         
         // 3. Resilience: Handle unexpected closures
         this.db.onversionchange = () => {
-          console.warn("[IndexedDB] Connection closing due to version change");
+          logger.warn('AudioDB - Connection closing due to version change', {
+            databaseName: this.dbName,
+            errorCategory: 'IndexedDB',
+          });
           this.closeConnection();
         };
 
         this.db.onclose = () => {
-          console.warn("[IndexedDB] Connection closed unexpectedly");
+          logger.warn('AudioDB - Connection closed unexpectedly', {
+            databaseName: this.dbName,
+            errorCategory: 'IndexedDB',
+          });
           this.closeConnection();
         };
 
         this.db.onerror = (e) => {
-          console.error("[IndexedDB] Database error:", e);
+          logger.error('AudioDB - Database error', {
+            databaseName: this.dbName,
+            errorCategory: 'IndexedDB',
+          }, new Error('IndexedDB database error'));
         };
         
         resolve();
@@ -84,16 +98,30 @@ class AudioDBService {
   public async saveRecording(blob: Blob, recordingType: string): Promise<void> {
     await this.init();
     return new Promise((resolve, reject) => {
-      if (!this.db) return reject(new Error("Database not initialized"));
+      if (!this.db) {
+        const error = new Error("Database not initialized");
+        logger.error('AudioDB - Save recording failed - database not initialized', {
+          recordingType,
+          blobSize: blob.size,
+          errorCategory: 'IndexedDB',
+        }, error);
+        return reject(error);
+      }
 
       const transaction = this.db.transaction(['blobs'], 'readwrite');
       const store = transaction.objectStore('blobs');
       
-      // Add a timestamp wrapper if you want to enable cleanup later
-      // Or just save the blob directly if you only care about the key
       const request = store.put(blob, recordingType);
 
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        const error = request.error || new Error('Failed to save recording');
+        logger.error('AudioDB - Save recording failed', {
+          recordingType,
+          blobSize: blob.size,
+          errorCategory: 'IndexedDB',
+        }, error instanceof Error ? error : new Error(String(error)));
+        reject(error);
+      };
       request.onsuccess = () => resolve();
     });
   }
@@ -101,13 +129,27 @@ class AudioDBService {
   public async loadRecording(recordingType: string): Promise<Blob | null> {
     await this.init();
     return new Promise((resolve, reject) => {
-      if (!this.db) return reject(new Error("Database not initialized"));
+      if (!this.db) {
+        const error = new Error("Database not initialized");
+        logger.error('AudioDB - Load recording failed - database not initialized', {
+          recordingType,
+          errorCategory: 'IndexedDB',
+        }, error);
+        return reject(error);
+      }
 
       const transaction = this.db.transaction(['blobs'], 'readonly');
       const store = transaction.objectStore('blobs');
       const request = store.get(recordingType);
 
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        const error = request.error || new Error('Failed to load recording');
+        logger.error('AudioDB - Load recording failed', {
+          recordingType,
+          errorCategory: 'IndexedDB',
+        }, error instanceof Error ? error : new Error(String(error)));
+        reject(error);
+      };
       request.onsuccess = () => resolve(request.result || null);
     });
   }
@@ -115,13 +157,27 @@ class AudioDBService {
   public async deleteRecording(recordingType: string): Promise<void> {
     await this.init();
     return new Promise((resolve, reject) => {
-      if (!this.db) return reject(new Error("Database not initialized"));
+      if (!this.db) {
+        const error = new Error("Database not initialized");
+        logger.error('AudioDB - Delete recording failed - database not initialized', {
+          recordingType,
+          errorCategory: 'IndexedDB',
+        }, error);
+        return reject(error);
+      }
 
       const transaction = this.db.transaction(['blobs'], 'readwrite');
       const store = transaction.objectStore('blobs');
       const request = store.delete(recordingType);
 
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        const error = request.error || new Error('Failed to delete recording');
+        logger.error('AudioDB - Delete recording failed', {
+          recordingType,
+          errorCategory: 'IndexedDB',
+        }, error instanceof Error ? error : new Error(String(error)));
+        reject(error);
+      };
       request.onsuccess = () => resolve();
     });
   }
