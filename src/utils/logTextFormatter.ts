@@ -1,4 +1,4 @@
-import { LogEntry, LogBatch } from '../services/logTypes';
+import { LogBatch } from '../services/logTypes';
 
 export function formatLogsAsPlainText(batch: LogBatch): string {
   const lines: string[] = [];
