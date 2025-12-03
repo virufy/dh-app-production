@@ -1,6 +1,6 @@
 import { logDB } from '../services/logDbService';
 import { logger } from '../services/loggingService';
-import { LogEntry, LogBatch, LogType } from '../services/logTypes';
+import { LogEntry, LogBatch } from '../services/logTypes';
 import { isErrorLog, isInfoLog, generateLogFilename, formatTimestampWithTimezone } from './logUtils';
 import { formatLogsAsPlainText } from './logTextFormatter';
 
