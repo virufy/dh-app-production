@@ -215,6 +215,7 @@ export function useAudioRecorder(recordingType: RecType = "unknown") {
       if (engineRef.current) engineRef.current.cleanup();
       setIsRecording(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRecording, processFinishedRecording, getMaxDuration]);
 
   const triggerFile = useCallback((file: File) => {
