@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import SehaDubaiLogo from '../../assets/images/SehaDubaiLogo.png';
 import { useNavigate } from 'react-router-dom';
 import { t } from 'i18next';
 import AppHeader from "../../components/AppHeader";
+import { logger } from '../../services/loggingService';
+import { uploadAllLogsForCurrentPatient } from '../../services/logUploadService';
+import { handleErrorReport } from '../../utils/errorReportHandler';
 
 
 import {
@@ -17,6 +20,37 @@ import {
 const ConfirmationScreen: React.FC = () => {
     const navigate = useNavigate();
 
+    useEffect(() => {
+        const uploadPatientLogs = async () => {
+            try {
+                await logger.forceFlush();
+                
+                await uploadAllLogsForCurrentPatient();
+                
+                logger.info('Patient session logs upload initiated', {
+                    patientId: logger.getPatientId(),
+                    patientSessionId: logger.getPatientSessionId(),
+                });
+            } catch (error) {
+                logger.error('Failed to upload patient logs on confirmation screen', {}, 
+                    error instanceof Error ? error : new Error(String(error)));
+            }
+        };
+
+        uploadPatientLogs();
+    }, []);
+
+    const handleReturnToMenu = () => {
+        sessionStorage.removeItem('patientId');
+        logger.startNewPatientSession();
+        logger.info('Patient data submission completed, starting new patient session');
+        navigate('/');
+    };
+
+    const handleReportError = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        handleErrorReport(e);
+    };
+
     return (
        
 <>
@@ -26,10 +60,10 @@ const ConfirmationScreen: React.FC = () => {
                 <Logo src={SehaDubaiLogo} alt="Dubai Health Logo" />
                 <Title>{t('confirmation.titleLine1')}<br />{t('confirmation.titleLine2')}
                 </Title>
-                <ButtonStyled onClick={() => navigate('/')}>
+                <ButtonStyled onClick={handleReturnToMenu}>
                     {t('confirmation.button')}
                 </ButtonStyled>
-                <ErrorLink href="https://docs.google.com/forms/d/e/1FAIpQLSdlBAA3drY6NydPkxKkMWTEZQhE9p5BSH5YSuaK18F_rObBFg/viewform">
+                <ErrorLink href="https://docs.google.com/forms/d/e/1FAIpQLSdlBAA3drY6NydPkxKkMWTEZQhE9p5BSH5YSuaK18F_rObBFg/viewform" onClick={handleReportError}>
                 
                     {t('confirmation.report')}
                 </ErrorLink>

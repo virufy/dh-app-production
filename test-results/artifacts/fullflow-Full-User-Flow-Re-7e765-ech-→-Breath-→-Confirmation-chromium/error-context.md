@@ -1,0 +1,66 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - banner "Application header" [ref=e3]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: "Patient ID:"
+      - button "Patient ID AB-1122" [ref=e7] [cursor=pointer]:
+        - generic [ref=e8]: AB-1122
+  - generic [ref=e10]:
+    - generic [ref=e11]:
+      - button "Go back" [ref=e12] [cursor=pointer]:
+        - img "Back" [ref=e13]
+      - generic [ref=e14]: Record your cough
+    - heading "Instructions" [level=3] [ref=e15]
+    - generic [ref=e16]:
+      - generic [ref=e17]: "1"
+      - generic [ref=e18]:
+        - text: Find a
+        - strong [ref=e19]: quiet place
+        - text: at least
+        - strong [ref=e20]: 20 ft (6m)
+        - text: away from others. If you are feeling ill, please sit down.
+    - img "Keep distance illustration" [ref=e21]
+    - generic [ref=e22]:
+      - generic [ref=e23]: "2"
+      - generic [ref=e24]:
+        - text: Hold the bottom of your device
+        - strong [ref=e25]: 1-2 ft (30-60 cm)
+        - text: away from your mouth. Try not to cough too forcefully.
+    - img "Hold device at mouth distance illustration" [ref=e26]
+    - generic [ref=e27]:
+      - generic [ref=e28]: "3"
+      - generic [ref=e29]:
+        - text: Tap record,
+        - strong [ref=e30]: cough 3 times
+        - text: with a
+        - strong [ref=e31]: deep breath
+        - text: between each cough. Then tap stop.
+    - generic [ref=e33]: 0:00
+    - generic [ref=e34]:
+      - generic [ref=e35]:
+        - button "Record" [ref=e36] [cursor=pointer]:
+          - img "record" [ref=e37]
+        - generic [ref=e38]: Record
+      - generic [ref=e39]:
+        - button "Stop" [disabled] [ref=e40] [cursor=pointer]:
+          - img "stop" [ref=e41]
+        - generic [ref=e42]: Stop
+      - generic [ref=e43]:
+        - button "Play audio" [disabled] [ref=e44] [cursor=pointer]:
+          - img "play" [ref=e45]
+        - generic [ref=e46]: Play audio
+    - generic [ref=e48]: Cough Recording
+    - slider "Audio seek slider" [disabled] [ref=e49]: "0"
+    - generic [ref=e50]:
+      - generic [ref=e51]: 0:00
+      - generic [ref=e52]: "- 0:00"
+    - generic [ref=e53]:
+      - generic [ref=e54]: Were the coughs involuntary?
+      - checkbox "Were the coughs involuntary?" [ref=e55] [cursor=pointer]
+    - paragraph [ref=e56]: Please upload the audio file first.
+    - button "Submit" [active] [ref=e58] [cursor=pointer]
+    - link "Something wrong? Report an error" [ref=e59] [cursor=pointer]:
+      - /url: https://docs.google.com/forms/d/e/1FAIpQLSdlBAA3drY6NydPkxKkMWTEZQhE9p5BSH5YSuaK18F_rObBFg/viewform
+```

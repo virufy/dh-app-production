@@ -1,5 +1,6 @@
 import { PRESIGNED_URL_API_URL } from "../config";
 import { generateSignature } from "../utils/signature";
+import { logger } from "./loggingService";
 
 export interface PresignedUrlRequest {
   patientId: string;
@@ -15,27 +16,6 @@ export interface PresignedUrlResponse {
   filename: string;
 }
 
-/**
- * Log detailed error information
- */
-function logError(step: string, error: unknown, context?: Record<string, any>) {
-  const errorDetails: any = {
-    timestamp: new Date().toISOString(),
-    step,
-    context,
-  };
-
-  if (error instanceof Error) {
-    errorDetails.message = error.message;
-    errorDetails.stack = error.stack;
-    errorDetails.name = error.name;
-  } else {
-    errorDetails.error = String(error);
-  }
-
-  console.error(`❌ [PRESIGNED URL ERROR] ${step}:`, errorDetails);
-  console.error("Full error details:", JSON.stringify(errorDetails, null, 2));
-}
 
 /**
  * Fetches a presigned URL from the Lambda API for direct S3 upload
@@ -62,10 +42,10 @@ export async function getPresignedUrl(
 
   if (!PRESIGNED_URL_API_URL || PRESIGNED_URL_API_URL === "") {
     const error = new Error("PRESIGNED_URL_API_URL is not configured");
-    logError("PresignedURL - Configuration Error", error, {
+    logger.error("PresignedURL - Configuration Error", {
       request,
       configValue: PRESIGNED_URL_API_URL,
-    });
+    }, error);
     throw error;
   }
 
@@ -77,9 +57,9 @@ export async function getPresignedUrl(
       signature = await generateSignature();
       console.log("[PresignedURL] ✅ Signature generated:", signature.substring(0, 50) + "...");
     } catch (signatureError) {
-      logError("PresignedURL - Generate Signature", signatureError, {
+      logger.error("PresignedURL - Generate Signature", {
         request,
-      });
+      }, signatureError instanceof Error ? signatureError : new Error(String(signatureError)));
       throw new Error(`Failed to generate signature: ${signatureError instanceof Error ? signatureError.message : String(signatureError)}`);
     }
 
@@ -157,15 +137,17 @@ export async function getPresignedUrl(
         console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
       }
       
-      logError("PresignedURL - Fetch Request", fetchError, {
+      const isCORS = errorMessage.includes("Failed to fetch") || fetchError instanceof TypeError;
+      logger.error("PresignedURL - Fetch Request", {
         url: apiUrl,
         requestBody,
         hasSignature: !!signature,
         origin: typeof window !== 'undefined' ? window.location.origin : 'unknown',
         errorMessage: errorMessage,
         errorType: fetchError?.constructor?.name,
-        isCORS: errorMessage.includes("Failed to fetch") || fetchError instanceof TypeError,
-      });
+        isCORS,
+        errorCategory: isCORS ? 'CORS' : 'Network',
+      }, fetchError instanceof Error ? fetchError : new Error(errorMessage));
       
       throw new Error(diagnosticMessage);
     }
@@ -186,14 +168,15 @@ export async function getPresignedUrl(
         console.warn("[PresignedURL] Could not read error response text:", textError);
       }
 
-      logError("PresignedURL - API Error Response", new Error(`HTTP ${response.status}`), {
+      logger.error("PresignedURL - API Error Response", {
         status: response.status,
         statusText: response.statusText,
         errorText: errorText.substring(0, 1000),
         url: apiUrl,
         requestBody,
         responseHeaders: Object.fromEntries(response.headers.entries()),
-      });
+        errorCategory: 'API',
+      }, new Error(`HTTP ${response.status}: ${response.statusText}`));
 
       throw new Error(
         `Failed to get presigned URL: HTTP ${response.status} ${response.statusText}${errorText ? ` - ${errorText.substring(0, 500)}` : ""}`
@@ -211,10 +194,11 @@ export async function getPresignedUrl(
       data = JSON.parse(responseText);
       console.log("[PresignedURL] ✅ Response parsed successfully");
     } catch (parseError) {
-      logError("PresignedURL - Parse Response", parseError, {
+      logger.error("PresignedURL - Parse Response", {
         status: response.status,
         url: apiUrl,
-      });
+        errorCategory: 'Parse',
+      }, parseError instanceof Error ? parseError : new Error(String(parseError)));
       throw new Error(`Failed to parse API response: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
     }
 
@@ -228,12 +212,13 @@ export async function getPresignedUrl(
 
     // Step 6: Validate response structure
     if (!data.uploadUrl || !data.key) {
-      logError("PresignedURL - Invalid Response Structure", new Error("Missing required fields"), {
+      logger.error("PresignedURL - Invalid Response Structure", {
         receivedKeys: Object.keys(data),
         hasUploadUrl: !!data.uploadUrl,
         hasKey: !!data.key,
         fullResponse: data,
-      });
+        errorCategory: 'Validation',
+      }, new Error("Missing required fields"));
       throw new Error(
         `Invalid presigned URL response format. Expected 'uploadUrl' and 'key', but got: ${JSON.stringify(Object.keys(data))}`
       );
@@ -251,10 +236,9 @@ export async function getPresignedUrl(
       filename: data.filename || request.filename,
     };
   } catch (error) {
-    logError("PresignedURL - Overall Failure", error, {
+    logger.error("PresignedURL - Overall Failure", {
       request,
-    });
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    }, error instanceof Error ? error : new Error(String(error)));
     
     if (error instanceof Error) {
       throw new Error(`Presigned URL request failed: ${error.message}`);
