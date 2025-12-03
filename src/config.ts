@@ -3,7 +3,7 @@
 // 1. COUGH API (Uploads & Status)
 // We prefer the Environment Variable. If not found (Localhost), we fall back to TEST.
 export const COUGH_API_URL = 
-  process.env.REACT_APP_COUGH_API_URL ?? 
+  process.env.REACT_APP_COUGH_API_URL ??
   "https://tvw8a1lqyd.execute-api.me-central-1.amazonaws.com/test";
 
 // 2. PATIENT API (ID Generation)
