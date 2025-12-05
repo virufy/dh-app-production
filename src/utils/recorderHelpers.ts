@@ -133,8 +133,10 @@ class RecorderProcessor extends AudioWorkletProcessor {
       this.sampleCount++;
 
       if (this.sampleCount >= this.bufferSize) {
+        // 👇 FIXED TYPO HERE: changed .upload() back to .slice()
         const c1 = this.buffers[0].slice(); 
         const c2 = this.buffers[1].slice();
+        
         this.port.postMessage({ channel1: c1, channel2: c2 }, [c1.buffer, c2.buffer]);
         this.sampleCount = 0;
       }
@@ -144,7 +146,6 @@ class RecorderProcessor extends AudioWorkletProcessor {
 }
 registerProcessor('recorder-processor', RecorderProcessor);
 `;
-
 /**
  * Encodes raw Float32 chunks into a valid WAV file.
  * Uses the dynamic sampleRate provided by the AudioContext.
@@ -199,4 +200,3 @@ export function capitalize(str: string): string {
   if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
-//sssssssssssssssssssssssssssssssssssssssss
