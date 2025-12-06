@@ -135,6 +135,7 @@ async function processUploadTask(task: UploadTask): Promise<void> {
     audioType: task.audioType,
     timestamp: task.timestamp,
     blobUrlPreview: task.audioFileUrl.substring(0, 80) + "...",
+    involuntaryCough: task.involuntaryCough
   });
 
   logger.info("UploadTask - Starting upload task", {
@@ -143,6 +144,7 @@ async function processUploadTask(task: UploadTask): Promise<void> {
     audioType: task.audioType,
     timestamp: task.timestamp,
     blobUrlPreview: task.audioFileUrl.substring(0, 80) + "...",
+    involuntaryCough: task.involuntaryCough
   });
 
   try {
@@ -197,6 +199,9 @@ async function processUploadTask(task: UploadTask): Promise<void> {
         audioType: task.audioType,
         deviceName: task.deviceName,
         contentType: "audio/wav",
+        // Pass the involuntary cough data to the service
+        involuntaryCough: task.involuntaryCough,
+        metadata: task.metadata
       });
       uploadUrl = result.uploadUrl;
       key = result.key;
@@ -356,6 +361,7 @@ export function addUploadTask(task: UploadTask): void {
     filename: task.filename,
     patientId: task.patientId,
     audioType: task.audioType,
+    involuntaryCough: task.involuntaryCough
   });
 
   // Validate task before adding to queue
