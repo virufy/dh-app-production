@@ -8,6 +8,9 @@ export interface PresignedUrlRequest {
   audioType: "cough" | "speech" | "breath" | "unknown";
   deviceName: string;
   contentType?: string;
+  // Added optional fields
+  involuntaryCough?: boolean;
+  metadata?: any;
 }
 
 export interface PresignedUrlResponse {
@@ -23,12 +26,13 @@ export async function getPresignedUrl(
   request: PresignedUrlRequest
 ): Promise<PresignedUrlResponse> {
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log(" PresignedURL] Starting presigned URL request:", {
+  console.log("[PresignedURL] Starting presigned URL request:", {
     patientId: request.patientId,
     filename: request.filename,
     audioType: request.audioType,
     deviceName: request.deviceName,
     contentType: request.contentType,
+    involuntaryCough: request.involuntaryCough,
   });
 
   // Validate API URL configuration
@@ -69,6 +73,9 @@ export async function getPresignedUrl(
       audioType: request.audioType,
       deviceName: request.deviceName,
       contentType: request.contentType || "audio/wav",
+      // Pass the new fields to the Lambda
+      involuntaryCough: request.involuntaryCough,
+      metadata: request.metadata
     };
 
     console.log("[PresignedURL] Step 2: Preparing API request:", {
@@ -245,4 +252,3 @@ export async function getPresignedUrl(
     throw error;
   }
 }
-
