@@ -281,8 +281,8 @@ export async function getPresignedUrl(
     throw new Error("PRESIGNED_URL_API_URL is not configured");
   }
 
-  // Pointing to the Generator Lambda
-  const apiUrl = `${PRESIGNED_URL_API_URL}/getS3presignedURL`;
+  // Pointing to the Generator Lambda (CORS-enabled route)
+  const apiUrl = `${PRESIGNED_URL_API_URL}/audio-getS3presignedURL`;
 
   try {
     const signature = await generateSignature();

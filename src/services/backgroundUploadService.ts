@@ -245,7 +245,7 @@
 //         audioType: task.audioType,
 //         timestamp: task.timestamp,
 //         blobUrlPreview: task.audioFileUrl.substring(0, 80) + "...",
-//         fileSize: fileSizeMB,
+//         fileSize: fileSizeMB
 //       });
 //     } catch (dbError) {
 //       logger.error("UploadTask - Load from IndexedDB", {
