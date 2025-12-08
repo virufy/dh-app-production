@@ -17,7 +17,15 @@ export function useAudioRecorder(recordingType: RecType = "unknown") {
 
  
   const [isRecording, setIsRecording] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
+  const [recordingTime, setRecordingTime] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    try {
+      const saved = sessionStorage.getItem(`recordingTime_${recordingType}`);
+      return saved ? parseInt(saved, 10) || 0 : 0;
+    } catch {
+      return 0;
+    }
+  });
   const [error, setError] = useState<string | null>(null);
   const [tooShort, setTooShort] = useState(false);
 
