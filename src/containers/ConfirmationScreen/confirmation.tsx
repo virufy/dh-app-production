@@ -40,6 +40,15 @@ const ConfirmationScreen: React.FC = () => {
         uploadPatientLogs();
     }, []);
 
+    const handleUndo = () => {
+        // Keep the existing patient session and recordings; simply restart the flow.
+        logger.info('Undo from confirmation triggered; returning to cough recording', {
+            patientId: logger.getPatientId(),
+            patientSessionId: logger.getPatientSessionId(),
+        });
+        navigate('/record-coughs', { replace: false });
+    };
+
     const handleReturnToMenu = () => {
         sessionStorage.removeItem('patientId');
         logger.startNewPatientSession();
@@ -60,6 +69,9 @@ const ConfirmationScreen: React.FC = () => {
                 <Logo src={SehaDubaiLogo} alt="Dubai Health Logo" />
                 <Title>{t('confirmation.titleLine1')}<br />{t('confirmation.titleLine2')}
                 </Title>
+                <ButtonStyled onClick={handleUndo}>
+                    {t('confirmation.undo')}
+                </ButtonStyled>
                 <ButtonStyled onClick={handleReturnToMenu}>
                     {t('confirmation.button')}
                 </ButtonStyled>
